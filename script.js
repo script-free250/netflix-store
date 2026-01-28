@@ -128,18 +128,46 @@ function updateUserSessionUI() {
  */
 async function loadProducts() {
     const container = document.getElementById('products-container');
-    if (!container) return;
+    if (!container) {
+        console.error("خطأ فادح: لم يتم العثور على العنصر 'products-container' في الصفحة.");
+        return;
+    }
+
+    console.log("1. بدء عملية جلب المنتجات...");
+    container.innerHTML = '<div class="loader"></div>'; // إظهار التحميل
 
     try {
-        const res = await fetch(`${SERVER_URL}/products`, { headers: {'Bypass-Tunnel-Reminder': 'true'} });
-        if (!res.ok) {
-             console.error('Network response was not ok');
-             throw new Error('Network response was not ok');
-        }
-        const products = await res.json();
+        console.log(`2. إرسال طلب إلى: ${SERVER_URL}/products`);
         
-        container.innerHTML = products.length ? '' : '<p style="text-align:center; width:100%;">لا توجد منتجات متاحة حالياً.</p>';
+        const res = await fetch(`${SERVER_URL}/products`, { 
+            headers: { 'Bypass-Tunnel-Reminder': 'true' } 
+        });
 
+        console.log(`3. تم استلام الرد من السيرفر. الحالة: ${res.status}`);
+
+        if (!res.ok) {
+            // إذا لم يكن الرد ناجحاً، ارمي خطأ لنلتقطه في الأسفل
+            throw new Error(`فشل الاتصال بالسيرفر. رمز الحالة: ${res.status}`);
+        }
+
+        const products = await res.json();
+        console.log("4. تم تحويل الرد إلى JSON بنجاح. عدد المنتجات:", products.length);
+        console.log("البيانات المستلمة:", products);
+
+        if (!Array.isArray(products)) {
+             throw new Error("البيانات المستلمة من السيرفر ليست مصفوفة (Array).");
+        }
+
+        // إذا نجح كل شيء، ابدأ في عرض المنتجات
+        container.innerHTML = ''; // مسح علامة التحميل
+
+        if (products.length === 0) {
+            console.log("5. لا توجد منتجات لعرضها.");
+            container.innerHTML = '<p style="text-align:center; width:100%;">لا توجد منتجات متاحة حالياً.</p>';
+            return;
+        }
+
+        console.log("5. بدء عرض المنتجات...");
         products.forEach((p, index) => {
             const isUser = p.type === 'netflix-user';
             const card = document.createElement('div');
@@ -155,12 +183,19 @@ async function loadProducts() {
             `;
             container.appendChild(card);
         });
-        
-    } catch (e) { 
-        console.error("Fetch Error:", e);
-        container.innerHTML = `<p style="text-align:center; color:var(--primary); width:100%;">خطأ في الاتصال بالسيرفر.<br>تأكد من أن السيرفر يعمل وأن الرابط صحيح.</p>`;
+        console.log("6. انتهى عرض المنتجات بنجاح.");
+
+    } catch (e) {
+        // هذا الجزء سيعمل إذا حدث أي خطأ في الـ try
+        console.error("حدث خطأ في عملية جلب المنتجات:", e);
+        container.innerHTML = `<p style="text-align:center; color:var(--primary); width:100%; padding: 20px;">
+            <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 10px;"></i><br>
+            <strong>خطأ في عرض الباقات.</strong><br>
+            <span style="font-size: 0.9rem; color: var(--text-dark);">قد يكون هناك مشكلة في الاتصال بالسيرفر. يرجى المحاولة لاحقاً.</span>
+        </p>`;
     }
 }
+
 
 function openBuyModal(id, name) {
     document.getElementById('buyModal').style.display = 'block';
