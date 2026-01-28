@@ -5,35 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Netflix Store</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <header>
         <a href="#" class="logo">NETFLIX</a>
     </header>
     <div class="container">
-        <div class="hero">
-            <h2>المتجر العربي الأول 🍿</h2>
-            <p>حسابات نتفلكس أصلية - تسليم فوري</p>
-        </div>
+        <h2 style="text-align:center; margin-bottom:40px;">العروض المتاحة 🔥</h2>
+        <div id="products-container" class="grid"></div>
+        <div class="my-orders-header"><h3>طلباتي السابقة</h3></div>
+        <div id="my-orders-list"></div>
+    </div>
 
-        <h3 style="margin-top:40px;">🔥 العروض المتاحة</h3>
-        <div id="products-container" class="grid">
-            <div class="loader"></div>
-        </div>
-
-        <!-- قسم طلباتي الجديد -->
-        <div class="my-orders-section">
-            <div class="my-orders-header">
-                <i class="fas fa-history" style="font-size:1.5rem; color:var(--primary);"></i>
-                <h3>طلباتي الأخيرة</h3>
-            </div>
-            <div id="my-orders-list">
-                <!-- هنا ستظهر الطلبات تلقائياً -->
+    <!-- نافذة الدفع -->
+    <div id="payment-modal" class="modal-overlay">
+        <div class="payment-box">
+            <h3>تأكيد الطلب 🚀</h3>
+            <input type="number" id="pay-phone" class="payment-input" placeholder="رقم فودافون كاش">
+            <label class="file-upload-wrapper">
+                <input type="file" id="pay-screenshot" accept="image/*" onchange="previewFile()" style="display:none;">
+                <span style="color:#aaa;">اضغط لرفع سكرين شوت التحويل</span>
+                <img id="img-preview" class="preview-image">
+            </label>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closePaymentModal()">إلغاء</button>
+                <button class="btn" id="btn-confirm-pay" onclick="confirmPurchase()">تأكيد</button>
             </div>
         </div>
     </div>
+
     <script src="script.js"></script>
-    <script>window.onload = loadProducts;</script>
 </body>
 </html>
