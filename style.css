@@ -59,6 +59,66 @@ body::before {
     100% { background-position: 0% 50%; }
 }
 
+/* ======== NEW: Notification System Styles ======== */
+.notification-container {
+    position: fixed;
+    top: 90px;
+    left: 20px; /* Changed from right to left for RTL */
+    transform: none;
+    right: auto;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* Align to the left */
+    gap: 15px;
+    width: auto;
+    max-width: 350px;
+}
+
+.notification {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 16px 20px;
+    border-radius: 12px;
+    color: #fff;
+    font-weight: 600;
+    background: #1a1a1a;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-right-width: 5px; /* Changed from left to right for RTL */
+    border-left-width: 1px;
+    animation: slide-in-left 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards, 
+               fade-out-left 0.5s ease-out 4.5s forwards;
+    width: 100%;
+    text-align: right;
+}
+
+.notification::before {
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    font-size: 1.2rem;
+    order: 1; /* Move icon to the right for RTL */
+    margin-right: 5px;
+}
+
+.notification.error { border-right-color: var(--primary); }
+.notification.error::before { content: '\f071'; color: var(--primary); }
+
+.notification.success { border-right-color: var(--success); }
+.notification.success::before { content: '\f058'; color: var(--success); }
+
+.notification.info { border-right-color: #3b82f6; }
+.notification.info::before { content: '\f05a'; color: #3b82f6; }
+
+@keyframes slide-in-left {
+    from { opacity: 0; transform: translateX(-100%); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fade-out-left {
+    to { opacity: 0; transform: scale(0.95) translateX(-20px); }
+}
 
 /* ======== General & Reusable Classes ======== */
 .container { 
@@ -94,6 +154,7 @@ body::before {
 }
 .btn:disabled { 
     background: #333; 
+    color: #777;
     cursor: not-allowed; 
     box-shadow: none; 
     transform: none;
@@ -126,6 +187,57 @@ header {
 .logo:hover {
     transform: scale(1.05);
 }
+
+/* ======== NEW: Header User Area Styles ======== */
+.user-session-ui {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+.user-session-ui .user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: var(--primary);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: 600;
+    color: white;
+    font-size: 1.1rem;
+}
+.user-session-ui span {
+    color: #ccc;
+    font-weight: 600;
+}
+.user-session-ui .logout-btn {
+    width: auto;
+    padding: 8px 12px;
+    margin: 0;
+    font-size: 0.9rem;
+    background: none;
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+}
+.user-session-ui .logout-btn:hover {
+    background: var(--border-color);
+    color: white;
+    transform: none;
+    box-shadow: none;
+}
+.btn-outline {
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    color: var(--text-light);
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+.btn-outline:hover {
+    background-color: var(--border-color);
+}
+
 
 /* ======== Hero Section ======== */
 .hero { 
@@ -199,9 +311,40 @@ header {
     box-shadow: 0 20px 40px rgba(0,0,0,0.5), 0 0 0 4px var(--primary-glow);
 }
 
-.card h3 { font-size: 1.6rem; margin: 15px 0; font-weight: 600; flex-grow: 1; }
-.price { font-size: 2rem; color: var(--success); font-weight: 700; margin-bottom: 10px;}
-.tag { background: rgba(255,255,255,0.05); padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; color: var(--text-dark); align-self: flex-start; border: 1px solid var(--border-color);}
+.card h3 { 
+    font-size: 1.6rem; 
+    margin: 15px 0 10px 0; 
+    font-weight: 600; 
+}
+.price { 
+    font-size: 2rem; 
+    color: var(--success); 
+    font-weight: 700; 
+    margin-bottom: 15px;
+    margin-top: 10px;
+}
+.tag { 
+    background: rgba(255,255,255,0.05); 
+    padding: 6px 14px; 
+    border-radius: 20px; 
+    font-size: 0.8rem; 
+    color: var(--text-dark); 
+    align-self: flex-start; 
+    border: 1px solid var(--border-color);
+}
+/* NEW: Product Description on Card */
+.card .product-description {
+    font-size: 0.9rem;
+    color: var(--text-dark);
+    line-height: 1.6;
+    display: -webkit-box;
+    -webkit-line-clamp: 3; /* Limit to 3 lines */
+    -webkit-box-orient: vertical;  
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-height: 54px; /* 3 lines * 1.6 line-height * 0.9rem font-size */
+}
+
 
 /* ======== Modal (Popup) ======== */
 .modal {
@@ -230,7 +373,7 @@ header {
     display:flex; 
     justify-content:space-between; 
     align-items:center; 
-    margin-bottom:20px;
+    margin-bottom:15px;
 }
 .modal-header h3 {
     margin:0; 
@@ -247,6 +390,20 @@ header {
 .close:hover { 
     color: var(--primary); 
     transform: rotate(90deg);
+}
+
+/* NEW: Modal Product Description style */
+#modal-product-description {
+    background: #0f0f0f;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    margin-bottom: 20px;
+    color: var(--text-dark);
+    line-height: 1.7;
+    font-size: 0.9rem;
+    max-height: 100px;
+    overflow-y: auto;
 }
 
 /* ======== Forms ======== */
@@ -346,28 +503,3 @@ header {
     animation: spin 1s linear infinite; 
     margin: 40px auto; 
 }
-/* Styles for Header User Area */
-.btn-outline {
-    padding: 10px 20px;
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-    color: var(--text-light);
-    text-decoration: none;
-    font-weight: 600;
-    transition: all 0.3s ease;
-}
-.btn-outline:hover {
-    background-color: var(--border-color);
-}
-/* === Toast (Notification) System === */
-#toast-container{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:3000;display:flex;flex-direction:column;align-items:center;gap:10px}
-.toast{padding:12px 20px;border-radius:8px;color:#fff;font-weight:500;box-shadow:0 5px 15px rgba(0,0,0,0.3);opacity:0;transform:translateY(-20px);animation:slide-in .3s ease forwards}
-.toast.success{background-color:var(--success)}
-.toast.error{background-color:var(--primary)}
-.toast.info{background-color:#333}
-@keyframes slide-in{to{opacity:1;transform:translateY(0)}}
-@keyframes slide-out{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-20px)}}
-
-/* === Product Card Details === */
-.card .product-image{width:100%;height:150px;object-fit:cover;border-radius:12px;margin-bottom:15px;background-color:#1a1a1a}
-.card .product-description{font-size:0.9rem;color:var(--text-dark);margin-bottom:15px;min-height:40px}
