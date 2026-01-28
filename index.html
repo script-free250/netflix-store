@@ -6,96 +6,82 @@
     <title>Netflix Store | المتجر الرسمي</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
 </head>
 <body>
+
     <header>
-        <a href="#" class="logo">NETFLIX <span style="font-size:0.5em; color:#fff; font-weight:300;">STORE</span></a>
-        <!-- يمكن إضافة زر تواصل أو قائمة هنا مستقبلاً -->
+        <a href="#" class="logo">NETFLIX</a>
+        <div class="nav-links">
+            <span style="color:#888; font-size:0.9rem;"><i class="fas fa-shield-alt"></i> ضمان 100%</span>
+        </div>
     </header>
 
+    <section class="hero">
+        <div data-aos="fade-up">
+            <h2>شاهد ما تريد، وقتما تريد.</h2>
+            <p>اشتراكات أصلية بأسعار خيالية. ابدأ مشاهدة أفلامك ومسلسلاتك المفضلة الآن بأعلى جودة 4K.</p>
+        </div>
+    </section>
+
     <div class="container">
-        <!-- Hero Section -->
-        <div class="hero">
-            <h2>اشتراكاتك المفضلة، <span style="color:var(--primary);">فوراً.</span></h2>
-            <p>أرخص الأسعار، ضمان كامل طوال فترة الاشتراك، ودعم فني تلقائي.</p>
-            <div style="margin-top:30px;">
-                <i class="fas fa-shield-alt" style="margin:0 10px; color:#666;"></i> آمن 100%
-                <i class="fas fa-bolt" style="margin:0 10px; color:#666;"></i> تسليم فوري
-            </div>
-        </div>
-
-        <!-- Products Section -->
-        <div style="display:flex; align-items:center; gap:12px; margin-top:40px; margin-bottom:20px; padding-right:10px;">
-            <div style="width:5px; height:30px; background:var(--primary); border-radius:5px;"></div>
-            <h3 style="margin:0; font-size:1.5rem;">أحدث الباقات</h3>
-        </div>
-        
+        <h3 style="margin-bottom: 30px; font-size: 1.8rem;" data-aos="fade-right">💎 الباقات المتاحة</h3>
         <div id="products-container" class="grid">
-            <div class="loader"></div>
-        </div>
-
-        <!-- Orders Widget -->
-        <div class="my-orders-section">
-            <div class="my-orders-header" style="display:flex; align-items:center; gap:10px; margin-bottom:25px;">
-                <i class="fas fa-history" style="font-size:1.4rem; color:var(--primary);"></i>
-                <h3 style="margin:0; font-size:1.4rem;">سجل طلباتك الأخيرة</h3>
             </div>
-            <div id="my-orders-list"></div>
+    </div>
+
+    <div class="container" style="padding-top:0;">
+        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+            <div class="card" data-aos="zoom-in" data-aos-delay="100">
+                <i class="fas fa-bolt" style="font-size:2rem; color:var(--primary);"></i>
+                <h4>تسليم سريع</h4>
+                <p style="font-size:0.8rem; color:#888;">يتم تفعيل طلبك فور التأكد من الدفع</p>
+            </div>
+            <div class="card" data-aos="zoom-in" data-aos-delay="200">
+                <i class="fas fa-headset" style="font-size:2rem; color:var(--primary);"></i>
+                <h4>دعم 24/7</h4>
+                <p style="font-size:0.8rem; color:#888;">متواجدون دائماً لمساعدتك</p>
+            </div>
+            <div class="card" data-aos="zoom-in" data-aos-delay="300">
+                <i class="fas fa-check-double" style="font-size:2rem; color:var(--primary);"></i>
+                <h4>ضمان كامل</h4>
+                <p style="font-size:0.8rem; color:#888;">تعويض فوري في حال حدوث مشكلة</p>
+            </div>
         </div>
     </div>
 
-    <!-- Purchase Modal -->
-    <div id="buyModal" class="modal">
-        <div class="modal-content">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px; border-bottom:1px solid #333; padding-bottom:15px;">
-                <h3 style="margin:0; font-size:1.3rem;">إتمام الطلب 🛒</h3>
-                <span class="close" onclick="closeModal()">&times;</span>
+    <div class="orders-sidebar" data-aos="fade-up">
+        <h4 style="margin:0 0 15px 0; border-bottom:1px solid #333; padding-bottom:10px;">
+            <i class="fas fa-history"></i> طلباتك الأخيرة
+        </h4>
+        <div id="my-orders-list" style="max-height: 200px; overflow-y: auto;">
             </div>
-            
-            <div style="text-align:center; margin-bottom:20px;">
-                <p style="color:#aaa; font-size:0.9rem;">المنتج المختار</p>
-                <h4 id="modal-product-name" style="color:var(--primary); font-size:1.2rem; margin:5px 0;"></h4>
-            </div>
-            
-            <form id="purchaseForm" onsubmit="submitOrder(event)">
+    </div>
+
+    <div id="buyModal" class="modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:2000; padding:20px; overflow-y:auto;">
+        <div class="modal-content" style="max-width:500px; margin:50px auto; background:#181818; padding:30px; border-radius:20px; border:1px solid #333;">
+            <h2 id="modal-product-name">شراء اشتراك</h2>
+            <form id="orderForm" onsubmit="submitOrder(event)">
                 <input type="hidden" id="modal-product-id" name="productId">
-                
-                <div class="form-group">
-                    <label>رقم المحفظة (فودافون كاش)</label>
-                    <div style="position:relative;">
-                        <i class="fas fa-mobile-alt" style="position:absolute; right:15px; top:18px; color:#666;"></i>
-                        <input type="text" name="userPhone" class="form-input" placeholder="010xxxxxxx" style="padding-right:45px;" required>
-                    </div>
+                <div style="margin-bottom:20px;">
+                    <label>رقم هاتفك (للتواصل)</label>
+                    <input type="text" name="userPhone" class="btn" style="background:#000; border:1px solid #333; text-align:right;" placeholder="010xxxxxxxx" required>
                 </div>
-
-                <div class="form-group">
-                    <label>إيصال التحويل</label>
-                    <label class="file-upload-wrapper" for="receipt-file">
-                        <div class="upload-content">
-                            <i class="fas fa-cloud-upload-alt" style="font-size:2rem; margin-bottom:10px;"></i>
-                            <span id="file-label-text" style="display:block;">اضغط لإرفاق الصورة</span>
-                        </div>
-                        <input type="file" id="receipt-file" name="receipt" accept="image/*" required onchange="updateFileName(this)">
-                    </label>
+                <div style="margin-bottom:20px;">
+                    <label>إيصال التحويل (فودافون كاش)</label>
+                    <input type="file" name="receipt" accept="image/*" required style="margin-top:10px;">
                 </div>
-
-                <button type="submit" class="btn">
-                    <i class="fas fa-check-circle"></i> تأكيد الطلب
-                </button>
+                <button type="submit" class="btn">🚀 تأكيد الطلب</button>
+                <button type="button" onclick="closeModal()" class="btn" style="background:transparent; border:1px solid #444;">إلغاء</button>
             </form>
         </div>
     </div>
 
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script src="script.js"></script>
     <script>
+        AOS.init({ duration: 1000, once: true });
         window.onload = loadProducts;
-        function updateFileName(input) {
-            const label = document.getElementById('file-label-text');
-            if(input.files && input.files[0]) {
-                label.innerHTML = `<span style="color:#46d369; font-weight:bold;">${input.files[0].name}</span>`;
-                document.querySelector('.file-upload-wrapper').style.borderColor = '#46d369';
-            }
-        }
     </script>
 </body>
 </html>
