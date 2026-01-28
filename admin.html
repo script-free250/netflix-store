@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | لوحة التحكم</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg-dark: #0f0f0f; --bg-panel: #1a1a1a; --border-color: #333; --text-muted: #888; }
+        body { background-color: #050505; margin: 0; font-family: 'Poppins', 'Cairo', sans-serif; }
+        .admin-layout { display: flex; min-height: 100vh; }
+        .sidebar { width: 280px; background: #000; border-left: 1px solid var(--border-color); padding: 25px; display: flex; flex-direction: column; position: fixed; top: 0; right: 0; height: 100%; z-index: 1000; box-shadow: -5px 0 20px rgba(0,0,0,0.5); }
+        .sidebar h2 { color: var(--primary); text-align: center; margin-bottom: 40px; letter-spacing: 2px; text-transform: uppercase; border-bottom: 2px solid #222; padding-bottom: 20px; }
+        .nav-item { color: #ccc; padding: 16px 20px; margin-bottom: 10px; cursor: pointer; border-radius: 10px; font-weight: 600; transition: 0.3s; display: flex; align-items: center; gap: 12px; }
+        .nav-item:hover { background: #222; color: #fff; transform: translateX(-5px); }
+        .nav-item.active { background: linear-gradient(90deg, rgba(229,9,20,0.1), transparent); color: var(--primary); border-right: 4px solid var(--primary); }
+        .content-area { margin-right: 280px; flex: 1; padding: 40px; background: #0a0a0a; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .section-header h3 { font-size: 1.8rem; margin: 0; color: #fff; }
+        .panel { background: var(--bg-panel); padding: 35px; border-radius: 16px; border: 1px solid var(--border-color); box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        .form-label { display: block; margin-bottom: 8px; color: #ccc; font-weight: bold; font-size: 0.9rem; }
+        .form-control { width: 100%; padding: 14px; background: #0f0f0f; border: 1px solid #333; color: white; border-radius: 8px; margin-bottom: 20px; transition: 0.3s; }
+        .form-control:focus { border-color: var(--primary); box-shadow: 0 0 10px rgba(229,9,20,0.1); }
+        .order-card { background: #161616; border-radius: 12px; padding: 20px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; transition: all 0.3s ease; border: 1px solid #222;}
+        .order-status-pending { border-right: 4px solid var(--warning); }
+        .order-status-approved { border-right: 4px solid var(--success); }
+        .order-info { flex-grow: 1; }
+        .order-info h4 { margin: 0 0 10px 0; font-size: 1.1rem; color: #fff; }
+        .order-meta { display: flex; flex-wrap: wrap; gap: 15px; font-size: 0.85rem; }
+        .meta-item { background: #222; padding: 4px 10px; border-radius: 4px; color: #aaa; display: flex; align-items: center; gap: 6px; }
+        .order-actions { display: flex; align-items: center; gap: 20px; }
+        .receipt-thumb { width: 70px; height: 70px; object-fit: cover; border-radius: 8px; border: 1px solid #444; cursor: pointer; transition: 0.3s; }
+        .receipt-thumb:hover { transform: scale(1.1); border-color: #fff; }
+    </style>
+</head>
+<body>
+    <script>
+        if (sessionStorage.getItem('isAdminAuthenticated') !== 'true') window.location.href = 'admin_login.html';
+        function adminLogout() { sessionStorage.removeItem('isAdminAuthenticated'); window.location.href = 'admin_login.html'; }
+    </script>
+    <div class="admin-layout">
+        <div class="sidebar">
+            <h2>ADMIN PANEL</h2>
+            <div class="nav-item" onclick="showSection('orders', this)"><i class="fas fa-box-open"></i> <span>الطلبات</span></div>
+            <div class="nav-item" onclick="showSection('add-product', this)"><i class="fas fa-plus-square"></i> <span>إضافة منتج</span></div>
+            <div style="margin-top: auto;">
+                <a href="index.html" class="nav-item" style="text-decoration:none; color: #ccc;"><i class="fas fa-store"></i> <span>عودة للمتجر</span></a>
+                <div class="nav-item" onclick="adminLogout()" style="color: var(--primary);"><i class="fas fa-sign-out-alt"></i> <span>تسجيل الخروج</span></div>
+            </div>
+        </div>
+        <div class="content-area">
+            <div id="section-orders" style="display: none;">
+                <div class="section-header">
+                    <h3>📦 إدارة الطلبات</h3>
+                    <button class="btn" style="width:auto; padding:10px 25px;" onclick="loadAdminOrders()"><i class="fas fa-sync-alt"></i> تحديث</button>
+                </div>
+                <div id="orders-list"><div class="loader"></div></div>
+            </div>
+            <div id="section-add-product" style="display: none;">
+                <div class="section-header"><h3>➕ إضافة منتج جديد</h3></div>
+                <div class="panel">
+                    <form id="addProductForm" onsubmit="addProduct(event)">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div><label class="form-label">نوع المنتج</label><select name="type" id="p-type" class="form-control" onchange="toggleProductFields()"><option value="netflix-user">بروفايل</option><option value="netflix-full">حساب كامل</option></select></div>
+                            <div><label class="form-label">السعر (ج.م)</label><input type="number" name="price" class="form-control" required></div>
+                        </div>
+                        <label class="form-label">اسم المنتج للعرض</label><input type="text" name="name" class="form-control" placeholder="مثال: اشتراك شهر 4K" required>
+                        
+                        <!-- ## بداية الإضافة: حقل تفاصيل المنتج ## -->
+                        <label class="form-label">تفاصيل المنتج (الوصف)</label>
+                        <textarea name="description" class="form-control" rows="3" placeholder="اكتب هنا تفاصيل المنتج التي ستظهر للمشتري عند استلام الطلب..."></textarea>
+                        <!-- ## نهاية الإضافة ## -->
+
+                        <div id="fields-full" style="display:none;"><label class="form-label">بيانات الحساب:</label><input type="email" name="accountEmail" class="form-control" placeholder="Email"><input type="text" name="accountPassword" class="form-control" placeholder="Password"></div>
+                        <div id="fields-user"><label class="form-label">بيانات البروفايل:</label><input type="text" name="profileName" class="form-control" placeholder="اسم البروفايل"><input type="text" name="profilePin" class="form-control" placeholder="PIN"><label class="form-label">صورة البروفايل:</label><input type="file" name="profileImage" class="form-control" accept="image/*"></div>
+                        <button type="submit" class="btn">🚀 نشر المنتج</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
