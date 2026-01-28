@@ -11,14 +11,13 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- ## بداية الإضافة: حاوية الإشعارات ## -->
-    <div id="notification-container" class="notification-container"></div>
-    <!-- ## نهاية الإضافة ## -->
+    <!-- NEW: Notification Container -->
+    <div id="notification-container"></div>
 
     <header>
         <a href="index.html" class="logo">NETFLIX <span style="font-size:0.5em; color:var(--text-light); font-weight:300;">STORE</span></a>
         <div id="user-session">
-            <!-- سيتم ملء هذا الجزء عبر script.js -->
+            <!-- Dynamic user session UI will be injected here -->
         </div>
     </header>
 
@@ -27,35 +26,45 @@
             <h2>اشتراكاتك المفضلة، فوراً.</h2>
             <p>أرخص الأسعار، ضمان كامل، ودعم فني على مدار الساعة.</p>
         </div>
+
         <div class="section-title">
             <i class="fas fa-fire"></i>
             <h3>الباقات المتاحة</h3>
         </div>
+        
         <div id="products-container" class="grid">
             <div class="loader"></div>
         </div>
+
         <div class="my-orders-section">
             <div class="section-title">
                 <i class="fas fa-history"></i>
                 <h3>سجل طلباتك</h3>
             </div>
             <div id="my-orders-list" style="margin-top:20px;">
-                <!-- سيتم ملء الطلبات هنا بواسطة script.js -->
+                <!-- User's orders will be injected here -->
             </div>
         </div>
     </div>
 
+    <!-- UPDATED: Buy Modal -->
     <div id="buyModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
                 <h3>إكمال الطلب 🛒</h3>
                 <span class="close" onclick="closeModal()">&times;</span>
             </div>
-            <p style="color:var(--text-dark); font-size:0.9rem; margin-bottom:25px;">
+            
+            <p style="color:var(--text-dark); font-size:0.9rem; margin-bottom:10px;">
                 أنت على وشك شراء: <span id="modal-product-name" style="color:var(--primary); font-weight:bold;"></span>
             </p>
+            
+            <!-- NEW: Product Description in Modal -->
+            <div id="modal-product-description"></div>
+
             <form id="purchaseForm" onsubmit="submitOrder(event)">
                 <input type="hidden" id="modal-product-id" name="productId">
+                
                 <div class="form-group">
                     <label>رقم المحفظة (فودافون كاش)</label>
                     <div style="position:relative;">
@@ -63,6 +72,7 @@
                         <input type="text" name="userPhone" class="form-input" placeholder="010xxxxxxxx" style="padding-right:45px;" required>
                     </div>
                 </div>
+
                 <div class="form-group">
                     <label>إيصال التحويل</label>
                     <label class="file-upload-wrapper" for="receipt-file">
@@ -73,13 +83,14 @@
                         <input type="file" id="receipt-file" name="receipt" accept="image/*" required onchange="updateFileName(this)">
                     </label>
                 </div>
+
                 <button type="submit" class="btn">
                     <i class="fas fa-check-circle"></i> تأكيد الشراء
                 </button>
             </form>
         </div>
     </div>
-    
+
     <script src="script.js"></script>
     <script>
         function updateFileName(input) {
@@ -93,6 +104,7 @@
                 uploadContent.style.color = "var(--text-muted)";
             }
         }
+
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
@@ -102,9 +114,11 @@
                 }
             });
         }, { threshold: 0.1 });
+
         document.addEventListener('DOMContentLoaded', () => {
              document.querySelectorAll('.section-title, .my-orders-section').forEach(el => {
-                el.style.opacity = 0; el.style.transform = 'translateY(30px)';
+                el.style.opacity = 0;
+                el.style.transform = 'translateY(30px)';
                 el.style.transition = 'opacity 0.8s ease-out, transform 0.8s ease-out';
                 observer.observe(el);
             });
