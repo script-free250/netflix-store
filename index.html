@@ -3,52 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Netflix Store | عالم الترفيه</title>
+    <title>Netflix Store | عالم الترفيه بين يديك</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
 </head>
 <body>
 
-    <header>
-        <div class="logo"><i class="fas fa-play-circle"></i> نيتفليكس ستور</div>
-        <nav>
-            <a href="track.html" style="color: white; text-decoration: none; font-weight: 600;">
-                <i class="fas fa-truck"></i> تتبع طلبك
-            </a>
-        </nav>
+    <header data-aos="fade-down">
+        <a href="#" class="logo">NETFLIX <span style="font-weight:300; color:#fff; font-size:0.6em;">STORE</span></a>
+        <div id="status-badge" style="font-size: 0.8rem; color: #46d369;"><i class="fas fa-circle"></i> المتجر متصل</div>
     </header>
 
-    <section class="hero">
-        <h1 data-aos="fade-up">اشتراكات نيتفليكس الأصلية</h1>
-        <p data-aos="fade-up" data-aos-delay="200">بأسعار خيالية وضمان كامل طوال فترة الاشتراك</p>
-    </section>
-
     <div class="container">
-        <div id="products-container" class="products-grid">
+        <section class="hero" data-aos="zoom-in">
+            <h2>اشترك في نتفليكس بضغطة واحدة</h2>
+            <p>حسابات رسمية، تسليم فوري، وأقل الأسعار في السوق.</p>
+        </section>
+
+        <div class="grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 50px;">
+            <div class="card" style="padding: 20px;" data-aos="fade-up" data-aos-delay="100">
+                <i class="fas fa-bolt" style="color:var(--primary); font-size: 2rem;"></i>
+                <h4>تسليم سريع</h4>
             </div>
+            <div class="card" style="padding: 20px;" data-aos="fade-up" data-aos-delay="200">
+                <i class="fas fa-shield-alt" style="color:var(--primary); font-size: 2rem;"></i>
+                <h4>ضمان كامل</h4>
+            </div>
+            <div class="card" style="padding: 20px;" data-aos="fade-up" data-aos-delay="300">
+                <i class="fas fa-headset" style="color:var(--primary); font-size: 2rem;"></i>
+                <h4>دعم 24/7</h4>
+            </div>
+        </div>
+
+        <h3 style="text-align: center; font-size: 2rem;" data-aos="fade-right">اكتشف باقاتنا 👇</h3>
+        <div id="products-container" class="grid">
+            </div>
+
+        <div id="orders-widget" class="card" style="margin-top: 60px; text-align: right;" data-aos="fade-up">
+            <h3><i class="fas fa-history"></i> طلباتك الأخيرة</h3>
+            <div id="my-orders-list"></div>
+        </div>
     </div>
 
-    <div id="buy-modal" class="modal">
-        <div class="modal-content">
-            <button onclick="closeBuyModal()" style="position:absolute; top:20px; left:20px; background:none; border:none; color:white; font-size:1.5rem; cursor:pointer;">&times;</button>
-            <h2 id="modal-product-name" style="margin-top:0;">تأكيد الاشتراك</h2>
-            <form id="purchase-form" onsubmit="handlePurchase(event)">
-                <input type="hidden" id="modal-p-id">
-                <input type="hidden" id="modal-p-name">
+    <div id="buyModal" class="modal">
+        <div class="modal-content" style="background:#111; border-radius:20px; padding:30px;">
+            <h3 id="modal-product-name" style="color:var(--primary);"></h3>
+            <form onsubmit="submitOrder(event)">
+                <input type="hidden" id="modal-product-id" name="productId">
+                <input type="hidden" id="modal-product-hidden-name" name="productName">
                 
                 <div style="margin-bottom:20px;">
                     <label>رقم الواتساب الخاص بك</label>
-                    <input type="text" name="userPhone" class="btn" style="background:#222; text-align:right;" placeholder="010xxxxxxxx" required>
+                    <input type="text" name="userPhone" class="btn" style="background:#222; width:100%; text-align:right;" placeholder="010xxxxxxxx" required>
                 </div>
 
                 <div style="margin-bottom:20px;">
-                    <label>إرفاق صورة التحويل (فودافون كاش)</label>
-                    <input type="file" name="receipt" accept="image/*" required style="margin-top:10px;">
+                    <label>ارفق صورة التحويل</label>
+                    <input type="file" name="receipt" accept="image/*" required>
                 </div>
 
-                <button type="submit" class="btn">🚀 إتمام الطلب الآن</button>
+                <button type="submit" class="btn" style="width:100%;">تأكيد الطلب</button>
             </form>
+            <button onclick="closeModal()" style="background:none; border:none; color:#555; margin-top:15px; cursor:pointer;">إلغاء</button>
         </div>
     </div>
 
