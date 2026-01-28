@@ -1,5 +1,5 @@
 // ✅ تأكد من تحديث الرابط عند تشغيل السيرفر
-const SERVER_URL = "https://hhjk-shop-final-v2.loca.lt";
+const SERVER_URL = "https://hhjk-shop-final-v2.loca.lt/"; // <--- غيّر هذا الرابط
 
 let productsData = []; 
 
@@ -35,7 +35,6 @@ async function handleRegister(event) {
     } catch (e) { errMsg.innerText = "فشل الاتصال."; } 
     finally { btn.disabled = false; btn.innerHTML = "إنشاء حساب"; }
 }
-
 async function handleLogin(event) {
     event.preventDefault();
     const form = event.target, btn = form.querySelector('button'), email = form.querySelector('#email').value, password = form.querySelector('#password').value, errMsg = form.querySelector('#error-message');
@@ -44,18 +43,16 @@ async function handleLogin(event) {
         const res = await fetch(`${SERVER_URL}/api/login`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) });
         const data = await res.json();
         if (res.ok && data.success) {
-            localStorage.setItem("authToken", data.token); localStorage.setItem("userEmail", data.email); localStorage.setItem("userName", data.name);
+            localStorage.setItem("authToken", data.token); localStorage.setItem("userName", data.name);
             window.location.href = "index.html";
         } else { errMsg.innerText = data.message; errMsg.style.display = "block"; }
     } catch (e) { errMsg.innerText = "فشل الاتصال."; } 
     finally { btn.disabled = false; btn.innerHTML = "دخول"; }
 }
-
 function logout() {
-    localStorage.removeItem("authToken"); localStorage.removeItem("userEmail"); localStorage.removeItem("userName");
+    localStorage.removeItem("authToken"); localStorage.removeItem("userName");
     window.location.href = "index.html";
 }
-
 function updateUserSessionUI() {
     const div = document.getElementById("user-session"); if (!div) return;
     const token = localStorage.getItem("authToken"), name = localStorage.getItem("userName");
@@ -66,7 +63,6 @@ function updateUserSessionUI() {
         div.innerHTML = `<div style="display:flex;gap:10px;"><a href="login.html" class="btn-outline">دخول</a><a href="register.html" class="btn" style="width:auto;padding:10px 20px;margin:0;">حساب جديد</a></div>`;
     }
 }
-
 /* =================================================================
    🛒 2. دوال المتجر والشراء
    ================================================================= */
@@ -80,24 +76,16 @@ async function loadProducts() {
         container.innerHTML = "";
         if (productsData.length === 0) { container.innerHTML = "<p>لا توجد منتجات حالياً.</p>"; return; }
         
-        productsData.forEach((p, index) => {
+        productsData.forEach((p) => {
             const card = document.createElement("div");
             card.className = "card";
-            card.style.animationDelay = `${100 * index}ms`;
-
-            const isOutOfStock = p.type === 'netflix-full' && p.availableStock === 0;
-            const stockDisplay = p.type === 'netflix-full' ? `(${p.availableStock} متاح)` : '';
+            const isOutOfStock = p.type === 'netflix-user' && p.availableStock === 0;
+            const stockDisplay = p.type === 'netflix-user' ? `(${p.availableStock} متاح)` : '';
             const buyButton = isOutOfStock
                 ? `<button class="btn" disabled style="background-color: var(--text-muted); cursor: not-allowed;">نفد المخزون</button>`
                 : `<button class="btn" onclick="openBuyModal(${p.id})">شراء الآن</button>`;
 
-            card.innerHTML = `
-                <span class="tag">${p.type === 'netflix-user' ? "👤 بروفايل" : "💎 حساب كامل"} <span style="color:var(--text-muted); font-size:0.7rem;">${stockDisplay}</span></span>
-                <h3>${p.name}</h3>
-                <p class="product-description">${p.description || 'لا يتوفر وصف لهذا المنتج.'}</p>
-                <div style="flex-grow:1;"></div>
-                <span class="price">${p.price} ج.م</span>
-                ${buyButton}`;
+            card.innerHTML = `<span class="tag">${p.type === 'netflix-user' ? "👤 بروفايل" : "💎 حساب كامل"} <span style="color:var(--text-muted); font-size:0.7rem;">${stockDisplay}</span></span><h3>${p.name}</h3><p class="product-description">${p.description || 'لا يتوفر وصف.'}</p><div style="flex-grow:1;"></div><span class="price">${p.price} ج.م</span>${buyButton}`;
             container.appendChild(card);
         });
     } catch (e) {
@@ -105,24 +93,38 @@ async function loadProducts() {
         container.innerHTML = "<p>حدث خطأ أثناء تحميل الباقات. يرجى المحاولة لاحقاً.</p>";
     }
 }
-
-function openBuyModal(productId) {
+async function loadMyOrdersWidget() {
+    const section = document.getElementById("my-orders-list"); if (!section) return;
     const token = localStorage.getItem("authToken");
-    if (!token) {
-        showNotification("يجب تسجيل الدخول أولاً لإتمام الشراء.", "info");
-        setTimeout(() => { window.location.href = "login.html"; }, 2500);
-        return;
+    if (!token) { section.innerHTML = '<p>يرجى <a href="login.html">تسجيل الدخول</a> لعرض طلباتك.</p>'; return; }
+    section.innerHTML = '<div class="loader"></div>';
+    try {
+        const res = await fetch(`${SERVER_URL}/api/my-orders`, { headers: { Authorization: `Bearer ${token}` } });
+        if (!res.ok) throw new Error("Failed to fetch user orders");
+        let orders = await res.json();
+        orders.reverse(); section.innerHTML = "";
+        if (!orders.length) { section.innerHTML = "<p>لا توجد طلبات سابقة.</p>"; return; }
+        orders.forEach(o => {
+            const statusMap = { 'approved': 'جاهز للعرض', 'completed': 'مكتمل', 'pending': 'قيد المراجعة'};
+            const card = document.createElement("div");
+            card.className = "order-mini-card";
+            card.setAttribute("onclick", `window.location.href='track.html?id=${o.orderId}'`);
+            card.innerHTML = `<div><strong>${o.productName}</strong><br><span style="font-family:monospace; color:var(--text-muted);">#${o.orderId}</span></div><span class="order-status ${o.status}">${statusMap[o.status]}</span>`;
+            section.appendChild(card);
+        });
+    } catch (e) { 
+        console.error("Failed to load my orders widget:", e);
+        section.innerHTML = "<p>خطأ في جلب الطلبات.</p>";
     }
+}
+function openBuyModal(productId) {
     const product = productsData.find(p => p.id === productId);
-    if (!product) {
-        showNotification("عذراً، المنتج المحدد غير موجود.", "error"); return;
-    }
+    if (!product) { showNotification("عذراً، المنتج المحدد غير موجود.", "error"); return; }
     document.getElementById("buyModal").style.display = "block";
     document.getElementById("modal-product-name").innerText = product.name;
     document.getElementById("modal-product-id").value = product.id;
     document.getElementById("modal-product-description").innerText = product.description || 'لا يتوفر وصف لهذا المنتج.';
 }
-
 function closeModal() { document.getElementById("buyModal").style.display = "none"; }
 
 async function submitOrder(e) {
@@ -146,33 +148,8 @@ async function submitOrder(e) {
     finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-check-circle"></i> تأكيد الشراء'; }
 }
 
-async function loadMyOrdersWidget() {
-    const section = document.getElementById("my-orders-list"); if (!section) return;
-    const token = localStorage.getItem("authToken");
-    if (!token) { section.innerHTML = '<p>يرجى <a href="login.html">تسجيل الدخول</a> لعرض طلباتك.</p>'; return; }
-    section.innerHTML = '<div class="loader"></div>';
-    try {
-        const res = await fetch(`${SERVER_URL}/api/my-orders`, { headers: { Authorization: `Bearer ${token}` } });
-        if (!res.ok) throw new Error("Failed to fetch user orders");
-        let orders = await res.json();
-        orders.reverse(); section.innerHTML = "";
-        if (!orders.length) { section.innerHTML = "<p>لا توجد طلبات سابقة.</p>"; return; }
-        orders.forEach(o => {
-            let statusText = o.status === 'approved' ? "جاهز للعرض" : (o.status === 'completed' ? "مكتمل" : "قيد المراجعة");
-            const card = document.createElement("div");
-            card.className = "order-mini-card";
-            card.setAttribute("onclick", `window.location.href='track.html?id=${o.orderId}'`);
-            card.innerHTML = `<div><strong>${o.productName}</strong><br><span style="font-family:monospace; color:var(--text-muted);">#${o.orderId}</span></div><span class="order-status ${o.status}">${statusText}</span>`;
-            section.appendChild(card);
-        });
-    } catch (e) { 
-        console.error("Failed to load my orders widget:", e);
-        section.innerHTML = "<p>خطأ في جلب الطلبات.</p>";
-    }
-}
-
 /* =================================================================
-   🔧 3. دوال لوحة الأدمن (النسخة الكاملة)
+   🔧 3. دوال لوحة الأدمن
    ================================================================= */
 function showSection(id, el) {
     document.querySelectorAll(".content-area > div").forEach(s => s.style.display = "none");
@@ -186,7 +163,7 @@ function toggleProductFields() {
     const type = document.getElementById("p-type").value;
     document.getElementById("fields-full").style.display = type === 'netflix-full' ? "block" : "none";
     document.getElementById("fields-user").style.display = type === 'netflix-user' ? "block" : "none";
-    if (type === 'netflix-full') { generateStockInputs(); }
+    if (type === 'netflix-user') { generateStockInputs(); }
 }
 
 async function addProduct(e) {
@@ -199,7 +176,7 @@ async function addProduct(e) {
         const data = await res.json();
         if (data.success) {
             showNotification("✅ تم نشر المنتج بنجاح!", "success"); e.target.reset();
-            document.getElementById('stock-accounts-container').innerHTML = '';
+            document.getElementById('stock-items-container').innerHTML = '';
             generateStockInputs();
         } else { showNotification(data.message || "فشل نشر المنتج.", "error"); }
     } catch (err) { showNotification("خطأ في الاتصال بالسيرفر.", "error"); } 
@@ -221,12 +198,13 @@ async function loadAdminOrders() {
         }
         orders.forEach(o => {
             const receiptUrl = o.receiptImage ? `${SERVER_URL}${o.receiptImage}` : "";
-            const receiptHtml = receiptUrl ? `<a href="${receiptUrl}" target="_blank"><img src="${receiptUrl}" class="receipt-thumb"></a>` : "<div class='receipt-thumb' style='background:#111; display:flex; align-items:center; justify-content:center; color:var(--text-muted); font-size:0.8rem;'>لا يوجد</div>";
-            const actionBtn = o.status === 'pending' ? `<button class="btn" style="width:auto; padding: 8px 16px; font-size:0.9rem; margin:0;" onclick="approve(${o.orderId}, this)">تفعيل</button>` : `<span style="color:var(--success); font-weight:bold;">${o.status === 'completed' ? "مكتمل" : "مُفعّل"}</span>`;
+            const receiptHtml = receiptUrl ? `<a href="${receiptUrl}" target="_blank"><img src="${SERVER_URL}${o.receiptImage}" class="receipt-thumb"></a>` : "<div class='receipt-thumb' style='background:#111; display:flex; align-items:center; justify-content:center; color:var(--text-muted); font-size:0.8rem;'>لا يوجد</div>";
+            const actionBtn = o.status === 'pending' ? `<button class="btn" style="width:auto; padding: 8px 16px; font-size:0.9rem; margin:0;" onclick="approve(${o.orderId}, this)">تفعيل</button>` : `<span style="color:var(--success); font-weight:bold;">مُفعّل</span>`;
+            
             const card = document.createElement('div');
             card.className = `order-card order-status-${o.status}`;
             card.id = `order-${o.orderId}`;
-            card.innerHTML = `<div class="order-info"><h4>${o.productName}</h4><div class="order-meta"><span class="meta-item"><i class="fas fa-id-card"></i> #${o.orderId}</span><span class="meta-item"><i class="fas fa-user"></i> ID: ${o.userId}</span><span class="meta-item"><i class="fas fa-mobile-alt"></i> ${o.userPhone}</span></div></div><div class="order-actions">${receiptHtml}<div style="text-align:center;">${actionBtn}</div></div>`;
+            card.innerHTML = `<div class="order-info"><h4>${o.productName}</h4><div class="order-meta"><span class="meta-item">#${o.orderId}</span><span class="meta-item">ID: ${o.userId}</span><span class="meta-item">${o.userPhone}</span></div></div><div class="order-actions">${receiptHtml}<div style="text-align:center;">${actionBtn}</div></div>`;
             container.appendChild(card);
         });
     } catch (e) {
@@ -256,14 +234,22 @@ async function approve(id, el) {
 }
 
 function generateStockInputs() {
-    const container = document.getElementById('stock-accounts-container'); if (!container) return;
+    const container = document.getElementById('stock-items-container'); if (!container) return;
     const quantity = parseInt(document.getElementById('p-stock-quantity').value, 10);
     if (isNaN(quantity) || quantity < 1) { container.innerHTML = ''; return; }
     container.innerHTML = '';
     for (let i = 0; i < quantity; i++) {
         const itemDiv = document.createElement('div');
-        itemDiv.className = 'stock-account-item';
-        itemDiv.innerHTML = `<label class="form-label" style="font-size: 0.8rem; color: #888;">حساب رقم ${i + 1}</label><div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;"><input type="email" name="accounts[${i}][email]" class="form-control" placeholder="Email" required><input type="text" name="accounts[${i}][password]" class="form-control" placeholder="Password" required></div>`;
+        itemDiv.className = 'stock-item';
+        itemDiv.innerHTML = `
+            <label class="form-label" style="font-size: 0.8rem; color: #888;">بروفايل رقم ${i + 1}</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <input type="text" name="stock[${i}][profileName]" class="form-control" placeholder="اسم البروفايل" required>
+                <input type="text" name="stock[${i}][profilePin]" class="form-control" placeholder="PIN" required>
+            </div>
+            <label class="form-label">صورة البروفايل (اختياري)</label>
+            <input type="file" name="stockImages" class="form-control" accept="image/*">
+        `;
         container.appendChild(itemDiv);
     }
 }
@@ -282,7 +268,23 @@ async function searchOrder(event) {
         if (!res.ok) { resultContainer.innerHTML = `<p style="color:var(--primary); text-align:center;">${data.message || 'خطأ'}</p>`; return; }
         const formatDate = (dateString) => new Date(dateString).toLocaleString('ar-EG', { dateStyle: 'full', timeStyle: 'short' });
         document.getElementById('search-modal-title').innerText = `تفاصيل الطلب #${data.order.orderId}`;
-        resultContainer.innerHTML = `<div style="display:flex; flex-direction:column; gap:8px;"><h4><i class="fas fa-box" style="color:var(--primary);"></i> تفاصيل المنتج</h4><div class="info-row"><span class="info-label">اسم المنتج</span><span class="info-value">${data.order.productName}</span></div><div class="info-row"><span class="info-label">الحالة</span><span class="info-value">${data.order.status}</span></div>${data.order.assignedAccount ? `<div class="info-row"><span class="info-label">الإيميل المسلم</span><span class="info-value">${data.order.assignedAccount.email}</span></div><div class="info-row"><span class="info-label">الباسورد المسلم</span><span class="info-value">${data.order.assignedAccount.password}</span></div>` : ''}<h4 style="margin-top:20px;"><i class="fas fa-user" style="color:var(--primary);"></i> تفاصيل المشتري</h4><div class="info-row"><span class="info-label">اسم المشتري</span><span class="info-value">${data.user.name}</span></div><div class="info-row"><span class="info-label">إيميل المشتري</span><span class="info-value">${data.user.email}</span></div><div class="info-row"><span class="info-label">رقم الهاتف</span><span class="info-value">${data.order.userPhone}</span></div><h4 style="margin-top:20px;"><i class="fas fa-calendar-alt" style="color:var(--primary);"></i> التواريخ</h4><div class="info-row"><span class="info-label">تاريخ الشراء</span><span class="info-value">${formatDate(data.order.createdAt)}</span></div>${data.order.approvedAt ? `<div class="info-row"><span class="info-label">تاريخ التفعيل</span><span class="info-value">${formatDate(data.order.approvedAt)}</span></div>` : ''}</div>`;
+        resultContainer.innerHTML = `
+            <div style="display:flex; flex-direction:column; gap:8px;">
+                <h4><i class="fas fa-box"></i> تفاصيل المنتج</h4>
+                <div class="info-row"><span class="info-label">اسم المنتج</span><span class="info-value">${data.order.productName}</span></div>
+                <div class="info-row"><span class="info-label">الحالة</span><span class="info-value">${data.order.status}</span></div>
+                ${data.order.assignedProfile ? `
+                    <div class="info-row"><span class="info-label">البروفايل</span><span class="info-value">${data.order.assignedProfile.profileName}</span></div>
+                    <div class="info-row"><span class="info-label">PIN</span><span class="info-value">${data.order.assignedProfile.profilePin}</span></div>
+                ` : ''}
+                <h4 style="margin-top:20px;"><i class="fas fa-user"></i> تفاصيل المشتري</h4>
+                <div class="info-row"><span class="info-label">اسم المشتري</span><span class="info-value">${data.user.name}</span></div>
+                <div class="info-row"><span class="info-label">إيميل المشتري</span><span class="info-value">${data.user.email}</span></div>
+                <div class="info-row"><span class="info-label">رقم الهاتف</span><span class="info-value">${data.order.userPhone}</span></div>
+                <h4 style="margin-top:20px;"><i class="fas fa-calendar-alt"></i> التواريخ</h4>
+                <div class="info-row"><span class="info-label">تاريخ الشراء</span><span class="info-value">${formatDate(data.order.createdAt)}</span></div>
+                ${data.order.approvedAt ? `<div class="info-row"><span class="info-label">تاريخ التفعيل</span><span class="info-value">${formatDate(data.order.approvedAt)}</span></div>` : ''}
+            </div>`;
     } catch (e) { resultContainer.innerHTML = `<p style="color:var(--primary); text-align:center;">فشل الاتصال بالسيرفر.</p>`; }
 }
 
@@ -305,9 +307,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loadAdminOrders();
         toggleProductFields();
     }
-    // No need to handle track.html here as its script is self-contained within initTrackPage
-    // which is not defined in this file. But if it were, it would be here.
-
+    
     window.onclick = function (event) {
         if (event.target == document.getElementById("buyModal")) closeModal();
         if (event.target == document.getElementById("searchResultModal")) closeSearchModal();
