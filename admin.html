@@ -3,41 +3,124 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم | Admin</title>
+    <title>لوحة التحكم | Admin Dashboard</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* تنسيقات خاصة بالأدمن فقط */
+        body { display: flex; min-height: 100vh; overflow-x: hidden; }
+        .sidebar {
+            width: 250px; background: #000; border-left: 1px solid #333;
+            padding: 20px; display: flex; flex-direction: column; position: fixed; height: 100%; right: 0;
+        }
+        .sidebar h2 { color: var(--primary); text-align: center; margin-bottom: 40px; }
+        .nav-item {
+            color: #aaa; padding: 15px; margin-bottom: 10px; cursor: pointer; border-radius: 8px; transition: 0.3s;
+        }
+        .nav-item:hover, .nav-item.active { background: #333; color: white; }
+        .nav-item i { margin-left: 10px; }
+        
+        .main-content {
+            margin-right: 250px; flex: 1; padding: 40px; width: 100%;
+        }
+        .panel { background: #1a1a1a; padding: 30px; border-radius: 12px; margin-bottom: 30px; border: 1px solid #333; }
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; margin-bottom: 5px; color: #ccc; }
+        .form-control {
+            width: 100%; padding: 12px; background: #222; border: 1px solid #444; color: white; border-radius: 6px;
+        }
+        .order-card {
+            background: #222; border-right: 4px solid var(--warning); padding: 15px; margin-bottom: 15px;
+            display: flex; justify-content: space-between; align-items: center; border-radius: 6px;
+        }
+        .order-card.approved { border-color: var(--success); }
+        .refresh-btn { background: #333; border: none; color: white; padding: 5px 10px; cursor: pointer; border-radius: 4px; float: left; }
+    </style>
 </head>
-<body style="background:#111;">
-    <header style="background:#000;">
-        <h1>لوحة تحكم الأدمن 🛠</h1>
-    </header>
+<body>
 
-    <div class="container">
-        <div class="admin-grid">
-            <!-- قسم إضافة المنتجات -->
-            <div class="panel">
-                <h3>➕ إضافة منتج جديد</h3>
-                <select id="p-type" class="input-field">
-                    <option value="netflix-user">نتفلكس يوزر (يتطلب كود)</option>
-                    <option value="netflix-full">نتفلكس حساب كامل (بدون كود)</option>
-                    <option value="other">حساب آخر</option>
-                </select>
-                <input type="text" id="p-name" class="input-field" placeholder="اسم المنتج (مثال: شاشة 4K)">
-                <input type="number" id="p-price" class="input-field" placeholder="السعر (ج.م)">
-                <input type="email" id="p-email" class="input-field" placeholder="البريد الإلكتروني للحساب">
-                <input type="text" id="p-pass" class="input-field" placeholder="كلمة المرور">
-                <button class="btn" onclick="addProduct()">إضافة للمتجر</button>
-            </div>
+    <!-- القائمة الجانبية -->
+    <div class="sidebar">
+        <h2>NETFLIX ADMIN</h2>
+        <div class="nav-item active" onclick="showSection('orders')">
+            <i class="fas fa-shopping-cart"></i> الطلبات الواردة
+        </div>
+        <div class="nav-item" onclick="showSection('add-product')">
+            <i class="fas fa-plus-circle"></i> إضافة منتج
+        </div>
+        <a href="index.html" class="nav-item" style="text-decoration:none;">
+            <i class="fas fa-external-link-alt"></i> معاينة المتجر
+        </a>
+    </div>
 
-            <!-- قسم الطلبات -->
+    <!-- المحتوى الرئيسي -->
+    <div class="main-content">
+        
+        <!-- قسم الطلبات -->
+        <div id="section-orders">
             <div class="panel">
-                <h3>🔔 الطلبات المعلقة <button onclick="loadOrders()" style="float:left; font-size:12px; cursor:pointer;">تحديث</button></h3>
+                <h3 style="margin-top:0;">📦 الطلبات المعلقة <button class="refresh-btn" onclick="loadOrders()"><i class="fas fa-sync"></i> تحديث</button></h3>
                 <div id="orders-list">
-                    <p>جاري التحميل...</p>
+                    <p style="color:#777;">جاري تحميل الطلبات...</p>
                 </div>
             </div>
         </div>
+
+        <!-- قسم إضافة منتج -->
+        <div id="section-add-product" style="display:none;">
+            <div class="panel">
+                <h3 style="margin-top:0;">➕ إضافة حساب جديد للمتجر</h3>
+                
+                <div class="input-group">
+                    <label>نوع المنتج</label>
+                    <select id="p-type" class="form-control">
+                        <option value="netflix-user">نتفلكس يوزر (مشترك - يتطلب كود)</option>
+                        <option value="netflix-full">نتفلكس حساب كامل (برايفيت)</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>اسم المنتج (كما سيظهر للعميل)</label>
+                    <input type="text" id="p-name" class="form-control" placeholder="مثال: شاشة 4K شهر">
+                </div>
+
+                <div class="input-group">
+                    <label>السعر (ج.م)</label>
+                    <input type="number" id="p-price" class="form-control" placeholder="50">
+                </div>
+
+                <div class="input-group">
+                    <label>البريد الإلكتروني للحساب</label>
+                    <input type="email" id="p-email" class="form-control" placeholder="user@example.com">
+                </div>
+
+                <div class="input-group">
+                    <label>كلمة المرور</label>
+                    <input type="text" id="p-pass" class="form-control" placeholder="Password123">
+                </div>
+
+                <button class="btn" onclick="addProduct()">نشر المنتج الآن</button>
+            </div>
+        </div>
+
     </div>
 
     <script src="script.js"></script>
+    <script>
+        // دالة التبديل بين الأقسام
+        function showSection(sectionId) {
+            document.getElementById('section-orders').style.display = 'none';
+            document.getElementById('section-add-product').style.display = 'none';
+            
+            document.getElementById('section-' + sectionId).style.display = 'block';
+
+            // تحديث القائمة النشطة
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+        }
+
+        // تحميل الطلبات عند الفتح
+        window.onload = loadOrders;
+    </script>
 </body>
 </html>
