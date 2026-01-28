@@ -3,62 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم | Admin</title>
+    <title>لوحة التحكم | الإدارة</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .admin-layout { display: none; flex: 1; margin-right: 280px; padding: 40px; }
-        .sidebar { width: 280px; background: #000; position: fixed; right: 0; top: 0; height: 100%; border-left: 1px solid #222; padding: 20px; }
-        .nav-item { padding: 15px; cursor: pointer; border-radius: 8px; margin-bottom: 5px; }
-        .nav-item:hover, .nav-item.active { background: var(--primary); color: #fff; }
+        .sidebar { width: 250px; background: #000; position: fixed; height: 100%; right: 0; padding: 20px; border-left: 1px solid #222; }
+        .main-content { margin-right: 250px; padding: 40px; }
+        .nav-item { padding: 15px; color: #888; cursor: pointer; display: block; transition: 0.3s; }
+        .nav-item.active { color: var(--primary); background: rgba(229,9,20,0.1); border-radius: 10px; }
     </style>
 </head>
 <body>
 
-    <div id="admin-login-overlay">
+    <div id="admin-login" class="admin-login-overlay">
         <div class="login-box">
-            <h2 style="color:var(--primary); font-size:2rem; margin-bottom:30px;">NETFLIX ADMIN</h2>
-            <input type="password" id="admin-pass" class="btn" style="background:#000; border:1px solid #333; margin-bottom:15px;" placeholder="كلمة المرور">
+            <i class="fas fa-lock" style="font-size: 3rem; color: var(--primary); margin-bottom: 20px;"></i>
+            <h2>دخول الإدارة</h2>
+            <input type="password" id="admin-pass" class="btn" style="background:#222; margin: 20px 0;" placeholder="أدخل كلمة السر">
             <button onclick="checkAdminLogin()" class="btn">دخول</button>
-            <p id="login-err" style="color:red; margin-top:10px; display:none;">كلمة المرور خاطئة!</p>
         </div>
     </div>
 
-    <div id="admin-content" style="display:none;">
+    <div id="admin-dashboard" style="display: none;">
         <div class="sidebar">
-            <h2 style="color:var(--primary); text-align:center;">لوحة التحكم</h2>
-            <div class="nav-item active" onclick="showSection('orders')"><i class="fas fa-shopping-cart"></i> الطلبات</div>
-            <div class="nav-item" onclick="showSection('add-product')"><i class="fas fa-plus"></i> إضافة منتج</div>
-            <div class="nav-item" onclick="adminLogout()" style="margin-top:50px; color:#ff4f58;"><i class="fas fa-sign-out-alt"></i> خروج</div>
+            <h2 style="color: var(--primary);">التحكم</h2>
+            <div class="nav-item active" onclick="showSection('orders')"><i class="fas fa-shopping-cart"></i> الطلبات الجديدة</div>
+            <div class="nav-item" onclick="showSection('add-product')"><i class="fas fa-plus-circle"></i> إضافة منتج</div>
+            <div class="nav-item" onclick="logoutAdmin()" style="margin-top: 50px; color: #ff4444;"><i class="fas fa-sign-out-alt"></i> خروج</div>
         </div>
 
-        <div class="admin-layout" id="section-orders" style="display:block;">
-            <h3>الطلبات الجديدة</h3>
-            <div id="admin-orders-container"></div>
-        </div>
+        <div class="main-content">
+            <div id="section-orders">
+                <h1>📦 إدارة الطلبات</h1>
+                <div id="admin-orders-list"></div>
+            </div>
 
-        <div class="admin-layout" id="section-add-product">
-            <h3>إضافة منتج جديد</h3>
-            <div class="card" style="text-align:right; max-width:600px;">
-                <form onsubmit="addProduct(event)">
+            <div id="section-add-product" style="display:none;">
+                <h1>✨ إضافة منتج جديد</h1>
+                <form onsubmit="handleAddProduct(event)" class="card" style="text-align: right; max-width: 600px;">
                     <label>اسم المنتج</label>
-                    <input type="text" name="name" class="btn" style="background:#000; border:1px solid #333;" required>
-                    <label>السعر</label>
-                    <input type="number" name="price" class="btn" style="background:#000; border:1px solid #333;" required>
-                    <label>النوع</label>
-                    <select name="type" id="p-type" class="btn" style="background:#000; border:1px solid #333;" onchange="toggleProductFields()">
-                        <option value="netflix-full">حساب كامل</option>
-                        <option value="netflix-user">بروفايل مشترك</option>
-                    </select>
+                    <input type="text" name="name" class="btn" style="background:#222; margin-bottom:15px;" required>
                     
+                    <label>السعر</label>
+                    <input type="number" name="price" class="btn" style="background:#222; margin-bottom:15px;" required>
+                    
+                    <label>النوع</label>
+                    <select name="type" id="p-type" class="btn" style="background:#222; margin-bottom:15px;" onchange="toggleProductFields()">
+                        <option value="netflix-full">حساب كامل (إيميل وباسورد)</option>
+                        <option value="netflix-user">شاشة داخل حساب (كود جلب)</option>
+                    </select>
+
                     <div id="fields-full">
-                        <label>إيميل الحساب</label>
-                        <input type="email" name="accountEmail" class="btn" style="background:#000; border:1px solid #333;">
-                        <label>كلمة المرور</label>
-                        <input type="text" name="accountPassword" class="btn" style="background:#000; border:1px solid #333;">
+                        <input type="text" name="email" placeholder="إيميل الحساب" class="btn" style="background:#222; margin-bottom:10px;">
+                        <input type="text" name="password" placeholder="باسورد الحساب" class="btn" style="background:#222;">
                     </div>
 
-                    <button type="submit" class="btn">حفظ المنتج</button>
+                    <button type="submit" class="btn" style="margin-top:20px;">نشر المنتج</button>
                 </form>
             </div>
         </div>
@@ -66,33 +66,21 @@
 
     <script src="script.js"></script>
     <script>
-        // التحقق من الجلسة عند التحميل
-        if(localStorage.getItem('admin_auth') === 'true') {
-            document.getElementById('admin-login-overlay').style.display = 'none';
-            document.getElementById('admin-content').style.display = 'block';
-            loadAdminOrders();
-        }
-
         function checkAdminLogin() {
             const pass = document.getElementById('admin-pass').value;
-            // كلمة السر هنا (يمكنك تغييرها)
-            if(pass === "admin123") {
-                localStorage.setItem('admin_auth', 'true');
-                location.reload();
+            if(pass === "123123") { // كلمة السر هنا (غيرها براحتك)
+                document.getElementById('admin-login').style.display = 'none';
+                document.getElementById('admin-dashboard').style.display = 'block';
+                loadAdminOrders();
             } else {
-                document.getElementById('login-err').style.display = 'block';
+                alert("كلمة السر غلط يا باشا!");
             }
         }
-
-        function adminLogout() {
-            localStorage.removeItem('admin_auth');
-            location.reload();
-        }
-
+        function logoutAdmin() { location.reload(); }
         function showSection(id) {
-            document.querySelectorAll('.admin-layout').forEach(s => s.style.display = 'none');
-            document.getElementById('section-' + id).style.display = 'block';
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById('section-orders').style.display = id === 'orders' ? 'block' : 'none';
+            document.getElementById('section-add-product').style.display = id === 'add-product' ? 'block' : 'none';
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             event.currentTarget.classList.add('active');
         }
     </script>
