@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم | Admin</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body style="background:#111;">
+    <header style="background:#000;">
+        <h1>لوحة تحكم الأدمن 🛠</h1>
+    </header>
+
+    <div class="container">
+        <div class="admin-grid">
+            <!-- قسم إضافة المنتجات -->
+            <div class="panel">
+                <h3>➕ إضافة منتج جديد</h3>
+                <select id="p-type" class="input-field">
+                    <option value="netflix-user">نتفلكس يوزر (يتطلب كود)</option>
+                    <option value="netflix-full">نتفلكس حساب كامل (بدون كود)</option>
+                    <option value="other">حساب آخر</option>
+                </select>
+                <input type="text" id="p-name" class="input-field" placeholder="اسم المنتج (مثال: شاشة 4K)">
+                <input type="number" id="p-price" class="input-field" placeholder="السعر (ج.م)">
+                <input type="email" id="p-email" class="input-field" placeholder="البريد الإلكتروني للحساب">
+                <input type="text" id="p-pass" class="input-field" placeholder="كلمة المرور">
+                <button class="btn" onclick="addProduct()">إضافة للمتجر</button>
+            </div>
+
+            <!-- قسم الطلبات -->
+            <div class="panel">
+                <h3>🔔 الطلبات المعلقة <button onclick="loadOrders()" style="float:left; font-size:12px; cursor:pointer;">تحديث</button></h3>
+                <div id="orders-list">
+                    <p>جاري التحميل...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
