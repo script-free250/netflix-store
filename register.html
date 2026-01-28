@@ -6,7 +6,7 @@
     <title>إنشاء حساب جديد</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="auth-style.css"> <!-- ملف تنسيق جديد -->
+    <link rel="stylesheet" href="auth-style.css">
 </head>
 <body>
     <div class="auth-container">
@@ -16,6 +16,13 @@
             <p class="auth-subtitle">انضم إلينا واستمتع بأفضل العروض.</p>
             
             <form id="registerForm" onsubmit="handleRegister(event)">
+                <!-- ## بداية التعديل: إضافة حقل الاسم ## -->
+                <div class="form-group">
+                    <label for="name">الاسم</label>
+                    <input type="text" id="name" class="form-control" required>
+                </div>
+                <!-- ## نهاية التعديل ## -->
+
                 <div class="form-group">
                     <label for="email">البريد الإلكتروني</label>
                     <input type="email" id="email" class="form-control" required>
