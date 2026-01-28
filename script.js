@@ -1,5 +1,5 @@
 // ✅ الرابط الثابت الذي قمنا بتفعيله
-const SERVER_URL = "https://netflix-store-hhjk.loca.lt";
+const SERVER_URL = "https://hhjk-store-v1.loca.lt/";
 
 // --- دوال الصفحة الرئيسية (للمستخدم) ---
 
