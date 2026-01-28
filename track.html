@@ -3,48 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>حالة الطلب</title>
+    <title>الحالة</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <header><a href="index.html" class="logo">NETFLIX</a></header>
     <div class="container">
         <div class="status-page-box">
-            
             <div id="pending-view">
-                <i class="fas fa-hourglass-half big-icon" style="color:var(--warning)"></i>
-                <h2>جاري مراجعة الطلب</h2>
-                <p>رقم الطلب: <span id="disp-id" style="color:var(--primary)"></span></p>
+                <h2>⏳ جاري المراجعة</h2>
+                <p>رقم الطلب: <span id="disp-id"></span></p>
                 <div class="loader"></div>
-                <p style="font-size:0.9rem; color:#777; margin-top:20px;">سيظهر الحساب هنا تلقائياً بعد موافقة الأدمن.</p>
             </div>
-
             <div id="approved-view" style="display:none;">
-                <i id="status-icon" class="fas fa-check-circle big-icon" style="color:var(--success)"></i>
-                <h2 id="status-title">طلبك جاهز!</h2>
-                
-                <div class="acc-info">
-                    <p>📧 <span id="acc-email"></span></p>
-                    <p>🔑 <span id="acc-pass"></span></p>
+                <h2 id="status-title">✅ طلبك جاهز</h2>
+                <div style="background:#111; padding:10px; border-radius:8px; text-align:left; direction:ltr;">
+                    <p>Email: <strong id="acc-email"></strong></p>
+                    <p>Pass: <strong id="acc-pass"></strong></p>
                 </div>
-
-                <div id="code-section" style="display:none; margin-top:30px;">
-                    <p>⚠️ اضغط "إرسال الكود" في نتفلكس، ثم اضغط هنا:</p>
-                    <button id="code-btn" class="btn" onclick="getCode()">جلب الكود الآن</button>
-                    
+                <div id="code-section" style="display:none; margin-top:20px;">
+                    <p>اضغط إرسال الكود في نتفلكس ثم:</p>
+                    <button id="code-btn" class="btn" onclick="getCode()">جلب الكود</button>
                     <div id="code-result" style="display:none;">
-                        <span id="final-code" style="font-size:3rem; letter-spacing:10px; font-weight:bold; display:block; margin:20px 0;"></span>
-                        <p style="color:#00bcd4">تم حفظ الكود بنجاح.</p>
+                        <span id="final-code" style="font-size:2rem; letter-spacing:5px;"></span>
                     </div>
                 </div>
-                
-                <a href="index.html" class="btn" style="background:transparent; border:1px solid #555; margin-top:20px;">عودة للمتجر</a>
+                <a href="index.html" class="btn" style="background:transparent; border:1px solid #555; margin-top:10px;">عودة</a>
             </div>
-
         </div>
     </div>
     <script src="script.js"></script>
-    <script>window.onload = initTrackPage;</script>
 </body>
 </html>
