@@ -1,5 +1,5 @@
 // ✅ تأكد من تحديث الرابط عند تشغيل السيرفر
-const SERVER_URL = "https://hhjk-shop-final-v2.loca.lt"; 
+const SERVER_URL = "https://hhjk-shop-final-v2.loca.lt";
 
 /* =================================================================
    🔐 1. دوال المصادقة وتسجيل الدخول
@@ -275,34 +275,21 @@ async function approve(id, el) {
 let trackInterval;
 
 async function initTrackPage() {
-    const pendingView = document.getElementById('pending-view');
-    const approvedView = document.getElementById('approved-view');
-    const dispIdElem = document.getElementById('disp-id');
-
-    if (!pendingView || !approvedView || !dispIdElem) {
-        document.body.innerHTML = '<h1>خطأ: الصفحة لا تحتوي على العناصر اللازمة.</h1>';
-        return;
-    }
-
+    const pendingView = document.getElementById('pending-view'), approvedView = document.getElementById('approved-view'), dispIdElem = document.getElementById('disp-id');
+    if (!pendingView || !approvedView || !dispIdElem) return document.body.innerHTML = '<h1>خطأ: الصفحة لا تحتوي على العناصر اللازمة.</h1>';
+    
     const id = new URLSearchParams(window.location.search).get('id');
-    if (!id) {
-        pendingView.innerHTML = '<h1>رقم الطلب غير موجود.</h1>';
-        return;
-    }
+    if (!id) return pendingView.innerHTML = '<h1>رقم الطلب غير موجود.</h1>';
     dispIdElem.innerText = '#' + id;
 
     const checkStatus = async () => {
         try {
-            console.log(`[Track] Checking status for order #${id}`);
             const res = await fetch(`${SERVER_URL}/order-status/${id}`);
             const data = await res.json();
-            console.log('[Track] Received data:', data);
-
             if (data.status === 'approved' || data.status === 'completed') {
                 clearInterval(trackInterval);
                 pendingView.style.display = 'none';
                 approvedView.style.display = 'block';
-
                 const accContainer = document.getElementById('account-display');
                 if (data.requiresCode) {
                      const imgSrc = data.profileImage ? `${SERVER_URL}${data.profileImage}` : 'https://upload.wikimedia.org/wikipedia/commons/0/0b/Netflix-avatar.png';
@@ -321,7 +308,6 @@ async function initTrackPage() {
             console.error('[Track] Error fetching status:', error);
         }
     };
-
     if (trackInterval) clearInterval(trackInterval);
     checkStatus();
     trackInterval = setInterval(checkStatus, 4000);
@@ -335,8 +321,10 @@ async function getCode() {
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
     try {
         const res = await fetch(`${SERVER_URL}/get-code-secure`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orderId: id }) });
-        const data = await res.json();
-        if (d.success) {
+        
+        // ## بداية التصحيح ##
+        const data = await res.json(); 
+        if (data.success) { // استخدام 'data' بدلاً من 'd'
             const codeResult = document.getElementById("code-result");
             const finalCode = document.getElementById("final-code");
             if (codeResult && finalCode) {
@@ -349,6 +337,7 @@ async function getCode() {
             btn.disabled = false;
             btn.innerHTML = "محاولة";
         }
+        // ## نهاية التصحيح ##
     } catch (e) {
         alert("خطأ اتصال.");
         btn.disabled = false;
@@ -365,4 +354,3 @@ document.addEventListener('DOMContentLoaded', () => {
     if (currentPage === 'admin.html') { const firstNavItem = document.querySelector('.nav-item'); if (firstNavItem) showSection('orders', firstNavItem); loadAdminOrders(); toggleProductFields(); }
     if (currentPage === 'track.html') { initTrackPage(); }
 });
-
