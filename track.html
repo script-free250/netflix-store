@@ -3,49 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تتبع الطلب</title>
+    <title>حالة الطلب</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <header><a href="index.html" class="logo">NETFLIX</a></header>
-    
-    <div class="track-container">
-        <div class="track-box">
+    <div class="container">
+        <div class="status-page-box">
             
-            <!-- حالة الانتظار -->
-            <div id="view-pending">
+            <div id="pending-view">
                 <i class="fas fa-hourglass-half big-icon" style="color:var(--warning)"></i>
-                <h2>جاري المراجعة...</h2>
-                <p style="color:#888;">سيقوم الأدمن بتفعيل حسابك فور التأكد من التحويل.</p>
-                <div style="margin-top:20px;" class="status-label st-wait">قيد الانتظار</div>
+                <h2>جاري مراجعة الطلب</h2>
+                <p>رقم الطلب: <span id="disp-id" style="color:var(--primary)"></span></p>
+                <div class="loader"></div>
+                <p style="font-size:0.9rem; color:#777; margin-top:20px;">سيظهر الحساب هنا تلقائياً بعد موافقة الأدمن.</p>
             </div>
 
-            <!-- حالة القبول -->
-            <div id="view-approved" style="display:none;">
-                <i class="fas fa-check-circle big-icon" style="color:var(--success)"></i>
-                <h2 id="status-head">طلبك جاهز!</h2>
+            <div id="approved-view" style="display:none;">
+                <i id="status-icon" class="fas fa-check-circle big-icon" style="color:var(--success)"></i>
+                <h2 id="status-title">طلبك جاهز!</h2>
                 
-                <div style="background:#111; padding:15px; border-radius:8px; text-align:left; direction:ltr; margin:20px 0;">
-                    <p style="margin:5px 0;">📧 <strong id="acc-email"></strong></p>
-                    <p style="margin:5px 0;">🔑 <strong id="acc-pass"></strong></p>
+                <div class="acc-info">
+                    <p>📧 <span id="acc-email"></span></p>
+                    <p>🔑 <span id="acc-pass"></span></p>
                 </div>
 
-                <div id="sec-code" style="display:none;">
-                    <p style="font-size:0.9rem; color:#aaa;">اضغط "إرسال الكود" في نتفلكس، ثم:</p>
-                    <button id="btn-get-code" class="btn" onclick="getCode()">جلب الكود</button>
+                <div id="code-section" style="display:none; margin-top:30px;">
+                    <p>⚠️ اضغط "إرسال الكود" في نتفلكس، ثم اضغط هنا:</p>
+                    <button id="code-btn" class="btn" onclick="getCode()">جلب الكود الآن</button>
                     
-                    <div id="res-code" style="display:none;">
-                        <div class="code-display" id="final-code">----</div>
-                        <div style="color:#00bcd4; font-weight:bold;">تم الحفظ بنجاح</div>
+                    <div id="code-result" style="display:none;">
+                        <span id="final-code" style="font-size:3rem; letter-spacing:10px; font-weight:bold; display:block; margin:20px 0;"></span>
+                        <p style="color:#00bcd4">تم حفظ الكود بنجاح.</p>
                     </div>
                 </div>
-
-                <a href="index.html" class="btn btn-secondary" style="margin-top:20px; display:inline-block;">عودة للمتجر</a>
+                
+                <a href="index.html" class="btn" style="background:transparent; border:1px solid #555; margin-top:20px;">عودة للمتجر</a>
             </div>
 
         </div>
     </div>
     <script src="script.js"></script>
+    <script>window.onload = initTrackPage;</script>
 </body>
 </html>
