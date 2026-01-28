@@ -2,125 +2,86 @@
 <html dir="rtl" lang="ar">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم | Admin Dashboard</title>
+    <title>Admin Dashboard</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        /* تنسيقات خاصة بالأدمن فقط */
-        body { display: flex; min-height: 100vh; overflow-x: hidden; }
-        .sidebar {
-            width: 250px; background: #000; border-left: 1px solid #333;
-            padding: 20px; display: flex; flex-direction: column; position: fixed; height: 100%; right: 0;
-        }
-        .sidebar h2 { color: var(--primary); text-align: center; margin-bottom: 40px; }
-        .nav-item {
-            color: #aaa; padding: 15px; margin-bottom: 10px; cursor: pointer; border-radius: 8px; transition: 0.3s;
-        }
-        .nav-item:hover, .nav-item.active { background: #333; color: white; }
-        .nav-item i { margin-left: 10px; }
-        
-        .main-content {
-            margin-right: 250px; flex: 1; padding: 40px; width: 100%;
-        }
-        .panel { background: #1a1a1a; padding: 30px; border-radius: 12px; margin-bottom: 30px; border: 1px solid #333; }
-        .input-group { margin-bottom: 15px; }
-        .input-group label { display: block; margin-bottom: 5px; color: #ccc; }
-        .form-control {
-            width: 100%; padding: 12px; background: #222; border: 1px solid #444; color: white; border-radius: 6px;
-        }
-        .order-card {
-            background: #222; border-right: 4px solid var(--warning); padding: 15px; margin-bottom: 15px;
-            display: flex; justify-content: space-between; align-items: center; border-radius: 6px;
-        }
-        .order-card.approved { border-color: var(--success); }
-        .refresh-btn { background: #333; border: none; color: white; padding: 5px 10px; cursor: pointer; border-radius: 4px; float: left; }
-    </style>
 </head>
 <body>
-
-    <!-- القائمة الجانبية -->
     <div class="sidebar">
-        <h2>NETFLIX ADMIN</h2>
-        <div class="nav-item active" onclick="showSection('orders')">
-            <i class="fas fa-shopping-cart"></i> الطلبات الواردة
-        </div>
-        <div class="nav-item" onclick="showSection('add-product')">
-            <i class="fas fa-plus-circle"></i> إضافة منتج
-        </div>
-        <a href="index.html" class="nav-item" style="text-decoration:none;">
-            <i class="fas fa-external-link-alt"></i> معاينة المتجر
-        </a>
+        <h2>ADMIN</h2>
+        <div class="nav-item active" onclick="showSection('orders')"><i class="fas fa-shopping-cart"></i> الطلبات الواردة</div>
+        <div class="nav-item" onclick="showSection('search')"><i class="fas fa-search"></i> تفاصيل الطلب</div>
+        <div class="nav-item" onclick="showSection('add-product')"><i class="fas fa-plus-circle"></i> إضافة منتج</div>
+        <a href="index.html" class="nav-item" style="text-decoration:none;"><i class="fas fa-eye"></i> معاينة المتجر</a>
     </div>
 
-    <!-- المحتوى الرئيسي -->
     <div class="main-content">
         
         <!-- قسم الطلبات -->
         <div id="section-orders">
             <div class="panel">
-                <h3 style="margin-top:0;">📦 الطلبات المعلقة <button class="refresh-btn" onclick="loadOrders()"><i class="fas fa-sync"></i> تحديث</button></h3>
-                <div id="orders-list">
-                    <p style="color:#777;">جاري تحميل الطلبات...</p>
+                <h3>📦 الطلبات الأخيرة <button class="refresh-btn" onclick="loadAdminOrders()"><i class="fas fa-sync"></i></button></h3>
+                <div id="orders-list"></div>
+            </div>
+        </div>
+
+        <!-- قسم التفاصيل (الجديد) -->
+        <div id="section-search" style="display:none;">
+            <div class="panel">
+                <h3>🔍 استعلام شامل عن طلب</h3>
+                <div style="display:flex; gap:10px;">
+                    <input type="text" id="detail-search-input" class="form-control" placeholder="أدخل رقم الطلب (Order ID)">
+                    <button class="btn" style="width:auto;" onclick="searchOrderDetails()">بحث</button>
+                </div>
+                
+                <div id="order-details-result" style="margin-top:20px; display:none;">
+                    <div class="card" style="background:#222; border:1px solid #444;">
+                        <h3 style="border-bottom:1px solid #444; padding-bottom:10px;">📋 تقرير الطلب</h3>
+                        <div class="detail-row"><strong>رقم الطلب:</strong> <span id="d-id"></span></div>
+                        <div class="detail-row"><strong>المنتج:</strong> <span id="d-product" style="color:var(--primary)"></span></div>
+                        <div class="detail-row"><strong>رقم الهاتف:</strong> <span id="d-phone"></span></div>
+                        <div class="detail-row"><strong>IP المستخدم:</strong> <span id="d-ip" style="font-family:monospace; background:#333; padding:2px 5px;"></span></div>
+                        <div class="detail-row"><strong>الحالة الحالية:</strong> <span id="d-status"></span></div>
+                        <hr style="border-color:#444">
+                        <div class="detail-row"><strong>وقت إنشاء الطلب:</strong> <span id="d-time-create"></span></div>
+                        <div class="detail-row"><strong>وقت تفعيل الأدمن:</strong> <span id="d-time-approve"></span></div>
+                        <div class="detail-row"><strong>وقت استلام الكود:</strong> <span id="d-time-code"></span></div>
+                        <hr style="border-color:#444">
+                        <div class="detail-row"><strong>الكود المستلم:</strong> <span id="d-code" class="big-code" style="font-size:1.5rem; letter-spacing:5px;"></span></div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- قسم إضافة منتج -->
+        <!-- قسم الإضافة -->
         <div id="section-add-product" style="display:none;">
             <div class="panel">
-                <h3 style="margin-top:0;">➕ إضافة حساب جديد للمتجر</h3>
-                
-                <div class="input-group">
-                    <label>نوع المنتج</label>
-                    <select id="p-type" class="form-control">
-                        <option value="netflix-user">نتفلكس يوزر (مشترك - يتطلب كود)</option>
-                        <option value="netflix-full">نتفلكس حساب كامل (برايفيت)</option>
-                    </select>
-                </div>
-
-                <div class="input-group">
-                    <label>اسم المنتج (كما سيظهر للعميل)</label>
-                    <input type="text" id="p-name" class="form-control" placeholder="مثال: شاشة 4K شهر">
-                </div>
-
-                <div class="input-group">
-                    <label>السعر (ج.م)</label>
-                    <input type="number" id="p-price" class="form-control" placeholder="50">
-                </div>
-
-                <div class="input-group">
-                    <label>البريد الإلكتروني للحساب</label>
-                    <input type="email" id="p-email" class="form-control" placeholder="user@example.com">
-                </div>
-
-                <div class="input-group">
-                    <label>كلمة المرور</label>
-                    <input type="text" id="p-pass" class="form-control" placeholder="Password123">
-                </div>
-
-                <button class="btn" onclick="addProduct()">نشر المنتج الآن</button>
+                <h3>➕ إضافة منتج</h3>
+                <div class="input-group"><label>النوع</label><select id="p-type" class="form-control"><option value="netflix-user">يوزر (كود)</option><option value="netflix-full">كامل</option></select></div>
+                <div class="input-group"><label>الاسم</label><input type="text" id="p-name" class="form-control"></div>
+                <div class="input-group"><label>السعر</label><input type="number" id="p-price" class="form-control"></div>
+                <div class="input-group"><label>الإيميل</label><input type="email" id="p-email" class="form-control"></div>
+                <div class="input-group"><label>باسورد</label><input type="text" id="p-pass" class="form-control"></div>
+                <button class="btn" onclick="addProduct()">نشر</button>
             </div>
         </div>
-
     </div>
 
+    <style>
+        .detail-row { margin-bottom: 10px; font-size: 1.1rem; }
+        .detail-row strong { color: #888; display: inline-block; width: 150px; }
+    </style>
     <script src="script.js"></script>
     <script>
-        // دالة التبديل بين الأقسام
-        function showSection(sectionId) {
+        function showSection(id) {
             document.getElementById('section-orders').style.display = 'none';
+            document.getElementById('section-search').style.display = 'none';
             document.getElementById('section-add-product').style.display = 'none';
-            
-            document.getElementById('section-' + sectionId).style.display = 'block';
-
-            // تحديث القائمة النشطة
-            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            document.getElementById('section-' + id).style.display = 'block';
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
             event.currentTarget.classList.add('active');
         }
-
-        // تحميل الطلبات عند الفتح
-        window.onload = loadOrders;
+        window.onload = loadAdminOrders;
     </script>
 </body>
 </html>
