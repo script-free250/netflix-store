@@ -359,3 +359,15 @@ header {
 .btn-outline:hover {
     background-color: var(--border-color);
 }
+/* === Toast (Notification) System === */
+#toast-container{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:3000;display:flex;flex-direction:column;align-items:center;gap:10px}
+.toast{padding:12px 20px;border-radius:8px;color:#fff;font-weight:500;box-shadow:0 5px 15px rgba(0,0,0,0.3);opacity:0;transform:translateY(-20px);animation:slide-in .3s ease forwards}
+.toast.success{background-color:var(--success)}
+.toast.error{background-color:var(--primary)}
+.toast.info{background-color:#333}
+@keyframes slide-in{to{opacity:1;transform:translateY(0)}}
+@keyframes slide-out{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-20px)}}
+
+/* === Product Card Details === */
+.card .product-image{width:100%;height:150px;object-fit:cover;border-radius:12px;margin-bottom:15px;background-color:#1a1a1a}
+.card .product-description{font-size:0.9rem;color:var(--text-dark);margin-bottom:15px;min-height:40px}
