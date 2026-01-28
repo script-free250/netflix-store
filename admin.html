@@ -1,149 +1,0 @@
-<!DOCTYPE html>
-<html dir="rtl" lang="ar">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم | الإدارة</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
-<body style="background: #050505;">
-
-    <div id="admin-login-overlay">
-        <div class="login-box reveal-scale">
-            <i class="fas fa-user-shield" style="font-size:3.5rem; color:var(--primary); margin-bottom:20px;"></i>
-            <h2 style="margin-bottom:10px;">دخول الأدمن</h2>
-            <p style="color:#666; margin-bottom:30px;">يرجى إدخال كلمة المرور السرية للوصول</p>
-            <input type="password" id="admin-pass-input" class="form-input" placeholder="كلمة المرور" style="text-align:center;">
-            <button onclick="loginAdmin()" class="btn" style="margin-top:20px;">دخول اللوحة</button>
-            <p id="login-error" style="color:red; margin-top:15px; display:none;">كلمة المرور خاطئة!</p>
-        </div>
-    </div>
-
-    <div class="admin-layout" id="admin-main-content" style="display:none;">
-        <div class="sidebar">
-            <h2 style="color:var(--primary); font-weight:800; text-align:center;">DASHBOARD</h2>
-            <div class="nav-item active" onclick="showSection('orders')">
-                <i class="fas fa-shopping-basket"></i> الطلبات الواردة
-            </div>
-            <div class="nav-item" onclick="showSection('add-product')">
-                <i class="fas fa-plus-circle"></i> إضافة منتج جديد
-            </div>
-            <div class="nav-item" onclick="logoutAdmin()" style="margin-top:auto; color:#ff4f58;">
-                <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
-            </div>
-        </div>
-
-        <div class="content-area">
-            
-            <div id="section-orders" class="reveal">
-                <div class="section-header">
-                    <h3><i class="fas fa-tasks"></i> إدارة الطلبات</h3>
-                    <button onclick="loadAdminOrders()" class="btn" style="width:auto; padding:10px 20px; font-size:0.9rem;">تحديث</button>
-                </div>
-                <div id="admin-orders-container">
-                    </div>
-            </div>
-
-            <div id="section-add-product" class="reveal" style="display:none;">
-                <h3>إضافة منتج جديد</h3>
-                <div class="panel">
-                    <form onsubmit="addProduct(event)">
-                        <div class="form-group">
-                            <label class="form-label">اسم المنتج</label>
-                            <input type="text" name="name" class="form-control" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">السعر (ج.م)</label>
-                            <input type="number" name="price" class="form-control" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">نوع المنتج</label>
-                            <select name="type" id="p-type" class="form-control" onchange="toggleProductFields()">
-                                <option value="netflix-full">حساب كامل (إيميل + باسوورد)</option>
-                                <option value="netflix-user">مشترك (يوزر داخل حساب)</option>
-                            </select>
-                        </div>
-
-                        <div id="fields-full">
-                            <div class="form-group">
-                                <label class="form-label">إيميل الحساب</label>
-                                <input type="email" name="accountEmail" class="form-control">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">كلمة المرور</label>
-                                <input type="text" name="accountPassword" class="form-control">
-                            </div>
-                        </div>
-
-                        <div id="fields-user" style="display:none;">
-                            <div class="form-group">
-                                <label class="form-label">اسم البروفايل</label>
-                                <input type="text" name="profileName" class="form-control">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">PIN الدخول</label>
-                                <input type="text" name="profilePin" class="form-control">
-                            </div>
-                        </div>
-
-                        <button type="submit" class="btn">🚀 نشر المنتج الآن</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script src="script.js"></script>
-    <script>
-        // نظام الدخول للأدمن
-        function loginAdmin() {
-            const pass = document.getElementById('admin-pass-input').value;
-            // يتم التحقق من كلمة المرور عبر السيرفر (قمت بإضافة المسار في index.js)
-            fetch(`${SERVER_URL}/admin/verify`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ password: pass })
-            }).then(res => res.json()).then(data => {
-                if(data.success) {
-                    localStorage.setItem('admin_session', 'active');
-                    document.getElementById('admin-login-overlay').style.opacity = '0';
-                    setTimeout(() => {
-                        document.getElementById('admin-login-overlay').style.display = 'none';
-                        document.getElementById('admin-main-content').style.display = 'flex';
-                        loadAdminOrders();
-                    }, 500);
-                } else {
-                    document.getElementById('login-error').style.display = 'block';
-                }
-            });
-        }
-
-        function logoutAdmin() {
-            localStorage.removeItem('admin_session');
-            location.reload();
-        }
-
-        function showSection(id) {
-            ['orders', 'add-product'].forEach(sec => document.getElementById('section-' + sec).style.display = 'none');
-            document.getElementById('section-' + id).style.display = 'block';
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            event.currentTarget.classList.add('active');
-        }
-
-        function toggleProductFields() {
-            const type = document.getElementById('p-type').value;
-            document.getElementById('fields-full').style.display = type === 'netflix-user' ? 'none' : 'block';
-            document.getElementById('fields-user').style.display = type === 'netflix-user' ? 'block' : 'none';
-        }
-
-        window.onload = () => {
-            if(localStorage.getItem('admin_session') === 'active') {
-                document.getElementById('admin-login-overlay').style.display = 'none';
-                document.getElementById('admin-main-content').style.display = 'flex';
-                loadAdminOrders();
-            }
-        };
-    </script>
-</body>
-</html>
