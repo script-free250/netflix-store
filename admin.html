@@ -23,11 +23,8 @@
         .form-control { width: 100%; padding: 14px; background: #0f0f0f; border: 1px solid #333; color: white; border-radius: 8px; margin-bottom: 20px; transition: 0.3s; }
         .form-control:focus { border-color: var(--primary); box-shadow: 0 0 10px rgba(229,9,20,0.1); }
         .order-card { background: #161616; border-radius: 12px; padding: 20px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; transition: all 0.3s ease; position: relative; overflow: hidden; }
-        .order-status-pending { border: 1px solid #f5a623; background: linear-gradient(45deg, rgba(245, 166, 35, 0.05), rgba(245, 166, 35, 0.01)); box-shadow: 0 4px 15px rgba(245, 166, 35, 0.1); }
-        .order-status-pending::before { content: ''; position: absolute; top:0; right:0; width: 4px; height: 100%; background: #f5a623; }
-        .order-status-approved { border: 1px solid #333; background: #111; opacity: 0.7; }
-        .order-status-approved:hover { opacity: 1; border-color: var(--success); }
-        .order-status-approved::before { content: ''; position: absolute; top:0; right:0; width: 4px; height: 100%; background: var(--success); }
+        .order-status-pending { border-left: 4px solid var(--warning); }
+        .order-status-approved { border-left: 4px solid var(--success); opacity: 0.8; }
         .receipt-thumb { width: 70px; height: 70px; object-fit: cover; border-radius: 8px; border: 1px solid #444; cursor: pointer; transition: 0.3s; }
         .receipt-thumb:hover { transform: scale(1.1); border-color: #fff; }
         .order-info h4 { margin: 0 0 5px 0; font-size: 1.1rem; color: #fff; }
@@ -38,11 +35,10 @@
 <body>
 
     <script>
-        // كود الحماية: يتحقق من وجود جلسة الأدمن قبل تحميل أي شيء
+        // كود الحماية: يجب أن يكون أول شيء للتنفيذ
         if (sessionStorage.getItem('isAdminAuthenticated') !== 'true') {
             window.location.href = 'admin_login.html';
         }
-        // دالة تسجيل الخروج الخاصة بالأدمن فقط
         function adminLogout() {
             sessionStorage.removeItem('isAdminAuthenticated');
             window.location.href = 'admin_login.html';
@@ -50,7 +46,6 @@
     </script>
 
     <div class="admin-layout">
-        <!-- Sidebar -->
         <div class="sidebar">
             <h2>ADMIN PANEL</h2>
             <div class="nav-item" onclick="showSection('orders', this)">
@@ -60,64 +55,30 @@
                 <i class="fas fa-plus-square"></i> <span>إضافة منتج</span>
             </div>
             <div style="margin-top: auto;">
-                <a href="index.html" class="nav-item" style="text-decoration:none; color: #ccc;">
-                    <i class="fas fa-store"></i> <span>العودة للمتجر</span>
-                </a>
-                <div class="nav-item" onclick="adminLogout()" style="color: var(--primary);">
-                    <i class="fas fa-sign-out-alt"></i> <span>تسجيل الخروج</span>
-                </div>
+                <a href="index.html" class="nav-item" style="text-decoration:none; color: #ccc;"><i class="fas fa-store"></i> <span>عودة للمتجر</span></a>
+                <div class="nav-item" onclick="adminLogout()" style="color: var(--primary);"><i class="fas fa-sign-out-alt"></i> <span>تسجيل الخروج</span></div>
             </div>
         </div>
 
-        <!-- Main Content -->
         <div class="content-area">
-            
             <div id="section-orders" style="display: none;">
                 <div class="section-header">
                     <h3>📦 إدارة الطلبات</h3>
-                    <button class="btn" style="width:auto; padding:10px 25px; border-radius: 30px;" onclick="loadAdminOrders()">
-                        <i class="fas fa-sync-alt"></i> تحديث
-                    </button>
+                    <button class="btn" style="width:auto; padding:10px 25px;" onclick="loadAdminOrders()"><i class="fas fa-sync-alt"></i> تحديث</button>
                 </div>
-                <div id="orders-list">
-                     <div class="loader" style="margin: 40px auto;"></div>
-                </div>
+                <div id="orders-list"><div class="loader"></div></div>
             </div>
-
             <div id="section-add-product" style="display: none;">
-                <div class="section-header">
-                    <h3>➕ إضافة منتج جديد</h3>
-                </div>
+                <div class="section-header"><h3>➕ إضافة منتج جديد</h3></div>
                 <div class="panel">
                     <form id="addProductForm" onsubmit="addProduct(event)">
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                            <div>
-                                <label class="form-label">نوع المنتج</label>
-                                <select name="type" id="p-type" class="form-control" onchange="toggleProductFields()">
-                                    <option value="netflix-user">نتفلكس يوزر (بروفايل)</option>
-                                    <option value="netflix-full">نتفلكس حساب كامل</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="form-label">السعر (ج.م)</label>
-                                <input type="number" name="price" class="form-control" required>
-                            </div>
+                            <div><label class="form-label">نوع المنتج</label><select name="type" id="p-type" class="form-control" onchange="toggleProductFields()"><option value="netflix-user">بروفايل</option><option value="netflix-full">حساب كامل</option></select></div>
+                            <div><label class="form-label">السعر (ج.م)</label><input type="number" name="price" class="form-control" required></div>
                         </div>
-                        <label class="form-label">اسم المنتج للعرض</label>
-                        <input type="text" name="name" class="form-control" placeholder="مثال: اشتراك شهر 4K" required>
-
-                        <div id="fields-full" style="display:none;">
-                            <label class="form-label">بيانات الحساب الكامل:</label>
-                            <input type="email" name="accountEmail" class="form-control" placeholder="Email Address">
-                            <input type="text" name="accountPassword" class="form-control" placeholder="Password">
-                        </div>
-                        <div id="fields-user">
-                            <label class="form-label">بيانات البروفايل (اليوزر):</label>
-                            <input type="text" name="profileName" class="form-control" placeholder="اسم البروفايل (مثال: User 1)">
-                            <input type="text" name="profilePin" class="form-control" placeholder="PIN البروفايل (مثال: 1234)">
-                            <label class="form-label">صورة البروفايل (Avatar)</label>
-                            <input type="file" name="profileImage" class="form-control" accept="image/*">
-                        </div>
+                        <label class="form-label">اسم المنتج للعرض</label><input type="text" name="name" class="form-control" placeholder="مثال: اشتراك شهر 4K" required>
+                        <div id="fields-full" style="display:none;"><label class="form-label">بيانات الحساب:</label><input type="email" name="accountEmail" class="form-control" placeholder="Email"><input type="text" name="accountPassword" class="form-control" placeholder="Password"></div>
+                        <div id="fields-user"><label class="form-label">بيانات البروفايل:</label><input type="text" name="profileName" class="form-control" placeholder="اسم البروفايل"><input type="text" name="profilePin" class="form-control" placeholder="PIN"><label class="form-label">صورة البروفايل:</label><input type="file" name="profileImage" class="form-control" accept="image/*"></div>
                         <button type="submit" class="btn">🚀 نشر المنتج</button>
                     </form>
                 </div>
