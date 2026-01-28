@@ -3,116 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard | لوحة التحكم</title>
+    <title>Dashboard | لوحة التحكم</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        .admin-layout { display: flex; min-height: 100vh; }
-        .sidebar {
-            width: 260px; background: #000; border-left: 1px solid #333;
-            padding: 20px; display: flex; flex-direction: column; position: fixed; top: 0; right: 0; height: 100%; z-index: 1000;
-        }
-        .content-area { margin-right: 260px; flex: 1; padding: 40px; width: 100%; background: #0a0a0a; }
-        .panel { background: #151515; padding: 30px; border-radius: 12px; margin-bottom: 30px; border: 1px solid #222; }
-        .nav-item { color: #aaa; padding: 15px; margin-bottom: 8px; cursor: pointer; border-radius: 8px; font-weight: bold; }
-        .nav-item.active { background: #222; color: white; border-right: 4px solid var(--primary); }
-        .form-control { width: 100%; padding: 12px; background: #222; border: 1px solid #444; color: white; border-radius: 6px; margin-bottom: 15px; }
-        
-        .receipt-thumb { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid #444; cursor: pointer; }
-        .receipt-thumb:hover { transform: scale(1.1); }
-        
-        @media (max-width: 768px) {
-            .sidebar { width: 60px; padding: 10px; }
-            .content-area { margin-right: 60px; padding: 15px; }
-            .sidebar span { display: none; }
-        }
-    </style>
 </head>
 <body>
-
-    <div class="admin-layout">
-        <div class="sidebar">
-            <h2 style="color:var(--primary); text-align:center;">ADMIN</h2>
-            <div class="nav-item active" onclick="showSection('orders')">
-                <i class="fas fa-shopping-cart"></i> <span>الطلبات</span>
+    <div class="admin-wrapper">
+        <aside class="admin-sidebar">
+            <h2 style="color:var(--primary); text-align:center; margin-bottom:40px;">NETFLIX <span style="color:#fff; font-size:0.6em;">ADM</span></h2>
+            <div class="admin-nav-item active" onclick="showSection('orders')">
+                <i class="fas fa-shopping-basket"></i> الطلبات الواردة
             </div>
-            <div class="nav-item" onclick="showSection('add-product')">
-                <i class="fas fa-plus-circle"></i> <span>إضافة منتج</span>
+            <div class="admin-nav-item" onclick="showSection('add-product')">
+                <i class="fas fa-plus-circle"></i> إضافة منتج جديد
             </div>
-            <a href="index.html" class="nav-item" style="text-decoration:none;">
-                <i class="fas fa-external-link-alt"></i> <span>المتجر</span>
-            </a>
-        </div>
+            <div style="margin-top: auto;">
+                <a href="index.html" style="text-decoration:none;" class="admin-nav-item">
+                    <i class="fas fa-external-link-alt"></i> عرض المتجر
+                </a>
+            </div>
+        </aside>
 
-        <div class="content-area">
+        <main class="admin-content">
             
-            <div id="section-orders">
-                <div class="panel">
-                    <h3>📦 الطلبات الأخيرة</h3>
-                    <button class="btn" style="width:auto; padding:8px 20px;" onclick="loadAdminOrders()">
-                        <i class="fas fa-sync-alt"></i> تحديث
-                    </button>
-                    <div id="orders-list" style="margin-top:20px;"></div>
+            <section id="section-orders">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
+                    <h3 style="margin:0;">الطلبات الحالية</h3>
+                    <button class="btn" onclick="loadAdminOrders()" style="font-size:0.8rem;"><i class="fas fa-sync"></i> تحديث</button>
                 </div>
-            </div>
+                <div id="orders-list">
+                    </div>
+            </section>
 
-            <div id="section-add-product" style="display:none;">
-                <div class="panel">
-                    <h3>➕ إضافة منتج جديد</h3>
-                    <form id="addProductForm" onsubmit="addProduct(event)">
-                        
-                        <label class="form-label">نوع المنتج</label>
-                        <select name="type" id="p-type" class="form-control" onchange="toggleProductFields()">
-                            <option value="netflix-user">نتفلكس يوزر (بروفايل مشترك)</option>
-                            <option value="netflix-full">نتفلكس حساب كامل (برايفيت)</option>
+            <section id="section-add-product" style="display:none;">
+                <h3 style="margin-bottom:30px;">إضافة منتج للمتجر</h3>
+                <div style="max-width: 600px; background:#111; padding:30px; border-radius:15px; border:1px solid #222;">
+                    <form id="admin-add-form" onsubmit="handleProductSubmit(event)">
+                        <label>نوع الاشتراك</label>
+                        <select id="p-type" class="form-control" onchange="toggleProductFields()">
+                            <option value="netflix-full">نتفلكس حساب كامل (إيميل + باسورد)</option>
+                            <option value="netflix-user">نتفلكس مشترك (بروفايل داخل حساب)</option>
                         </select>
 
-                        <label class="form-label">اسم المنتج للعرض</label>
-                        <input type="text" name="name" class="form-control" placeholder="مثال: بروفايل 4K لمدة شهر" required>
+                        <label>اسم المنتج</label>
+                        <input type="text" id="p-name" class="form-control" placeholder="مثال: نتفلكس شهر شاشة واحدة" required>
 
-                        <label class="form-label">السعر (ج.م)</label>
-                        <input type="number" name="price" class="form-control" required>
+                        <label>السعر (ج.م)</label>
+                        <input type="number" id="p-price" class="form-control" placeholder="100" required>
 
-                        <div id="fields-full" style="display:none;">
-                            <label class="form-label" style="color:var(--primary)">بيانات الحساب الكامل:</label>
-                            <input type="email" name="accountEmail" class="form-control" placeholder="Email">
-                            <input type="text" name="accountPassword" class="form-control" placeholder="Password">
+                        <div id="fields-full">
+                            <label>إيميل الحساب</label>
+                            <input type="email" id="p-email" class="form-control" placeholder="netflix@example.com">
+                            <label>كلمة المرور</label>
+                            <input type="text" id="p-pass" class="form-control" placeholder="P@ssword123">
                         </div>
 
-                        <div id="fields-user">
-                            <label class="form-label" style="color:var(--success)">بيانات البروفايل (اليوزر):</label>
-                            <input type="text" name="profileName" class="form-control" placeholder="اسم البروفايل (مثال: User 1)">
-                            <input type="text" name="profilePin" class="form-control" placeholder="PIN البروفايل (مثال: 1234)">
-                            
-                            <label class="form-label">صورة البروفايل</label>
-                            <input type="file" name="profileImage" class="form-control" accept="image/*">
+                        <div id="fields-user" style="display:none;">
+                            <label>اسم البروفايل</label>
+                            <input type="text" id="p-profile-name" class="form-control" placeholder="Profile 1">
+                            <label>رمز PIN</label>
+                            <input type="text" id="p-pin" class="form-control" placeholder="1234">
+                            <label>صورة البروفايل</label>
+                            <input type="file" id="p-img" class="form-control" accept="image/*">
                         </div>
 
-                        <button type="submit" class="btn">نشر المنتج</button>
+                        <button type="submit" class="btn" style="width:100%; padding:15px; margin-top:10px;">نشر المنتج الآن</button>
                     </form>
                 </div>
-            </div>
+            </section>
 
-        </div>
+        </main>
+    </div>
+
+    <div id="receiptModal" class="modal" onclick="this.style.display='none'">
+        <img id="fullReceipt" style="max-width:90%; max-height:90%; margin:auto; display:block; margin-top:2%;">
     </div>
 
     <script src="script.js"></script>
     <script>
         function showSection(id) {
-            ['orders', 'add-product'].forEach(sec => document.getElementById('section-' + sec).style.display = 'none');
+            document.querySelectorAll('section').forEach(s => s.style.display = 'none');
+            document.querySelectorAll('.admin-nav-item').forEach(i => i.classList.remove('active'));
             document.getElementById('section-' + id).style.display = 'block';
+            event.currentTarget.classList.add('active');
         }
         function toggleProductFields() {
             const type = document.getElementById('p-type').value;
-            if (type === 'netflix-user') {
-                document.getElementById('fields-full').style.display = 'none';
-                document.getElementById('fields-user').style.display = 'block';
-            } else {
-                document.getElementById('fields-full').style.display = 'block';
-                document.getElementById('fields-user').style.display = 'none';
-            }
+            document.getElementById('fields-full').style.display = type === 'netflix-full' ? 'block' : 'none';
+            document.getElementById('fields-user').style.display = type === 'netflix-user' ? 'block' : 'none';
         }
-        window.onload = () => { loadAdminOrders(); toggleProductFields(); };
+        window.onload = loadAdminOrders;
     </script>
 </body>
 </html>
