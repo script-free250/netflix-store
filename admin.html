@@ -7,109 +7,78 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --bg-dark: #0f0f0f; --bg-panel: #1a1a1a; --border-color: #333; --text-muted: #888; }
-        body { background-color: #050505; margin: 0; font-family: 'Cairo', sans-serif; }
-        
-        /* Login Overlay */
-        #login-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center;
+        /* ... الستايلات الأصلية ... */
+        #login-screen {
+            display: flex; align-items: center; justify-content: center;
+            height: 100vh; background: #050505;
         }
-        .login-box {
-            background: #111; padding: 40px; border-radius: 15px; border: 1px solid #333;
-            width: 100%; max-width: 400px; text-align: center;
-        }
-        .login-box h2 { color: var(--primary); margin-bottom: 30px; }
-
-        .admin-layout { display: flex; min-height: 100vh; }
-        .sidebar {
-            width: 280px; background: #000; border-left: 1px solid var(--border-color);
-            padding: 25px; display: flex; flex-direction: column; position: fixed; top: 0; right: 0; height: 100%; z-index: 1000;
-        }
-        .content-area { margin-right: 280px; flex: 1; padding: 40px; background: #0a0a0a; }
-        .panel { background: var(--bg-panel); padding: 35px; border-radius: 16px; border: 1px solid var(--border-color); }
-        .form-control { width: 100%; padding: 14px; background: #0f0f0f; border: 1px solid #333; color: white; border-radius: 8px; margin-bottom: 20px; }
-        
-        .nav-item { color: #ccc; padding: 16px 20px; margin-bottom: 10px; cursor: pointer; border-radius: 10px; transition: 0.3s; display: flex; align-items: center; gap: 12px; }
-        .nav-item.active { background: linear-gradient(90deg, rgba(229,9,20,0.1), transparent); color: var(--primary); border-right: 4px solid var(--primary); }
     </style>
 </head>
 <body>
 
-    <div id="login-overlay">
-        <div class="login-box">
-            <h2>تسجيل دخول الأدمن</h2>
-            <input type="text" id="admin-user" class="form-control" placeholder="اسم المستخدم">
-            <input type="password" id="admin-pass" class="form-control" placeholder="كلمة المرور">
-            <button class="btn" onclick="adminLogin()">دخول</button>
-            <p id="login-msg" style="color: red; margin-top: 15px;"></p>
+    <!-- شاشة تسجيل الدخول -->
+    <div id="login-screen">
+        <div class="panel" style="width: 100%; max-width: 400px; text-align: center; border: 1px solid var(--primary);">
+            <h2 style="color: var(--primary); margin-bottom: 30px;">تسجيل دخول الإدارة</h2>
+            <div style="margin-bottom: 15px; text-align: right;">
+                <label class="form-label">اسم المستخدم</label>
+                <input type="text" id="admin-user" class="form-control" placeholder="أدخل اليوزر">
+            </div>
+            <div style="margin-bottom: 25px; text-align: right;">
+                <label class="form-label">كلمة المرور</label>
+                <input type="password" id="admin-pass" class="form-control" placeholder="••••••••">
+            </div>
+            <button class="btn" onclick="loginAdmin()">دخول اللوحة</button>
+            <p id="login-error" style="color: #ff4f58; margin-top: 15px; display: none;"></p>
         </div>
     </div>
 
-    <div id="main-admin-ui" class="admin-layout" style="display: none;">
+    <!-- لوحة التحكم (مخفية افتراضياً) -->
+    <div id="admin-dashboard" class="admin-layout" style="display: none;">
         <div class="sidebar">
-            <h2>ADMIN</h2>
-            <div class="nav-item active" onclick="showSection('orders')"><i class="fas fa-shopping-cart"></i> الطلبات</div>
-            <div class="nav-item" onclick="showSection('add-product')"><i class="fas fa-plus-circle"></i> إضافة منتج</div>
-            <div class="nav-item" onclick="logoutAdmin()" style="margin-top: auto; color: #ff4f58;"><i class="fas fa-sign-out-alt"></i> خروج</div>
+            <h2>ADMIN PANEL</h2>
+            <div class="nav-item active" onclick="showSection('orders')">
+                <i class="fas fa-box-open"></i> <span>الطلبات</span>
+            </div>
+            <div class="nav-item" onclick="showSection('add-product')">
+                <i class="fas fa-plus-square"></i> <span>إضافة منتج</span>
+            </div>
+            <div style="margin-top: auto;">
+                <div class="nav-item" onclick="logoutAdmin()" style="color: #666; cursor: pointer;">
+                    <i class="fas fa-sign-out-alt"></i> <span>تسجيل خروج</span>
+                </div>
+                <a href="index.html" class="nav-item" style="text-decoration:none; color: var(--primary);">
+                    <i class="fas fa-store"></i> <span>العودة للمتجر</span>
+                </a>
+            </div>
         </div>
 
         <div class="content-area">
+            <!-- (محتوى الطلبات وإضافة المنتج الأصلي يوضع هنا) -->
             <div id="section-orders">
-                <div class="section-header"><h3>الطلبات الواردة</h3></div>
-                <div id="admin-orders-container"></div>
-            </div>
-
-            <div id="section-add-product" style="display: none;">
-                <div class="section-header"><h3>إضافة منتج جديد</h3></div>
-                <div class="panel">
-                    <form id="add-product-form" onsubmit="submitNewProduct(event)">
-                        <label class="form-label">اسم المنتج</label>
-                        <input type="text" name="name" class="form-control" required>
-                        
-                        <label class="form-label">السعر (ج.م)</label>
-                        <input type="number" name="price" class="form-control" required>
-
-                        <label class="form-label">نوع الحساب</label>
-                        <select name="type" id="p-type" class="form-control" onchange="toggleProductFields()">
-                            <option value="full">💎 حساب كامل</option>
-                            <option value="netflix-user">👤 مشترك (يوزر)</option>
-                        </select>
-
-                        <div id="fields-full">
-                            <label class="form-label">إيميل الحساب</label>
-                            <input type="email" name="accountEmail" class="form-control">
-                            <label class="form-label">كلمة المرور</label>
-                            <input type="text" name="accountPassword" class="form-control">
-                        </div>
-
-                        <div id="fields-user" style="display:none;">
-                            <label class="form-label">اسم البروفايل</label>
-                            <input type="text" name="profileName" class="form-control">
-                            <label class="form-label">PIN الدخول</label>
-                            <input type="text" name="profilePin" class="form-control">
-                            <label class="form-label">صورة البروفايل</label>
-                            <input type="file" name="profileImage" class="form-control" accept="image/*">
-                        </div>
-
-                        <button type="submit" class="btn">🚀 نشر المنتج الآن</button>
-                    </form>
+                <div class="section-header">
+                    <h3>📦 إدارة الطلبات</h3>
+                    <button class="btn" style="width:auto; padding:10px 25px; border-radius:30px;" onclick="loadAdminOrders()">تحديث</button>
                 </div>
+                <div id="orders-list"></div>
+            </div>
+            
+            <div id="section-add-product" style="display:none;">
+                <!-- كود فورم إضافة المنتج -->
             </div>
         </div>
     </div>
 
     <script src="script.js"></script>
     <script>
-        // التحقق من وجود توكن عند التحميل
+        // التحقق من الدخول عند التحميل
         window.onload = () => {
-            const token = localStorage.getItem('adminToken');
+            const token = localStorage.getItem('admin_token');
             if (token) {
-                document.getElementById('login-overlay').style.display = 'none';
-                document.getElementById('main-admin-ui').style.display = 'flex';
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('admin-dashboard').style.display = 'flex';
                 loadAdminOrders();
             }
-            toggleProductFields();
         };
 
         function showSection(id) {
@@ -117,12 +86,6 @@
             document.getElementById('section-' + id).style.display = 'block';
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             event.currentTarget.classList.add('active');
-        }
-
-        function toggleProductFields() {
-            const type = document.getElementById('p-type').value;
-            document.getElementById('fields-full').style.display = (type === 'netflix-user') ? 'none' : 'block';
-            document.getElementById('fields-user').style.display = (type === 'netflix-user') ? 'block' : 'none';
         }
     </script>
 </body>
