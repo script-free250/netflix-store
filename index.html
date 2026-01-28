@@ -22,17 +22,40 @@
             <div class="loader"></div>
         </div>
 
-        <!-- قسم طلباتي الجديد -->
         <div class="my-orders-section">
             <div class="my-orders-header">
                 <i class="fas fa-history" style="font-size:1.5rem; color:var(--primary);"></i>
                 <h3>طلباتي الأخيرة</h3>
             </div>
-            <div id="my-orders-list">
-                <!-- هنا ستظهر الطلبات تلقائياً -->
-            </div>
+            <div id="my-orders-list"></div>
         </div>
     </div>
+
+    <div id="buyModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h3 style="margin-top:0; color:var(--primary);">تأكيد الطلب</h3>
+            <p style="color:#888; font-size:0.9rem;">المنتج: <span id="modal-product-name" style="color:#fff;"></span></p>
+            
+            <form id="purchaseForm" onsubmit="submitOrder(event)">
+                <input type="hidden" id="modal-product-id" name="productId">
+                
+                <div class="form-group">
+                    <label>رقم المحفظة (فودافون كاش)</label>
+                    <input type="text" name="userPhone" class="form-input" placeholder="010xxxxxxx" required>
+                </div>
+
+                <div class="form-group">
+                    <label>صورة التحويل (السكرين شوت)</label>
+                    <input type="file" name="receipt" class="form-input" accept="image/*" required>
+                    <p style="font-size:0.75rem; color:#666; margin-top:5px;">يجب إرفاق صورة التحويل لتأكيد الطلب.</p>
+                </div>
+
+                <button type="submit" class="btn">تأكيد وإرسال</button>
+            </form>
+        </div>
+    </div>
+
     <script src="script.js"></script>
     <script>window.onload = loadProducts;</script>
 </body>
