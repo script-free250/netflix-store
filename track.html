@@ -10,32 +10,31 @@
 <body>
     <header><a href="index.html" class="logo">NETFLIX</a></header>
     <div class="container">
-        <div class="status-page-box">
+        <div class="status-page-box" style="margin: 30px auto; max-width:600px;">
             
             <div id="pending-view">
-                <i class="fas fa-hourglass-half big-icon" style="color:var(--warning)"></i>
-                <h2>جاري مراجعة الطلب</h2>
+                <i class="fas fa-hourglass-half big-icon" style="color:var(--warning); font-size:3rem; margin-bottom:20px;"></i>
+                <h2>جاري مراجعة طلبك</h2>
                 <p>رقم الطلب: <span id="disp-id" style="color:var(--primary)"></span></p>
                 <div class="loader"></div>
-                <p style="font-size:0.9rem; color:#777; margin-top:20px;">سيظهر الحساب هنا تلقائياً بعد موافقة الأدمن.</p>
+                <p style="font-size:0.9rem; color:#777; margin-top:20px;">سيتم تفعيل الحساب فور تحقق الأدمن من الإيصال.</p>
             </div>
 
             <div id="approved-view" style="display:none;">
-                <i id="status-icon" class="fas fa-check-circle big-icon" style="color:var(--success)"></i>
-                <h2 id="status-title">طلبك جاهز!</h2>
+                <h2 style="color:var(--success)">✅ طلبك جاهز</h2>
                 
-                <div class="acc-info">
-                    <p>📧 <span id="acc-email"></span></p>
-                    <p>🔑 <span id="acc-pass"></span></p>
-                </div>
+                <div id="account-display" class="profile-card">
+                    </div>
 
-                <div id="code-section" style="display:none; margin-top:30px;">
-                    <p>⚠️ اضغط "إرسال الكود" في نتفلكس، ثم اضغط هنا:</p>
-                    <button id="code-btn" class="btn" onclick="getCode()">جلب الكود الآن</button>
+                <div id="code-section" style="display:none; margin-top:20px; border-top:1px solid #333; padding-top:20px;">
+                    <p style="color:#f5a623; font-weight:bold;">⚠️ خطوة أخيرة للدخول:</p>
+                    <p style="font-size:0.9rem; color:#ccc;">أدخل الإيميل أعلاه في نتفلكس، وعندما يطلب "رمز الدخول"، اضغط على الزر أدناه:</p>
                     
-                    <div id="code-result" style="display:none;">
-                        <span id="final-code" style="font-size:3rem; letter-spacing:10px; font-weight:bold; display:block; margin:20px 0;"></span>
-                        <p style="color:#00bcd4">تم حفظ الكود بنجاح.</p>
+                    <button id="code-btn" class="btn" onclick="getCode()">جلب كود الدخول</button>
+                    
+                    <div id="code-result" style="display:none; text-align:center;">
+                        <div style="background:#fff; color:#000; padding:10px 20px; font-size:2.5rem; letter-spacing:8px; font-weight:bold; border-radius:8px; display:inline-block; margin:15px 0;" id="final-code"></div>
+                        <p style="color:#46d369">تم سحب الكود بنجاح!</p>
                     </div>
                 </div>
                 
