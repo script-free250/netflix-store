@@ -7,218 +7,123 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root {
-            --bg-dark: #0f0f0f;
-            --bg-panel: #1a1a1a;
-            --border-color: #333;
-            --text-muted: #888;
-        }
+        :root { --bg-dark: #0f0f0f; --bg-panel: #1a1a1a; --border-color: #333; --text-muted: #888; }
         body { background-color: #050505; margin: 0; font-family: 'Cairo', sans-serif; }
         
+        /* Login Overlay */
+        #login-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center;
+        }
+        .login-box {
+            background: #111; padding: 40px; border-radius: 15px; border: 1px solid #333;
+            width: 100%; max-width: 400px; text-align: center;
+        }
+        .login-box h2 { color: var(--primary); margin-bottom: 30px; }
+
         .admin-layout { display: flex; min-height: 100vh; }
-        
-        /* Sidebar Design */
         .sidebar {
             width: 280px; background: #000; border-left: 1px solid var(--border-color);
             padding: 25px; display: flex; flex-direction: column; position: fixed; top: 0; right: 0; height: 100%; z-index: 1000;
-            box-shadow: -5px 0 20px rgba(0,0,0,0.5);
         }
-        .sidebar h2 { 
-            color: var(--primary); text-align: center; margin-bottom: 40px; 
-            letter-spacing: 2px; text-transform: uppercase; border-bottom: 2px solid #222; padding-bottom: 20px;
-        }
-        .nav-item { 
-            color: #ccc; padding: 16px 20px; margin-bottom: 10px; cursor: pointer; border-radius: 10px; 
-            font-weight: 600; transition: 0.3s; display: flex; align-items: center; gap: 12px;
-        }
-        .nav-item:hover { background: #222; color: #fff; transform: translateX(-5px); }
-        .nav-item.active { 
-            background: linear-gradient(90deg, rgba(229,9,20,0.1), transparent); 
-            color: var(--primary); border-right: 4px solid var(--primary); 
-        }
+        .content-area { margin-right: 280px; flex: 1; padding: 40px; background: #0a0a0a; }
+        .panel { background: var(--bg-panel); padding: 35px; border-radius: 16px; border: 1px solid var(--border-color); }
+        .form-control { width: 100%; padding: 14px; background: #0f0f0f; border: 1px solid #333; color: white; border-radius: 8px; margin-bottom: 20px; }
         
-        /* Content Area */
-        .content-area { margin-right: 280px; flex: 1; padding: 40px; width: 100%; background: #0a0a0a; }
-        
-        /* Headers */
-        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-        .section-header h3 { font-size: 1.8rem; margin: 0; color: #fff; }
-        
-        /* Panels & Forms */
-        .panel { background: var(--bg-panel); padding: 35px; border-radius: 16px; border: 1px solid var(--border-color); box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-        .form-label { display: block; margin-bottom: 8px; color: #ccc; font-weight: bold; font-size: 0.9rem; }
-        .form-control { 
-            width: 100%; padding: 14px; background: #0f0f0f; border: 1px solid #333; 
-            color: white; border-radius: 8px; margin-bottom: 20px; transition: 0.3s;
-        }
-        .form-control:focus { border-color: var(--primary); box-shadow: 0 0 10px rgba(229,9,20,0.1); }
-        
-        /* Order Cards Styling */
-        .order-card {
-            background: #161616;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        /* Dynamic Status Colors */
-        .order-status-pending {
-            border: 1px solid #f5a623;
-            background: linear-gradient(45deg, rgba(245, 166, 35, 0.05), rgba(245, 166, 35, 0.01));
-            box-shadow: 0 4px 15px rgba(245, 166, 35, 0.1);
-        }
-        .order-status-pending::before {
-            content: ''; position: absolute; top:0; right:0; width: 4px; height: 100%; background: #f5a623;
-        }
-        
-        .order-status-approved {
-            border: 1px solid #333;
-            background: #111;
-            opacity: 0.7;
-        }
-        .order-status-approved:hover { opacity: 1; border-color: var(--success); }
-        .order-status-approved::before {
-            content: ''; position: absolute; top:0; right:0; width: 4px; height: 100%; background: var(--success);
-        }
-
-        /* Order Details */
-        .receipt-thumb { width: 70px; height: 70px; object-fit: cover; border-radius: 8px; border: 1px solid #444; cursor: pointer; transition: 0.3s; }
-        .receipt-thumb:hover { transform: scale(1.1); border-color: #fff; }
-        
-        .order-info h4 { margin: 0 0 5px 0; font-size: 1.1rem; color: #fff; }
-        .order-info p { margin: 0; font-size: 0.9rem; color: #888; }
-        .order-meta { display: flex; gap: 15px; margin-top: 8px; font-size: 0.85rem; }
-        .meta-item { background: #222; padding: 4px 10px; border-radius: 4px; color: #aaa; }
-
-        @media (max-width: 768px) {
-            .sidebar { width: 70px; padding: 15px 10px; }
-            .content-area { margin-right: 70px; padding: 20px; }
-            .sidebar span, .sidebar h2 { display: none; }
-            .nav-item { justify-content: center; padding: 15px; }
-            .order-card { flex-direction: column; text-align: center; gap: 15px; }
-            .order-meta { justify-content: center; }
-            .order-status-pending::before, .order-status-approved::before { width: 100%; height: 4px; top: 0; right: 0; }
-        }
+        .nav-item { color: #ccc; padding: 16px 20px; margin-bottom: 10px; cursor: pointer; border-radius: 10px; transition: 0.3s; display: flex; align-items: center; gap: 12px; }
+        .nav-item.active { background: linear-gradient(90deg, rgba(229,9,20,0.1), transparent); color: var(--primary); border-right: 4px solid var(--primary); }
     </style>
 </head>
 <body>
 
-    <div class="admin-layout">
-        <!-- Sidebar -->
+    <div id="login-overlay">
+        <div class="login-box">
+            <h2>تسجيل دخول الأدمن</h2>
+            <input type="text" id="admin-user" class="form-control" placeholder="اسم المستخدم">
+            <input type="password" id="admin-pass" class="form-control" placeholder="كلمة المرور">
+            <button class="btn" onclick="adminLogin()">دخول</button>
+            <p id="login-msg" style="color: red; margin-top: 15px;"></p>
+        </div>
+    </div>
+
+    <div id="main-admin-ui" class="admin-layout" style="display: none;">
         <div class="sidebar">
-            <h2>ADMIN PANEL</h2>
-            <div class="nav-item active" onclick="showSection('orders')">
-                <i class="fas fa-box-open"></i> <span>الطلبات</span>
-            </div>
-            <div class="nav-item" onclick="showSection('add-product')">
-                <i class="fas fa-plus-square"></i> <span>إضافة منتج</span>
-            </div>
-            <div style="margin-top: auto;">
-                <a href="index.html" class="nav-item" style="text-decoration:none; color: var(--primary);">
-                    <i class="fas fa-store"></i> <span>العودة للمتجر</span>
-                </a>
-            </div>
+            <h2>ADMIN</h2>
+            <div class="nav-item active" onclick="showSection('orders')"><i class="fas fa-shopping-cart"></i> الطلبات</div>
+            <div class="nav-item" onclick="showSection('add-product')"><i class="fas fa-plus-circle"></i> إضافة منتج</div>
+            <div class="nav-item" onclick="logoutAdmin()" style="margin-top: auto; color: #ff4f58;"><i class="fas fa-sign-out-alt"></i> خروج</div>
         </div>
 
-        <!-- Main Content -->
         <div class="content-area">
-            
-            <!-- Orders Section -->
             <div id="section-orders">
-                <div class="section-header">
-                    <h3>📦 إدارة الطلبات</h3>
-                    <button class="btn" style="width:auto; padding:10px 25px; border-radius: 30px;" onclick="loadAdminOrders()">
-                        <i class="fas fa-sync-alt"></i> تحديث القائمة
-                    </button>
-                </div>
-                
-                <div id="orders-list">
-                    <!-- Orders will be injected here via JS -->
-                     <div style="text-align:center; padding: 40px; color:#555;">جاري التحميل...</div>
-                </div>
+                <div class="section-header"><h3>الطلبات الواردة</h3></div>
+                <div id="admin-orders-container"></div>
             </div>
 
-            <!-- Add Product Section -->
-            <div id="section-add-product" style="display:none;">
-                <div class="section-header">
-                    <h3>➕ إضافة منتج جديد</h3>
-                </div>
+            <div id="section-add-product" style="display: none;">
+                <div class="section-header"><h3>إضافة منتج جديد</h3></div>
                 <div class="panel">
-                    <form id="addProductForm" onsubmit="addProduct(event)">
+                    <form id="add-product-form" onsubmit="submitNewProduct(event)">
+                        <label class="form-label">اسم المنتج</label>
+                        <input type="text" name="name" class="form-control" required>
                         
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                            <div>
-                                <label class="form-label">نوع المنتج</label>
-                                <select name="type" id="p-type" class="form-control" onchange="toggleProductFields()">
-                                    <option value="netflix-user">نتفلكس يوزر (بروفايل مشترك)</option>
-                                    <option value="netflix-full">نتفلكس حساب كامل (برايفيت)</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="form-label">السعر (ج.م)</label>
-                                <input type="number" name="price" class="form-control" required>
-                            </div>
+                        <label class="form-label">السعر (ج.م)</label>
+                        <input type="number" name="price" class="form-control" required>
+
+                        <label class="form-label">نوع الحساب</label>
+                        <select name="type" id="p-type" class="form-control" onchange="toggleProductFields()">
+                            <option value="full">💎 حساب كامل</option>
+                            <option value="netflix-user">👤 مشترك (يوزر)</option>
+                        </select>
+
+                        <div id="fields-full">
+                            <label class="form-label">إيميل الحساب</label>
+                            <input type="email" name="accountEmail" class="form-control">
+                            <label class="form-label">كلمة المرور</label>
+                            <input type="text" name="accountPassword" class="form-control">
                         </div>
 
-                        <label class="form-label">اسم المنتج للعرض</label>
-                        <input type="text" name="name" class="form-control" placeholder="مثال: اشتراك شهر 4K" required>
-
-                        <!-- Full Account Fields -->
-                        <div id="fields-full" style="display:none; background: #111; padding: 20px; border-radius: 8px; border: 1px dashed #444; margin-bottom: 20px;">
-                            <label class="form-label" style="color:var(--primary); margin-bottom: 15px;"> بيانات الحساب الكامل:</label>
-                            <input type="email" name="accountEmail" class="form-control" placeholder="Email Address">
-                            <input type="text" name="accountPassword" class="form-control" placeholder="Password">
-                        </div>
-
-                        <!-- User Profile Fields -->
-                        <div id="fields-user" style="background: #111; padding: 20px; border-radius: 8px; border: 1px dashed #444; margin-bottom: 20px;">
-                            <label class="form-label" style="color:var(--success); margin-bottom: 15px;"> بيانات البروفايل (اليوزر):</label>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                                <input type="text" name="profileName" class="form-control" placeholder="اسم البروفايل (مثال: User 1)">
-                                <input type="text" name="profilePin" class="form-control" placeholder="PIN البروفايل (مثال: 1234)">
-                            </div>
-                            
-                            <label class="form-label">صورة البروفايل (Avatar)</label>
+                        <div id="fields-user" style="display:none;">
+                            <label class="form-label">اسم البروفايل</label>
+                            <input type="text" name="profileName" class="form-control">
+                            <label class="form-label">PIN الدخول</label>
+                            <input type="text" name="profilePin" class="form-control">
+                            <label class="form-label">صورة البروفايل</label>
                             <input type="file" name="profileImage" class="form-control" accept="image/*">
                         </div>
 
-                        <button type="submit" class="btn" style="font-size: 1.1rem;">🚀 نشر المنتج الآن</button>
+                        <button type="submit" class="btn">🚀 نشر المنتج الآن</button>
                     </form>
                 </div>
             </div>
-
         </div>
     </div>
 
     <script src="script.js"></script>
     <script>
-        // Navigation Logic
+        // التحقق من وجود توكن عند التحميل
+        window.onload = () => {
+            const token = localStorage.getItem('adminToken');
+            if (token) {
+                document.getElementById('login-overlay').style.display = 'none';
+                document.getElementById('main-admin-ui').style.display = 'flex';
+                loadAdminOrders();
+            }
+            toggleProductFields();
+        };
+
         function showSection(id) {
             ['orders', 'add-product'].forEach(sec => document.getElementById('section-' + sec).style.display = 'none');
             document.getElementById('section-' + id).style.display = 'block';
-            
-            // Update active styling
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             event.currentTarget.classList.add('active');
         }
 
         function toggleProductFields() {
             const type = document.getElementById('p-type').value;
-            if (type === 'netflix-user') {
-                document.getElementById('fields-full').style.display = 'none';
-                document.getElementById('fields-user').style.display = 'block';
-            } else {
-                document.getElementById('fields-full').style.display = 'block';
-                document.getElementById('fields-user').style.display = 'none';
-            }
+            document.getElementById('fields-full').style.display = (type === 'netflix-user') ? 'none' : 'block';
+            document.getElementById('fields-user').style.display = (type === 'netflix-user') ? 'block' : 'none';
         }
-        
-        window.onload = () => { loadAdminOrders(); toggleProductFields(); };
     </script>
 </body>
 </html>
