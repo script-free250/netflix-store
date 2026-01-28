@@ -3,79 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تفاصيل الطلب</title>
+    <title>حالة الطلب | Netflix Store</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        /* تحسينات خاصة لصفحة التتبع */
-        body {
-            background-image: radial-gradient(circle at center, #1a0505 0%, #000 100%);
-        }
-        .status-page-box {
-            background: rgba(20, 20, 20, 0.9);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 24px;
-            padding: 40px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            max-width: 550px;
-            margin: 60px auto;
-            position: relative;
-            overflow: hidden;
-        }
-        /* شريط علوي ملون */
-        .status-page-box::before {
-            content: ''; position: absolute; top:0; left:0; width:100%; height:6px;
-            background: linear-gradient(90deg, var(--primary), #ff4f58);
-        }
-
-        /* تنسيق كارت الحساب */
-        .account-card {
-            background: #000;
-            border: 1px solid #333;
-            border-radius: 16px;
-            padding: 25px;
-            margin: 25px 0;
-            text-align: center;
-            position: relative;
-        }
-        .profile-avatar {
-            width: 100px; height: 100px;
-            border-radius: 12px;
-            object-fit: cover;
-            border: 3px solid var(--primary);
-            box-shadow: 0 0 20px rgba(229,9,20,0.4);
-            margin-bottom: 15px;
-        }
-        .info-row {
-            display: flex; justify-content: space-between; align-items: center;
-            background: #111; padding: 12px 15px; border-radius: 8px; margin-bottom: 8px;
-            border: 1px solid #222;
-        }
-        .info-label { color: #888; font-size: 0.9rem; }
-        .info-value { color: #fff; font-weight: bold; font-family: sans-serif; letter-spacing: 0.5px; direction: ltr; }
-        
-        /* PIN تمييز */
-        .pin-display {
-            background: #222; color: var(--primary);
-            font-size: 1.5rem; font-weight: 800; letter-spacing: 5px;
-            padding: 10px; border-radius: 8px; border: 1px dashed #444;
-            display: inline-block; margin-top: 10px;
-        }
-
-        /* زر نسخ */
-        .copy-btn { background:none; border:none; color:#555; cursor:pointer; font-size:1rem; }
-        .copy-btn:hover { color:#fff; }
-
-        /* منطقة الكود */
-        .code-area {
-            background: linear-gradient(135deg, #111, #1a1a1a);
-            border: 1px solid var(--success);
-            padding: 20px; border-radius: 12px;
-            margin-top: 20px; text-align: center;
-            animation: fadeIn 0.5s;
-        }
-    </style>
 </head>
 <body>
     <header>
@@ -83,116 +13,48 @@
     </header>
 
     <div class="container">
-        <div class="status-page-box">
-            
-            <div id="pending-view">
-                <div style="text-align: center;">
-                    <div class="loader" style="width: 50px; height: 50px; border-width: 4px; margin-bottom: 20px;"></div>
-                    <h2 style="font-size: 1.8rem; margin-bottom: 10px;">جاري مراجعة الطلب</h2>
-                    <p style="color: #888;">رقم الطلب: <span id="disp-id" style="color:#fff; font-family:monospace;"></span></p>
-                    <div style="background: rgba(245, 166, 35, 0.1); color: var(--warning); padding: 10px; border-radius: 8px; font-size: 0.9rem; margin-top: 20px;">
-                        <i class="fas fa-info-circle"></i> سيتم تفعيل الحساب فور تحقق الأدمن من الإيصال.
+        <div class="status-page-box reveal">
+            <div id="status-content" style="text-align:center;">
+                <h2 id="status-title">جاري التحقق من طلبك...</h2>
+                <div id="order-details" style="margin-top:30px;">
                     </div>
-                </div>
             </div>
-
-            <div id="approved-view" style="display:none;">
-                <div style="text-align: center;">
-                    <i class="fas fa-check-circle" style="color: var(--success); font-size: 3rem; margin-bottom: 10px; filter: drop-shadow(0 0 10px rgba(70,211,105,0.4));"></i>
-                    <h2 style="color: #fff;">استمتع بالمشاهدة!</h2>
-                </div>
-                
-                <div id="account-display" class="account-card">
-                    </div>
-
-                <div id="code-section" style="display:none; margin-top:20px;">
-                    <div style="text-align:center; margin-bottom:15px;">
-                        <p style="color:#f5a623; font-weight:bold; font-size:0.9rem;">⚠️ مطلوب رمز للدخول؟</p>
-                        <p style="font-size:0.8rem; color:#aaa;">أدخل الإيميل في التطبيق، وعند طلب الرمز اضغط أدناه:</p>
-                    </div>
-                    
-                    <button id="code-btn" class="btn" onclick="getCode()" style="background: #333; border: 1px solid #555;">
-                        <i class="fas fa-key"></i> جلب كود الدخول
-                    </button>
-                    
-                    <div id="code-result" style="display:none; text-align:center; margin-top:15px;">
-                        <div style="font-size:0.8rem; color:#888; margin-bottom:5px;">رمز الدخول الخاص بك:</div>
-                        <div id="final-code" style="font-size: 2.5rem; letter-spacing: 5px; color: #fff; font-weight: bold; text-shadow: 0 0 10px rgba(255,255,255,0.5);"></div>
-                    </div>
-                </div>
-                
-                <a href="index.html" style="display:block; text-align:center; color:#666; font-size:0.9rem; margin-top:20px; text-decoration:none;">
-                    <i class="fas fa-arrow-right"></i> عودة للمتجر
-                </a>
-            </div>
-
         </div>
     </div>
-    
+
     <script src="script.js"></script>
     <script>
-        // تعديل بسيط لدالة العرض لتعمل مع التصميم الجديد
-        // هذه الدالة ستستبدل المحتوى الداخلي عند نجاح الطلب
-        const originalInitTrack = initTrackPage;
-        
-        // إعادة تعريف جزء العرض ليتناسب مع HTML الجديد
-        window.onload = async function() {
+        async function checkStatus() {
             const id = new URLSearchParams(window.location.search).get('id');
-            if(id) document.getElementById('disp-id').innerText = '#' + id;
+            const res = await fetch(`${SERVER_URL}/order-status/${id}`);
+            const data = await res.json();
             
-            // استخدام نفس المنطق الموجود في script.js لكن مع تحديث طريقة عرض الـ HTML داخل الجافاسكريبت هنا لتناسب التصميم الجديد
-            // سيتم الاعتماد على script.js لجلب البيانات، وهنا نقوم بالتحكم في الـ DOM
-            
-            setInterval(async () => {
-                try {
-                    const res = await fetch(`${SERVER_URL}/order-status/${id}`);
-                    const data = await res.json();
-                    
-                    if (data.status === 'approved' || data.status === 'completed') {
-                        document.getElementById('pending-view').style.display = 'none';
-                        document.getElementById('approved-view').style.display = 'block';
-                        
-                        const container = document.getElementById('account-display');
-                        
-                        if (data.requiresCode) { // يوزر
-                             const imgSrc = data.profileImage ? `${SERVER_URL}${data.profileImage}` : 'https://upload.wikimedia.org/wikipedia/commons/0/0b/Netflix-avatar.png';
-                             container.innerHTML = `
-                                <img src="${imgSrc}" class="profile-avatar">
-                                <div class="info-row">
-                                    <span class="info-label">الإيميل</span>
-                                    <span class="info-value">${data.accountEmail} <button class="copy-btn" onclick="navigator.clipboard.writeText('${data.accountEmail}')"><i class="fas fa-copy"></i></button></span>
-                                </div>
-                                <div class="info-row">
-                                    <span class="info-label">اسم البروفايل</span>
-                                    <span class="info-value">${data.profileName}</span>
-                                </div>
-                                <div style="margin-top:15px;">
-                                    <span style="display:block; color:#666; font-size:0.8rem;">PIN البروفايل</span>
-                                    <span class="pin-display">${data.profilePin}</span>
-                                </div>
-                             `;
-                             document.getElementById('code-section').style.display = 'block';
-                             if (data.savedCode) {
-                                 document.getElementById('code-btn').style.display = 'none';
-                                 document.getElementById('code-result').style.display = 'block';
-                                 document.getElementById('final-code').innerText = data.savedCode;
-                             }
-                        } else { // كامل
-                            container.innerHTML = `
-                                <div class="info-row">
-                                    <span class="info-label">الإيميل</span>
-                                    <span class="info-value">${data.accountEmail} <button class="copy-btn" onclick="navigator.clipboard.writeText('${data.accountEmail}')"><i class="fas fa-copy"></i></button></span>
-                                </div>
-                                <div class="info-row">
-                                    <span class="info-label">كلمة المرور</span>
-                                    <span class="info-value">${data.accountPassword} <button class="copy-btn" onclick="navigator.clipboard.writeText('${data.accountPassword}')"><i class="fas fa-copy"></i></button></span>
-                                </div>
-                            `;
-                        }
-                    }
-                } catch(e){}
-            }, 3000);
-        };
+            const details = document.getElementById('order-details');
+            if(data.status === 'pending') {
+                document.getElementById('status-title').innerText = "الطلب قيد المراجعة ⏳";
+                details.innerHTML = "<p style='color:#888;'>سوف تظهر بيانات الحساب هنا فور قبول الأدمن للطلب.</p>";
+            } else {
+                document.getElementById('status-title').innerText = "تم تجهيز طلبك بنجاح! 🎉";
+                document.getElementById('status-title').style.color = "var(--success)";
+                
+                if(data.requiresCode) {
+                    details.innerHTML = `
+                        <div class="reveal-scale" style="background:#111; padding:20px; border-radius:15px; border:1px solid var(--primary);">
+                            <p><strong>اسم البروفايل:</strong> ${data.profileName}</p>
+                            <p><strong>PIN:</strong> <span style="font-size:1.5rem; color:var(--primary); font-weight:800;">${data.profilePin}</span></p>
+                            <hr style="border-color:#222;">
+                            <p style="font-size:0.8rem; color:#666;">إيميل الحساب الرئيسي: ${data.accountEmail}</p>
+                        </div>`;
+                } else {
+                    details.innerHTML = `
+                        <div class="reveal-scale" style="background:#111; padding:20px; border-radius:15px; border:1px solid var(--success);">
+                            <p><strong>الإيميل:</strong> ${data.accountEmail}</p>
+                            <p><strong>كلمة المرور:</strong> ${data.accountPassword}</p>
+                        </div>`;
+                }
+            }
+        }
+        window.onload = checkStatus;
     </script>
 </body>
 </html>
