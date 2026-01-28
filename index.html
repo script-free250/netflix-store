@@ -4,124 +4,44 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Netflix Store | المتجر الرسمي</title>
-    <!-- === Font & Icons === -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- === Main Stylesheet === -->
-    <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div id="toast-container"></div>
+
     <header>
-        <a href="#" class="logo">NETFLIX <span style="font-size:0.5em; color:var(--text-light); font-weight:300;">STORE</span></a>
+        <a href="/" class="logo">NETFLIX <span class="logo-span">STORE</span></a>
+        <nav>
+            <a href="/">الرئيسية</a>
+            <a href="/contact.html">تواصل معنا</a>
+        </nav>
+        <nav id="nav-auth"></nav>
     </header>
 
     <div class="container">
         <div class="hero">
             <h2>اشتراكاتك المفضلة، فوراً.</h2>
-            <p>أرخص الأسعار، ضمان كامل، ودعم فني على مدار الساعة.</p>
+            <p>منصة متكاملة لجميع احتياجاتك الرقمية بأمان وسرعة.</p>
         </div>
 
-        <div class="section-title">
-            <i class="fas fa-fire"></i>
-            <h3>الباقات المتاحة</h3>
-        </div>
-        
+        <div class="section-title"><i class="fas fa-fire"></i><h3>الباقات المتاحة</h3></div>
         <div id="products-container" class="grid">
             <div class="loader"></div>
         </div>
-
-        <div class="my-orders-section">
-            <div class="section-title">
-                <i class="fas fa-history"></i>
-                <h3>سجل طلباتك الأخيرة</h3>
-            </div>
-            <div id="my-orders-list" style="margin-top:20px;">
-                <!-- Orders will be injected here by script.js -->
-            </div>
+    </div>
+    
+    <div id="productDetailModal" class="modal">
+        <div class="modal-content large" id="product-modal-content">
+            <!-- Content is dynamically injected by script.js -->
         </div>
     </div>
+    
+    <footer>
+        <p>&copy; 2024 Netflix Store. جميع الحقوق محفوظة.</p>
+    </footer>
 
-    <div id="buyModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>إكمال الطلب 🛒</h3>
-                <span class="close" onclick="closeModal()">&times;</span>
-            </div>
-            
-            <p style="color:var(--text-dark); font-size:0.9rem; margin-bottom:25px;">
-                أنت على وشك شراء: <span id="modal-product-name" style="color:var(--primary); font-weight:bold;"></span>
-            </p>
-            
-            <form id="purchaseForm" onsubmit="submitOrder(event)">
-                <input type="hidden" id="modal-product-id" name="productId">
-                
-                <div class="form-group">
-                    <label>رقم المحفظة (فودافون كاش)</label>
-                    <div style="position:relative;">
-                        <i class="fas fa-mobile-alt" style="position:absolute; right:15px; top:50%; transform: translateY(-50%); color:var(--text-muted);"></i>
-                        <input type="text" name="userPhone" class="form-input" placeholder="010xxxxxxxx" style="padding-right:45px;" required>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>إيصال التحويل</label>
-                    <label class="file-upload-wrapper" for="receipt-file">
-                        <div class="upload-content">
-                            <i class="fas fa-cloud-upload-alt"></i>
-                            <span id="file-label-text">اضغط لإرفاق صورة التحويل</span>
-                        </div>
-                        <input type="file" id="receipt-file" name="receipt" accept="image/*" required onchange="updateFileName(this)">
-                    </label>
-                </div>
-
-                <button type="submit" class="btn">
-                    <i class="fas fa-check-circle"></i> تأكيد الشراء
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <script src="script.js"></script>
-    <script>
-        // دالة جمالية لتحديث اسم الملف عند اختياره
-        function updateFileName(input) {
-            const labelText = document.getElementById('file-label-text');
-            const uploadContent = input.previousElementSibling;
-            if(input.files && input.files[0]) {
-                labelText.textContent = "تم اختيار: " + input.files[0].name;
-                uploadContent.style.color = "var(--success)";
-            } else {
-                labelText.textContent = "اضغط لإرفاق صورة التحويل";
-                uploadContent.style.color = "var(--text-muted)";
-            }
-        }
-
-        // Observer for animations on scroll
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.style.opacity = 1;
-                    entry.target.style.transform = 'translateY(0)';
-                    observer.unobserve(entry.target);
-                }
-            });
-        }, { threshold: 0.1 });
-
-        // Initial call to load products
-        window.onload = function() {
-            loadProducts().then(() => {
-                // Animate sections after loading
-                document.querySelectorAll('.section-title, .my-orders-section').forEach(el => {
-                    el.style.opacity = 0;
-                    el.style.transform = 'translateY(30px)';
-                    el.style.transition = 'opacity 0.8s ease-out, transform 0.8s ease-out';
-                    observer.observe(el);
-                });
-            });
-        };
-    </script>
+    <script src="/script.js"></script>
 </body>
 </html>
