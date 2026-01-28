@@ -1,5 +1,5 @@
 // ✅ تأكد أن هذا الرابط مطابق للسيرفر (V5)
-const SERVER_URL = "https://hhjk-shop-final-v5.loca.lt"; 
+const SERVER_URL = "https://hhjk-shop-final-v2.loca.lt"; 
 
 /* =========================================
    🛒 دوال المستخدم (User Side)
