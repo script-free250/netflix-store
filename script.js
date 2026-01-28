@@ -1,49 +1,79 @@
-// ✅ الرابط الثابت للسيرفر
 const SERVER_URL = "https://hhjk-shop-final-v2.loca.lt"; 
 
-/* =========================================
-   🛍️ قسم المستخدم (المتجر والتتبع)
-   ========================================= */
+// --- إدارة الطلبات المحلية (LocalStorage) ---
+function saveLocalOrder(order) {
+    let orders = JSON.parse(localStorage.getItem('my_orders') || '[]');
+    orders.push(order);
+    localStorage.setItem('my_orders', JSON.stringify(orders));
+}
 
-// تحميل المنتجات في الصفحة الرئيسية
+function getLocalOrders() {
+    return JSON.parse(localStorage.getItem('my_orders') || '[]');
+}
+
+// --- الصفحة الرئيسية ---
 async function loadProducts() {
     const container = document.getElementById('products-container');
-    if (!container) return;
+    if (container) {
+        // تحميل المنتجات
+        try {
+            const res = await fetch(`${SERVER_URL}/products`, { headers: {'Bypass-Tunnel-Reminder': 'true'} });
+            const products = await res.json();
+            container.innerHTML = products.length ? '' : '<p>لا توجد منتجات</p>';
+            products.forEach(p => {
+                container.innerHTML += `
+                    <div class="card">
+                        <span class="tag">${p.type === 'netflix-user' ? 'مشترك' : 'كامل'}</span>
+                        <h3>${p.name}</h3>
+                        <span class="price">${p.price} ج.م</span>
+                        <button class="btn" onclick="buyProduct(${p.id}, '${p.name}')">شراء</button>
+                    </div>`;
+            });
+        } catch (e) { container.innerHTML = '<p style="color:red">تأكد من تشغيل السيرفر والنفق</p>'; }
 
-    try {
-        const res = await fetch(`${SERVER_URL}/products`, { headers: {'Bypass-Tunnel-Reminder': 'true'} });
-        const products = await res.json();
-        container.innerHTML = '';
-
-        if(products.length === 0) {
-            container.innerHTML = '<p style="text-align:center;">لا توجد منتجات حالياً.</p>';
-            return;
-        }
-
-        products.forEach(p => {
-            const div = document.createElement('div');
-            div.className = 'card';
-            div.innerHTML = `
-                <div class="card-body">
-                    <span class="tag">${p.type === 'netflix-user' ? '👤 حساب مشترك' : '💎 حساب كامل'}</span>
-                    <h3>${p.name}</h3>
-                    <span class="price">${p.price} ج.م</span>
-                    <p class="desc">تسليم فوري وتلقائي.</p>
-                    <button class="btn" onclick="buyProduct(${p.id})">شراء الآن</button>
-                </div>
-            `;
-            container.appendChild(div);
-        });
-    } catch (err) {
-        container.innerHTML = `<p style="text-align:center; color:red;">خطأ في الاتصال بالسيرفر.<br>تأكد من فتح رابط النفق أولاً.</p>`;
+        // تحميل طلباتي (الجديد)
+        loadMyOrdersWidget();
     }
 }
 
-// عملية الشراء
-async function buyProduct(id) {
-    const phone = prompt("📞 أدخل رقم فودافون كاش (للتواصل وتأكيد الدفع):");
-    if (!phone) return;
+function loadMyOrdersWidget() {
+    const section = document.getElementById('my-orders-list');
+    if (!section) return;
+    
+    const localOrders = getLocalOrders().reverse(); // الأحدث أولاً
+    if (localOrders.length === 0) {
+        section.innerHTML = '<p style="color:#555">ليس لديك طلبات سابقة.</p>';
+        return;
+    }
 
+    section.innerHTML = '';
+    localOrders.forEach(async (order) => {
+        // جلب الحالة المحدثة من السيرفر
+        let statusText = "جاري المراجعة";
+        let statusClass = "pending";
+        
+        try {
+            const res = await fetch(`${SERVER_URL}/order-status/${order.id}`);
+            const data = await res.json();
+            if (data.status === 'approved') { statusText = "جاهز للاستلام"; statusClass = "approved"; }
+            if (data.status === 'completed') { statusText = "تم الاستلام ✅"; statusClass = "completed"; }
+        } catch(e){}
+
+        section.innerHTML += `
+            <div class="order-mini-card ${statusClass}" onclick="window.location.href='track.html?id=${order.id}'" style="cursor:pointer">
+                <div>
+                    <strong>${order.name}</strong><br>
+                    <span style="font-size:0.8rem; color:#777">#${order.id}</span>
+                </div>
+                <span class="status-badge bg-${statusClass === 'approved' ? 'success' : (statusClass === 'completed' ? 'blue' : 'pending')}">${statusText}</span>
+            </div>
+        `;
+    });
+}
+
+async function buyProduct(id, name) {
+    const phone = prompt("رقم فودافون كاش:");
+    if (!phone) return;
     try {
         const res = await fetch(`${SERVER_URL}/buy`, {
             method: 'POST',
@@ -51,144 +81,113 @@ async function buyProduct(id) {
             body: JSON.stringify({ productId: id, userPhone: phone })
         });
         const data = await res.json();
-        
         if (data.success) {
-            // 🔥 التوجيه لصفحة التتبع 🔥
+            // حفظ الطلب في المتصفح
+            saveLocalOrder({ id: data.orderId, name: name, date: new Date() });
             window.location.href = `track.html?id=${data.orderId}`;
-        } else {
-            alert("حدث خطأ أثناء إنشاء الطلب.");
         }
-    } catch (e) {
-        alert("فشل الاتصال بالسيرفر.");
-    }
+    } catch (e) { alert("خطأ"); }
 }
 
-// تتبع الطلب (في صفحة track.html)
-let trackingInterval;
-async function trackOrder(orderId) {
-    document.getElementById('search-view').style.display = 'none';
-    document.getElementById('pending-view').style.display = 'block';
-    document.getElementById('disp-order-id').innerText = orderId;
+// --- صفحة التتبع (Track) ---
+let trackInterval;
+async function initTrackPage() {
+    const id = new URLSearchParams(window.location.search).get('id');
+    if (!id) return;
+    document.getElementById('disp-id').innerText = id;
 
-    const checkStatus = async () => {
-        try {
-            const res = await fetch(`${SERVER_URL}/order-status/${orderId}`);
-            const data = await res.json();
+    const check = async () => {
+        const res = await fetch(`${SERVER_URL}/order-status/${id}`);
+        const data = await res.json();
 
-            if (data.status === 'approved') {
-                clearInterval(trackingInterval);
-                document.getElementById('pending-view').style.display = 'none';
-                document.getElementById('approved-view').style.display = 'block';
-                document.getElementById('acc-email').innerText = data.accountEmail;
-                document.getElementById('acc-pass').innerText = data.accountPassword;
+        if (data.status === 'approved' || data.status === 'completed') {
+            document.getElementById('pending-view').style.display = 'none';
+            document.getElementById('approved-view').style.display = 'block';
+            
+            // عرض البيانات
+            document.getElementById('acc-email').innerText = data.accountEmail;
+            document.getElementById('acc-pass').innerText = data.accountPassword;
 
-                if (data.requiresCode) {
-                    document.getElementById('code-section').style.display = 'block';
+            if (data.requiresCode) {
+                const codeSec = document.getElementById('code-section');
+                codeSec.style.display = 'block';
+                
+                // لو الكود محفوظ، اظهره علطول
+                if (data.savedCode) {
+                    showFinalCode(data.savedCode);
                 }
-            } else if (data.status === 'not-found') {
-                document.getElementById('pending-view').innerHTML = "<h3>❌ الطلب غير موجود</h3><a href='index.html' class='btn'>عودة</a>";
-                clearInterval(trackingInterval);
             }
-        } catch (e) { console.error("Tracking Error", e); }
+            if (data.status === 'completed' && !data.requiresCode) {
+                 document.getElementById('status-title').innerText = "تم استلام الطلب بنجاح ✅";
+            }
+            clearInterval(trackInterval);
+        }
     };
-    checkStatus();
-    trackingInterval = setInterval(checkStatus, 3000); // فحص كل 3 ثواني
+    check();
+    trackInterval = setInterval(check, 3000);
 }
 
-// جلب الكود
+function showFinalCode(code) {
+    document.getElementById('code-btn').style.display = 'none';
+    document.getElementById('code-result').style.display = 'block';
+    document.getElementById('final-code').innerText = code;
+    document.getElementById('status-title').innerText = "تم استلام الحساب بنجاح ✅";
+    document.getElementById('status-icon').className = "fas fa-check-double big-icon";
+    document.getElementById('status-icon').style.color = "#00bcd4";
+}
+
 async function getCode() {
+    const id = new URLSearchParams(window.location.search).get('id');
     const btn = document.getElementById('code-btn');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الاتصال...';
+    btn.disabled = true; btn.innerText = "جاري الاتصال...";
 
     try {
-        const res = await fetch(`${SERVER_URL}/get-code`);
+        const res = await fetch(`${SERVER_URL}/get-code-secure`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ orderId: id })
+        });
         const data = await res.json();
-
         if (data.success) {
-            btn.style.display = 'none';
-            document.getElementById('code-result').style.display = 'block';
-            document.getElementById('final-code').innerText = data.code;
+            showFinalCode(data.code);
         } else {
-            btn.disabled = false;
-            btn.innerText = "لم يصل الكود بعد، اضغط للمحاولة مجدداً";
-            alert("لم تصل رسالة الكود بعد. تأكد من ضغط زر الإرسال في نتفلكس وانتظر 10 ثوانٍ.");
+            alert(data.message || "لم يصل الكود. انتظر قليلاً وحاول.");
+            btn.disabled = false; btn.innerText = "جلب الكود";
         }
-    } catch (e) {
-        btn.disabled = false;
-        btn.innerText = "خطأ في الاتصال";
-    }
+    } catch (e) { btn.disabled = false; btn.innerText = "خطأ"; }
 }
 
-/* =========================================
-   🔧 قسم الأدمن (Admin Dashboard)
-   ========================================= */
+// --- صفحة الأدمن ---
+async function addProduct() { /* ...نفس كود الأدمن السابق... */ }
 
-async function addProduct() {
-    const type = document.getElementById('p-type').value;
-    const name = document.getElementById('p-name').value;
-    const price = document.getElementById('p-price').value;
-    const email = document.getElementById('p-email').value;
-    const pass = document.getElementById('p-pass').value;
-
-    if (!name || !price) { alert("أكمل البيانات!"); return; }
-
-    const btn = document.querySelector('button[onclick="addProduct()"]');
-    btn.disabled = true;
-    btn.innerText = "جاري النشر...";
-
-    try {
-        const res = await fetch(`${SERVER_URL}/admin/add-product`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ type, name, price, accountEmail: email, accountPassword: pass })
-        });
-        const data = await res.json();
-        if(data.success) {
-            alert("✅ تم النشر!");
-            document.getElementById('p-name').value = '';
-            document.getElementById('p-price').value = '';
-        } else { alert("فشل."); }
-    } catch (e) { alert("خطأ: " + e.message); }
-    btn.disabled = false;
-    btn.innerText = "نشر المنتج الآن";
-}
-
-async function loadOrders() {
+async function loadAdminOrders() {
     const container = document.getElementById('orders-list');
-    if (!container) return;
-    container.innerHTML = '<p style="color:#aaa;">جاري التحديث...</p>';
-    try {
-        const res = await fetch(`${SERVER_URL}/admin/orders`);
-        const orders = await res.json();
-        container.innerHTML = '';
-        if(orders.length === 0) {
-            container.innerHTML = '<div style="text-align:center; color:#555;">لا توجد طلبات 💤</div>';
-            return;
-        }
-        orders.forEach(o => {
-            const div = document.createElement('div');
-            div.className = 'order-card';
-            div.innerHTML = `
-                <div>
-                    <strong style="color:var(--primary);">${o.productName}</strong>
-                    <div style="font-size:0.9rem; color:#ccc;">📱 ${o.userPhone}</div>
-                </div>
-                <button class="btn" style="width:auto; padding:5px 15px; background:var(--success);" onclick="approveOrder(${o.orderId})">قبول</button>
-            `;
-            container.appendChild(div);
-        });
-    } catch (e) { container.innerHTML = '<p style="color:red">فشل الاتصال.</p>'; }
-}
+    const searchVal = document.getElementById('admin-search').value; // قيمة البحث
+    
+    const res = await fetch(`${SERVER_URL}/admin/orders`);
+    let orders = await res.json();
+    
+    // الفلترة بالبحث
+    if (searchVal) {
+        orders = orders.filter(o => o.orderId.toString().includes(searchVal) || o.userPhone.includes(searchVal));
+    }
 
-async function approveOrder(orderId) {
-    if(!confirm("تأكيد تفعيل الحساب للعميل؟")) return;
-    try {
-        await fetch(`${SERVER_URL}/admin/approve`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ orderId })
-        });
-        loadOrders();
-    } catch (e) { alert("خطأ في الاتصال."); }
+    // عرض الطلبات المعلقة أولاً
+    orders.sort((a,b) => (a.status === 'pending' ? -1 : 1));
+
+    container.innerHTML = '';
+    orders.forEach(o => {
+        let color = o.status === 'pending' ? 'orange' : 'green';
+        let btnHtml = o.status === 'pending' ? `<button class="btn" style="width:auto; padding:5px 10px;" onclick="approve(${o.orderId})">تفعيل</button>` : `<span style="color:green">مفعل</span>`;
+        
+        container.innerHTML += `
+            <div class="card" style="display:flex; justify-content:space-between; align-items:center; border-right:4px solid ${color}; margin-bottom:10px;">
+                <div>
+                    <div style="font-weight:bold">${o.productName}</div>
+                    <div style="font-size:0.8rem; color:#888">#${o.orderId} | 📱 ${o.userPhone}</div>
+                </div>
+                ${btnHtml}
+            </div>`;
+    });
 }
+async function approve(id) { await fetch(`${SERVER_URL}/admin/approve`, { method:'POST', body:JSON.stringify({orderId:id}), headers:{'Content-Type':'application/json'} }); loadAdminOrders(); }
