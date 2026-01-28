@@ -5,148 +5,91 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard | لوحة التحكم</title>
     <link rel="stylesheet" href="style.css">
-    <!-- مكتبة أيقونات -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* تنسيقات إضافية للأدمن */
         .admin-layout { display: flex; min-height: 100vh; }
         .sidebar {
             width: 260px; background: #000; border-left: 1px solid #333;
             padding: 20px; display: flex; flex-direction: column; position: fixed; top: 0; right: 0; height: 100%; z-index: 1000;
         }
-        .sidebar h2 { color: var(--primary); text-align: center; margin-bottom: 40px; letter-spacing: 2px; }
-        .nav-item {
-            color: #aaa; padding: 15px; margin-bottom: 8px; cursor: pointer; border-radius: 8px; transition: 0.3s; font-weight: bold;
-        }
-        .nav-item:hover, .nav-item.active { background: #222; color: white; border-right: 4px solid var(--primary); }
-        .nav-item i { margin-left: 10px; width: 20px; text-align: center; }
-        
         .content-area { margin-right: 260px; flex: 1; padding: 40px; width: 100%; background: #0a0a0a; }
-        
         .panel { background: #151515; padding: 30px; border-radius: 12px; margin-bottom: 30px; border: 1px solid #222; }
-        .panel h3 { margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 15px; margin-bottom: 20px; color: #fff; }
-        
+        .nav-item { color: #aaa; padding: 15px; margin-bottom: 8px; cursor: pointer; border-radius: 8px; font-weight: bold; }
+        .nav-item.active { background: #222; color: white; border-right: 4px solid var(--primary); }
         .form-control { width: 100%; padding: 12px; background: #222; border: 1px solid #444; color: white; border-radius: 6px; margin-bottom: 15px; }
-        .form-label { display: block; margin-bottom: 5px; color: #888; font-size: 0.9rem; }
         
-        .detail-card { background: #1a1a1a; padding: 20px; border-radius: 8px; border: 1px solid #333; margin-top: 20px; }
-        .detail-row { margin-bottom: 12px; border-bottom: 1px solid #222; padding-bottom: 8px; font-size: 1rem; }
-        .detail-row strong { color: #888; display: inline-block; width: 160px; }
+        .receipt-thumb { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid #444; cursor: pointer; }
+        .receipt-thumb:hover { transform: scale(1.1); }
         
-        .status-badge { padding: 4px 10px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; }
-        .badge-pending { background: rgba(255, 166, 0, 0.2); color: orange; }
-        .badge-done { background: rgba(0, 128, 0, 0.2); color: #46d369; }
-
         @media (max-width: 768px) {
             .sidebar { width: 60px; padding: 10px; }
-            .sidebar h2, .nav-item span { display: none; }
             .content-area { margin-right: 60px; padding: 15px; }
-            .nav-item i { margin: 0; font-size: 1.2rem; }
+            .sidebar span { display: none; }
         }
     </style>
 </head>
 <body>
 
     <div class="admin-layout">
-        <!-- القائمة الجانبية -->
         <div class="sidebar">
-            <h2>ADMIN</h2>
+            <h2 style="color:var(--primary); text-align:center;">ADMIN</h2>
             <div class="nav-item active" onclick="showSection('orders')">
-                <i class="fas fa-shopping-cart"></i> <span>الطلبات الواردة</span>
-            </div>
-            <div class="nav-item" onclick="showSection('search')">
-                <i class="fas fa-search"></i> <span>تفاصيل طلب (Logs)</span>
+                <i class="fas fa-shopping-cart"></i> <span>الطلبات</span>
             </div>
             <div class="nav-item" onclick="showSection('add-product')">
                 <i class="fas fa-plus-circle"></i> <span>إضافة منتج</span>
             </div>
             <a href="index.html" class="nav-item" style="text-decoration:none;">
-                <i class="fas fa-external-link-alt"></i> <span>معاينة المتجر</span>
+                <i class="fas fa-external-link-alt"></i> <span>المتجر</span>
             </a>
         </div>
 
-        <!-- المحتوى -->
         <div class="content-area">
             
-            <!-- 1. قسم الطلبات -->
             <div id="section-orders">
                 <div class="panel">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <h3>📦 الطلبات الأخيرة</h3>
-                        <button class="btn" style="width:auto; padding:8px 20px; font-size:0.9rem;" onclick="loadAdminOrders()">
-                            <i class="fas fa-sync-alt"></i> تحديث
-                        </button>
-                    </div>
-                    
-                    <div id="orders-list" style="margin-top:20px;">
-                        <p style="color:#666; text-align:center;">جاري التحميل...</p>
-                    </div>
+                    <h3>📦 الطلبات الأخيرة</h3>
+                    <button class="btn" style="width:auto; padding:8px 20px;" onclick="loadAdminOrders()">
+                        <i class="fas fa-sync-alt"></i> تحديث
+                    </button>
+                    <div id="orders-list" style="margin-top:20px;"></div>
                 </div>
             </div>
 
-            <!-- 2. قسم التفاصيل والبحث -->
-            <div id="section-search" style="display:none;">
-                <div class="panel">
-                    <h3>🔍 استعلام شامل (Logs)</h3>
-                    <p style="color:#777; margin-bottom:15px;">ابحث عن أي طلب لمعرفة متى تم تفعيله ومن سحب الكود.</p>
-                    
-                    <div style="display:flex; gap:10px;">
-                        <input type="text" id="detail-search-input" class="form-control" style="margin:0;" placeholder="أدخل رقم الطلب (Order ID)">
-                        <button class="btn" style="width:auto;" onclick="searchOrderDetails()">بحث</button>
-                    </div>
-
-                    <!-- نتيجة البحث -->
-                    <div id="order-details-result" style="display:none; animation: fadeIn 0.5s;">
-                        <div class="detail-card">
-                            <h4 style="color:var(--primary); margin-top:0;">📋 تقرير تفصيلي للطلب</h4>
-                            
-                            <div class="detail-row"><strong>رقم الطلب:</strong> <span id="d-id" style="font-family:monospace; color:#fff;"></span></div>
-                            <div class="detail-row"><strong>المنتج:</strong> <span id="d-product" style="color:#fff;"></span></div>
-                            <div class="detail-row"><strong>هاتف العميل:</strong> <span id="d-phone" style="color:#fff;"></span></div>
-                            <div class="detail-row"><strong>IP المستخدم:</strong> <span id="d-ip" style="font-family:monospace; background:#333; padding:2px 6px; border-radius:4px; font-size:0.9rem;"></span></div>
-                            <div class="detail-row"><strong>حالة الطلب:</strong> <span id="d-status"></span></div>
-                            
-                            <hr style="border-color:#333; margin:15px 0;">
-                            
-                            <div class="detail-row"><strong>🕒 وقت الشراء:</strong> <span id="d-time-create"></span></div>
-                            <div class="detail-row"><strong>✅ وقت التفعيل:</strong> <span id="d-time-approve"></span></div>
-                            <div class="detail-row"><strong>🔓 وقت سحب الكود:</strong> <span id="d-time-code" style="color:#46d369;"></span></div>
-                            
-                            <hr style="border-color:#333; margin:15px 0;">
-                            
-                            <div style="text-align:center;">
-                                <p style="color:#888; margin-bottom:5px;">الكود الذي ظهر للعميل:</p>
-                                <span id="d-code" style="font-size:2rem; letter-spacing:8px; font-weight:bold; color:#fff; background:#000; padding:10px 20px; border-radius:8px; display:inline-block;">----</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 3. قسم إضافة منتج -->
             <div id="section-add-product" style="display:none;">
                 <div class="panel">
                     <h3>➕ إضافة منتج جديد</h3>
-                    
-                    <label class="form-label">نوع المنتج</label>
-                    <select id="p-type" class="form-control">
-                        <option value="netflix-user">نتفلكس يوزر (يتطلب كود دخول)</option>
-                        <option value="netflix-full">نتفلكس حساب كامل (برايفيت)</option>
-                    </select>
+                    <form id="addProductForm" onsubmit="addProduct(event)">
+                        
+                        <label class="form-label">نوع المنتج</label>
+                        <select name="type" id="p-type" class="form-control" onchange="toggleProductFields()">
+                            <option value="netflix-user">نتفلكس يوزر (بروفايل مشترك)</option>
+                            <option value="netflix-full">نتفلكس حساب كامل (برايفيت)</option>
+                        </select>
 
-                    <label class="form-label">اسم المنتج</label>
-                    <input type="text" id="p-name" class="form-control" placeholder="مثال: شاشة 4K لمدة شهر">
+                        <label class="form-label">اسم المنتج للعرض</label>
+                        <input type="text" name="name" class="form-control" placeholder="مثال: بروفايل 4K لمدة شهر" required>
 
-                    <label class="form-label">السعر (ج.م)</label>
-                    <input type="number" id="p-price" class="form-control" placeholder="50">
+                        <label class="form-label">السعر (ج.م)</label>
+                        <input type="number" name="price" class="form-control" required>
 
-                    <label class="form-label">البريد الإلكتروني للحساب</label>
-                    <input type="email" id="p-email" class="form-control" placeholder="user@example.com">
+                        <div id="fields-full" style="display:none;">
+                            <label class="form-label" style="color:var(--primary)">بيانات الحساب الكامل:</label>
+                            <input type="email" name="accountEmail" class="form-control" placeholder="Email">
+                            <input type="text" name="accountPassword" class="form-control" placeholder="Password">
+                        </div>
 
-                    <label class="form-label">كلمة المرور</label>
-                    <input type="text" id="p-pass" class="form-control" placeholder="Password123">
+                        <div id="fields-user">
+                            <label class="form-label" style="color:var(--success)">بيانات البروفايل (اليوزر):</label>
+                            <input type="text" name="profileName" class="form-control" placeholder="اسم البروفايل (مثال: User 1)">
+                            <input type="text" name="profilePin" class="form-control" placeholder="PIN البروفايل (مثال: 1234)">
+                            
+                            <label class="form-label">صورة البروفايل</label>
+                            <input type="file" name="profileImage" class="form-control" accept="image/*">
+                        </div>
 
-                    <button class="btn" onclick="addProduct()">نشر المنتج في المتجر</button>
+                        <button type="submit" class="btn">نشر المنتج</button>
+                    </form>
                 </div>
             </div>
 
@@ -156,17 +99,20 @@
     <script src="script.js"></script>
     <script>
         function showSection(id) {
-            ['orders', 'search', 'add-product'].forEach(sec => {
-                document.getElementById('section-' + sec).style.display = 'none';
-            });
+            ['orders', 'add-product'].forEach(sec => document.getElementById('section-' + sec).style.display = 'none');
             document.getElementById('section-' + id).style.display = 'block';
-            
-            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-            event.currentTarget.classList.add('active');
         }
-        
-        // التحميل التلقائي
-        window.onload = loadAdminOrders;
+        function toggleProductFields() {
+            const type = document.getElementById('p-type').value;
+            if (type === 'netflix-user') {
+                document.getElementById('fields-full').style.display = 'none';
+                document.getElementById('fields-user').style.display = 'block';
+            } else {
+                document.getElementById('fields-full').style.display = 'block';
+                document.getElementById('fields-user').style.display = 'none';
+            }
+        }
+        window.onload = () => { loadAdminOrders(); toggleProductFields(); };
     </script>
 </body>
 </html>
