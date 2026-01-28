@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>متابعة الطلب</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <header>
+        <a href="index.html" class="logo">NETFLIX</a>
+    </header>
+
+    <div class="container">
+        <div id="status-container" class="status-box">
+            
+            <!-- الحالة 1: البحث عن الطلب -->
+            <div id="search-view" style="display:none;">
+                <h2>🔍 متابعة طلبك</h2>
+                <p>أدخل رقم الطلب (Order ID) الذي ظهر لك عند الشراء</p>
+                <input type="text" id="order-input" placeholder="رقم الطلب..." style="width:100%; padding:10px; margin:10px 0; border-radius:4px; border:none;">
+                <button class="btn" onclick="manualTrack()">بحث</button>
+            </div>
+
+            <!-- الحالة 2: جاري المراجعة -->
+            <div id="pending-view" style="display:none;">
+                <i class="fas fa-clock status-icon pending"></i>
+                <h2>جاري مراجعة الطلب...</h2>
+                <p>رقم الطلب: <span id="disp-order-id" style="color:var(--primary);"></span></p>
+                <p style="color:var(--text-sec);">يرجى الانتظار، سيقوم الأدمن بتأكيد استلام المبلغ وتفعيل الحساب فوراً.</p>
+                <p style="font-size:0.8rem; margin-top:20px;">💡 نصيحة: يمكنك حفظ رابط هذه الصفحة والعودة لاحقاً.</p>
+                <div class="loader"></div>
+            </div>
+
+            <!-- الحالة 3: تمت الموافقة -->
+            <div id="approved-view" style="display:none;">
+                <i class="fas fa-check-circle status-icon approved"></i>
+                <h2>✅ مبروك! طلبك جاهز</h2>
+                
+                <div class="account-details">
+                    <p><i class="fas fa-envelope"></i> Email: <strong id="acc-email" style="color:#fff;"></strong></p>
+                    <p><i class="fas fa-key"></i> Pass: <strong id="acc-pass" style="color:#fff;"></strong></p>
+                </div>
+
+                <!-- قسم الكود (يظهر فقط لليوزر) -->
+                <div id="code-section" class="code-area" style="display:none;">
+                    <h3>🔐 كود الدخول (Netflix Code)</h3>
+                    <p>افتح نتفلكس، وعندما يطلب منك الكود، اضغط الزر بالأسفل.</p>
+                    
+                    <button id="code-btn" class="btn" onclick="getCode()">
+                        <i class="fas fa-sync-alt"></i> جلب الكود الآن
+                    </button>
+                    
+                    <div id="code-result" style="display:none;">
+                        <span id="final-code" class="big-code">----</span>
+                        <p style="color:var(--success);">تم جلب الكود بنجاح!</p>
+                    </div>
+                </div>
+
+                <a href="index.html" class="btn btn-outline">عودة للمتجر</a>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // عند فتح الصفحة، نبحث عن رقم الطلب في الرابط
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const orderId = urlParams.get('id');
+
+            if (orderId) {
+                trackOrder(orderId);
+            } else {
+                document.getElementById('search-view').style.display = 'block';
+            }
+        };
+
+        function manualTrack() {
+            const id = document.getElementById('order-input').value;
+            if(id) window.location.href = `track.html?id=${id}`;
+        }
+    </script>
+</body>
+</html>
