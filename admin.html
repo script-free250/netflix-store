@@ -2,60 +2,75 @@
 <html dir="rtl" lang="ar">
 <head>
     <meta charset="UTF-8">
-    <title>Admin</title>
+    <title>Admin Dashboard</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <div class="sidebar">
         <h2>ADMIN</h2>
-        <div class="nav-item active" onclick="showSection('orders')">الطلبات</div>
+        <div class="nav-item active" onclick="showSection('orders')">الطلبات الواردة</div>
         <div class="nav-item" onclick="showSection('search')">تفاصيل (Logs)</div>
         <div class="nav-item" onclick="showSection('add-product')">إضافة منتج</div>
-        <a href="index.html" class="nav-item" style="text-decoration:none;">المتجر</a>
+        <a href="index.html" class="nav-item" style="text-decoration:none;">معاينة المتجر</a>
     </div>
+
     <div class="main-content">
+        <!-- 1. الطلبات -->
         <div id="section-orders">
             <div class="panel">
-                <h3>📦 الطلبات <button onclick="loadAdminOrders()">تحديث</button></h3>
+                <h3>📦 الطلبات الأخيرة <button class="btn" style="width:auto; float:left; margin:0; padding:5px 10px;" onclick="loadAdminOrders()">تحديث</button></h3>
                 <div id="orders-list"></div>
             </div>
         </div>
+
+        <!-- 2. التفاصيل -->
         <div id="section-search" style="display:none;">
             <div class="panel">
-                <h3>🔍 استعلام</h3>
-                <input id="detail-search-input" class="payment-input" placeholder="رقم الطلب">
-                <button class="btn" onclick="searchOrderDetails()">بحث</button>
-                <div id="order-details-result" style="display:none; margin-top:20px; background:#111; padding:20px; border-radius:8px;">
-                    <p>ID: <span id="d-id"></span></p>
-                    <p>IP: <span id="d-ip"></span></p>
-                    <p>Phone: <span id="d-phone"></span></p>
-                    <p>Status: <span id="d-status"></span></p>
-                    <p>Created: <span id="d-time-create"></span></p>
-                    <p>Approved: <span id="d-time-approve"></span></p>
-                    <p>Code Fetched: <span id="d-time-code"></span></p>
-                    <p>Code: <span id="d-code" style="font-size:1.5rem;"></span></p>
-                    <div id="d-img-container"></div>
+                <h3>🔍 استعلام شامل</h3>
+                <div style="display:flex; gap:10px;">
+                    <input id="detail-search-input" class="form-control" style="margin:0;" placeholder="أدخل رقم الطلب">
+                    <button class="btn" style="width:auto; margin:0;" onclick="searchOrderDetails()">بحث</button>
+                </div>
+                <div id="order-details-result" style="display:none; margin-top:20px; background:#1a1a1a; padding:20px; border-radius:8px; border:1px solid #333;">
+                    <div class="detail-row"><strong>الرقم:</strong> <span id="d-id" style="font-family:monospace"></span></div>
+                    <div class="detail-row"><strong>المنتج:</strong> <span id="d-product"></span></div>
+                    <div class="detail-row"><strong>الهاتف:</strong> <span id="d-phone"></span></div>
+                    <div class="detail-row"><strong>IP:</strong> <span id="d-ip" style="font-family:monospace; background:#333;"></span></div>
+                    <div class="detail-row"><strong>الحالة:</strong> <span id="d-status"></span></div>
+                    <hr style="border-color:#333">
+                    <div class="detail-row"><strong>وقت الطلب:</strong> <span id="d-time-create"></span></div>
+                    <div class="detail-row"><strong>وقت التفعيل:</strong> <span id="d-time-approve"></span></div>
+                    <div class="detail-row"><strong>وقت الكود:</strong> <span id="d-time-code"></span></div>
+                    <div class="detail-row"><strong>الكود:</strong> <span id="d-code" style="color:#fff; font-weight:bold;"></span></div>
+                    <div class="detail-row"><strong>الإيصال:</strong> <span id="d-img-container"></span></div>
                 </div>
             </div>
         </div>
+
+        <!-- 3. إضافة منتج -->
         <div id="section-add-product" style="display:none;">
             <div class="panel">
-                <h3>➕ منتج</h3>
-                <select id="p-type" class="payment-input"><option value="netflix-user">يوزر</option><option value="netflix-full">كامل</option></select>
-                <input id="p-name" class="payment-input" placeholder="اسم">
-                <input id="p-price" class="payment-input" placeholder="سعر">
-                <input id="p-email" class="payment-input" placeholder="ايميل">
-                <input id="p-pass" class="payment-input" placeholder="باسورد">
+                <h3>➕ إضافة منتج</h3>
+                <select id="p-type" class="form-control"><option value="netflix-user">يوزر</option><option value="netflix-full">كامل</option></select>
+                <input id="p-name" class="form-control" placeholder="اسم المنتج">
+                <input id="p-price" class="form-control" placeholder="السعر">
+                <input id="p-email" class="form-control" placeholder="الإيميل">
+                <input id="p-pass" class="form-control" placeholder="باسورد">
                 <button class="btn" onclick="addProduct()">نشر</button>
             </div>
         </div>
     </div>
+
     <script src="script.js"></script>
     <script>
         function showSection(id) {
-            ['orders','search','add-product'].forEach(s=>document.getElementById('section-'+s).style.display='none');
+            ['orders','search','add-product'].forEach(s => document.getElementById('section-'+s).style.display='none');
             document.getElementById('section-'+id).style.display='block';
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            event.currentTarget.classList.add('active');
         }
+        window.onload = loadAdminOrders;
     </script>
 </body>
 </html>
