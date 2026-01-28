@@ -17,9 +17,18 @@
         .info-value { color: #fff; font-weight: bold; font-family: sans-serif; letter-spacing: 0.5px; direction: ltr; }
         .pin-display { background: #222; color: var(--primary); font-size: 1.5rem; font-weight: 800; letter-spacing: 5px; padding: 10px; border-radius: 8px; border: 1px dashed #444; display: inline-block; margin-top: 10px; }
         .copy-btn { background:none; border:none; color:#555; cursor:pointer; font-size:1rem; }
+        /* ## بداية الإضافة: تنسيق وصف المنتج ## */
+        .product-description-box { margin-top: 30px; padding: 20px; background: #111; border-radius: 12px; border: 1px solid #222; text-align: right; }
+        .product-description-box h4 { color: var(--primary); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; justify-content: flex-start; }
+        .product-description-box p { color: #ccc; line-height: 1.7; font-size: 0.95rem; white-space: pre-wrap; }
+        /* ## نهاية الإضافة ## */
     </style>
 </head>
 <body>
+    <!-- ## بداية الإضافة: حاوية الإشعارات ## -->
+    <div id="notification-container" class="notification-container"></div>
+    <!-- ## نهاية الإضافة ## -->
+
     <header><a href="index.html" class="logo">NETFLIX</a></header>
     <div class="container">
         <div class="status-page-box">
@@ -36,6 +45,13 @@
                     <h2 style="color: #fff;">استمتع بالمشاهدة!</h2>
                 </div>
                 <div id="account-display" class="account-card"></div>
+                
+                <!-- ## بداية الإضافة: حاوية وصف المنتج ## -->
+                <div id="product-description-container">
+                    <!-- سيتم حقن الوصف هنا عبر script.js -->
+                </div>
+                <!-- ## نهاية الإضافة ## -->
+
                 <div id="code-section" style="display:none; margin-top:20px;">
                     <p style="color:#f5a623;font-weight:bold;">⚠️ مطلوب رمز للدخول؟</p>
                     <p style="font-size:0.8rem;color:#aaa;">أدخل الإيميل في التطبيق، وعند طلب الرمز اضغط أدناه:</p>
