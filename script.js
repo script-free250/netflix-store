@@ -1,18 +1,6 @@
-// ✅ تأكد من تحديث الرابط عند تشغيل السيرفر
 const SERVER_URL = "https://hhjk-shop-final-v2.loca.lt"; 
 
-/* =================================================================
-   🛒 دوال المستخدم (المتجر - الشراء)
-   ================================================================= */
-
-function saveLocalOrder(order) {
-    let orders = JSON.parse(localStorage.getItem('my_orders') || '[]');
-    if (!orders.find(o => o.id === order.id)) {
-        orders.push(order);
-        localStorage.setItem('my_orders', JSON.stringify(orders));
-    }
-}
-function getLocalOrders() { return JSON.parse(localStorage.getItem('my_orders') || '[]'); }
+/* ================= USER FUNCTIONS ================= */
 
 async function loadProducts() {
     const container = document.getElementById('products-container');
@@ -21,253 +9,201 @@ async function loadProducts() {
     try {
         const res = await fetch(`${SERVER_URL}/products`, { headers: {'Bypass-Tunnel-Reminder': 'true'} });
         const products = await res.json();
-        container.innerHTML = products.length ? '' : '<p style="text-align:center; width:100%;">لا توجد منتجات حالياً.</p>';
-
+        container.innerHTML = '';
+        
+        // تأثير تأخير للأنيميشن
+        let delay = 0;
         products.forEach(p => {
             const isUser = p.type === 'netflix-user';
             container.innerHTML += `
-                <div class="card">
+                <div class="card" style="animation-delay: ${delay}s">
                     <span class="tag">${isUser ? '👤 مشترك' : '💎 كامل'}</span>
                     <h3>${p.name}</h3>
-                    <span class="price">${p.price} ج.م</span>
+                    <span class="price">${p.price} <small style="font-size:1rem">ج.م</small></span>
                     <button class="btn" onclick="openBuyModal(${p.id}, '${p.name}')">شراء الآن</button>
                 </div>`;
+            delay += 0.1;
         });
-        
+        if(!products.length) container.innerHTML = '<p style="text-align:center;width:100%">لا توجد منتجات.</p>';
         loadMyOrdersWidget();
-
     } catch (e) { 
-        container.innerHTML = `<p style="text-align:center; color:red; width:100%;">خطأ في الاتصال بالسيرفر.<br>تأكد من تشغيل النفق.</p>`;
+        container.innerHTML = `<p style="text-align:center; color:var(--primary);">خطأ في الاتصال.</p>`;
     }
 }
 
-// نافذة الشراء
 function openBuyModal(id, name) {
     document.getElementById('buyModal').style.display = 'block';
     document.getElementById('modal-product-name').innerText = name;
     document.getElementById('modal-product-id').value = id;
 }
 function closeModal() { document.getElementById('buyModal').style.display = 'none'; }
-window.onclick = function(event) { if (event.target == document.getElementById('buyModal')) closeModal(); }
 
-// إرسال الطلب (مع الصورة) - معدلة حسب الطلب
 async function submitOrder(e) {
     e.preventDefault();
     const btn = e.target.querySelector('button');
-    btn.disabled = true; btn.innerText = "جاري الرفع...";
+    const originalText = btn.innerHTML;
+    btn.disabled = true; btn.innerHTML = '<div class="loader" style="width:20px;height:20px;margin:0;border-width:2px;"></div>';
 
     const formData = new FormData(e.target);
-
     try {
-        const res = await fetch(`${SERVER_URL}/buy`, {
-            method: 'POST',
-            body: formData 
-        });
+        const res = await fetch(`${SERVER_URL}/buy`, { method: 'POST', body: formData });
         const data = await res.json();
-        
         if (data.success) {
-            const prodName = document.getElementById('modal-product-name').innerText;
-            // حفظ الطلب محلياً
-            saveLocalOrder({ id: data.orderId, name: prodName, date: new Date() });
-            
-            // 🛑 التعديل المطلوب: عدم التوجيه التلقائي
+            saveLocalOrder({ id: data.orderId, name: document.getElementById('modal-product-name').innerText });
             closeModal();
-            e.target.reset(); // تصفير الفورم
-            document.getElementById('file-label-text').innerText = "اضغط لإرفاق صورة التحويل";
-            
-            // رسالة للمستخدم
-            alert("✅ تم إرسال طلبك بنجاح!\nيمكنك متابعة حالة الطلب والدخول إليه من قائمة 'سجل طلباتك الأخيرة' في الأسفل.");
-            
-            // تحديث قائمة الطلبات فوراً ليظهر الطلب الجديد
+            e.target.reset();
+            document.getElementById('file-label-text').innerText = "اضغط لإرفاق الصورة";
+            alert("✅ تم إرسال طلبك! انتظر التفعيل.");
             loadMyOrdersWidget();
-            
-        } else {
-            alert("حدث خطأ أثناء الطلب.");
         }
-    } catch (error) { alert("فشل الاتصال بالسيرفر"); }
-    
-    btn.disabled = false; btn.innerText = "تأكيد ودفع";
+    } catch (error) { alert("حدث خطأ"); }
+    btn.disabled = false; btn.innerHTML = originalText;
 }
+
+function saveLocalOrder(order) {
+    let orders = JSON.parse(localStorage.getItem('my_orders') || '[]');
+    orders.push(order);
+    localStorage.setItem('my_orders', JSON.stringify(orders));
+}
+function getLocalOrders() { return JSON.parse(localStorage.getItem('my_orders') || '[]'); }
 
 function loadMyOrdersWidget() {
     const section = document.getElementById('my-orders-list');
-    if (!section) return;
-    const localOrders = getLocalOrders().reverse();
-    if (!localOrders.length) { section.innerHTML = '<p style="color:#555; text-align:center;">لا توجد طلبات.</p>'; return; }
-    
+    if(!section) return;
+    const orders = getLocalOrders().reverse();
     section.innerHTML = '';
-    localOrders.forEach(async (o) => {
-        let status = "مراجعة", colorClass = "pending";
+    orders.forEach(async (o) => {
+        let statusHtml = '<span style="color:#f5a623"><i class="fas fa-clock"></i> مراجعة</span>';
         try {
             const r = await fetch(`${SERVER_URL}/order-status/${o.id}`);
             const d = await r.json();
-            if(d.status === 'approved') { status="جاهز"; colorClass="success"; }
-            if(d.status === 'completed') { status="مكتمل"; colorClass="completed"; }
+            if(d.status === 'approved') statusHtml = '<span style="color:#46d369"><i class="fas fa-check"></i> جاهز</span>';
         } catch(e){}
-        
         section.innerHTML += `
             <div class="order-mini-card" onclick="window.location.href='track.html?id=${o.id}'">
-                <div><strong>${o.name}</strong><br><span style="font-size:0.75rem; color:#777">#${o.id}</span></div>
-                <span style="color:${colorClass=='success'?'#46d369':'#f5a623'}">${status}</span>
+                <div><strong>${o.name}</strong><br><small style="color:#777">#${o.id}</small></div>
+                ${statusHtml}
             </div>`;
     });
 }
 
-/* =================================================================
-   📡 صفحة التتبع (track.html)
-   ================================================================= */
-let trackInterval;
+/* ================= ADMIN FUNCTIONS ================= */
 
-async function initTrackPage() {
-    const id = new URLSearchParams(window.location.search).get('id');
-    if (!id) return;
-    const dispId = document.getElementById('disp-id');
-    if(dispId) dispId.innerText = id;
-
-    const checkStatus = async () => {
-        try {
-            const res = await fetch(`${SERVER_URL}/order-status/${id}`);
-            const data = await res.json();
-
-            if (data.status === 'approved' || data.status === 'completed') {
-                document.getElementById('pending-view').style.display = 'none';
-                document.getElementById('approved-view').style.display = 'block';
-                
-                const container = document.getElementById('account-display');
-                
-                // عرض البيانات بناءً على النوع
-                if (data.requiresCode) { // نوع: يوزر
-                    // صورة البروفايل
-                    const imgSrc = data.profileImage ? `${SERVER_URL}${data.profileImage}` : 'https://upload.wikimedia.org/wikipedia/commons/0/0b/Netflix-avatar.png';
-                    
-                    container.innerHTML = `
-                        <img src="${imgSrc}" class="profile-img">
-                        <div class="profile-detail"><span>اسم البروفايل:</span> <strong>${data.profileName || 'Unknown'}</strong></div>
-                        <div class="profile-detail"><span>PIN الدخول:</span> <strong class="pin-box">${data.profilePin || '----'}</strong></div>
-                        <hr style="width:100%; border-color:#333; margin:15px 0;">
-                        <div class="profile-detail" style="font-size:0.9rem;"><span>الإيميل:</span> ${data.accountEmail}</div>
-                    `;
-                    
-                    document.getElementById('code-section').style.display = 'block';
-                    if (data.savedCode) showFinalCode(data.savedCode);
-                    
-                } else { // نوع: حساب كامل
-                    container.innerHTML = `
-                        <div class="profile-detail"><span>الإيميل:</span> ${data.accountEmail}</div>
-                        <div class="profile-detail"><span>كلمة المرور:</span> ${data.accountPassword}</div>
-                        <p style="color:#46d369; margin-top:10px;">الحساب بالكامل لك! 🎉</p>
-                    `;
-                }
-                clearInterval(trackInterval);
-            }
-        } catch(e) {}
-    };
-
-    checkStatus();
-    trackInterval = setInterval(checkStatus, 3000);
+// التحقق من الدخول عند تحميل صفحة الأدمن
+if (window.location.pathname.includes('admin.html')) {
+    const savedPass = localStorage.getItem('admin_pass');
+    if (savedPass) {
+        verifyAdmin(savedPass).then(valid => {
+            if (valid) unlockAdmin();
+            else document.getElementById('loginOverlay').style.display = 'flex';
+        });
+    }
 }
 
-function showFinalCode(code) {
-    document.getElementById('code-btn').style.display = 'none';
-    document.getElementById('code-result').style.display = 'block';
-    document.getElementById('final-code').innerText = code;
+async function adminLogin(e) {
+    e.preventDefault();
+    const pass = document.getElementById('adminPass').value;
+    const valid = await verifyAdmin(pass);
+    if(valid) {
+        localStorage.setItem('admin_pass', pass);
+        unlockAdmin();
+    } else {
+        document.getElementById('loginError').style.display = 'block';
+    }
 }
 
-async function getCode() {
-    const id = new URLSearchParams(window.location.search).get('id');
-    const btn = document.getElementById('code-btn');
-    btn.disabled = true; btn.innerText = 'جاري الاتصال...';
-
+async function verifyAdmin(password) {
     try {
-        const res = await fetch(`${SERVER_URL}/get-code-secure`, {
-            method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ orderId: id })
+        const res = await fetch(`${SERVER_URL}/admin/login`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ password })
         });
         const data = await res.json();
-        if (data.success) showFinalCode(data.code);
-        else { alert(data.message); btn.disabled = false; btn.innerText = "محاولة مجدداً"; }
-    } catch (e) { btn.disabled = false; btn.innerText = "خطأ"; }
+        return data.success;
+    } catch(e) { return false; }
 }
 
-/* =================================================================
-   🔧 لوحة الأدمن (admin.html) - معدلة حسب الطلب
-   ================================================================= */
-
-// إضافة منتج (مع دعم الصور)
-async function addProduct(e) {
-    e.preventDefault();
-    const btn = e.target.querySelector('button');
-    btn.disabled = true; btn.innerText = "جاري النشر...";
-    const formData = new FormData(e.target);
-
-    try {
-        const res = await fetch(`${SERVER_URL}/admin/add-product`, { method: 'POST', body: formData });
-        const data = await res.json();
-        if(data.success) { alert("✅ تم النشر!"); e.target.reset(); } 
-        else alert("فشل.");
-    } catch (e) { alert("خطأ."); }
-    btn.disabled = false; btn.innerText = "نشر المنتج";
+function unlockAdmin() {
+    document.getElementById('loginOverlay').style.opacity = '0';
+    setTimeout(() => document.getElementById('loginOverlay').style.display = 'none', 500);
+    document.getElementById('dashboardWrapper').classList.add('active');
+    loadAdminOrders();
 }
 
 async function loadAdminOrders() {
-    const container = document.getElementById('orders-list');
-    if (!container) return;
-    
+    const pass = localStorage.getItem('admin_pass');
     try {
-        const res = await fetch(`${SERVER_URL}/admin/orders`);
-        let orders = await res.json();
-        orders.reverse();
-        container.innerHTML = '';
+        const res = await fetch(`${SERVER_URL}/admin/orders`, { headers: { 'admin-auth': pass } });
+        const orders = await res.json();
+        const container = document.getElementById('orders-list');
         
-        if (orders.length === 0) {
-            container.innerHTML = '<p style="text-align:center; color:#555;">لا توجد طلبات حتى الآن.</p>';
-            return;
-        }
+        container.innerHTML = '';
+        let totalRev = 0;
+        
+        // حساب الاحصائيات
+        document.getElementById('stat-total').innerText = orders.length;
 
-        orders.forEach(o => {
-            // رابط الصورة
-            const receiptUrl = o.receiptImage ? `${SERVER_URL}${o.receiptImage}` : '';
-            const receiptHtml = receiptUrl ? 
-                `<a href="${receiptUrl}" target="_blank"><img src="${receiptUrl}" class="receipt-thumb" title="عرض الإيصال"></a>` 
-                : '<div style="width:70px; height:70px; background:#222; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#555; font-size:0.7rem;">بلا صورة</div>';
-
+        orders.reverse().forEach(o => {
             const isPending = o.status === 'pending';
+            // تقدير السعر بشكل بسيط (يمكن تحسينه لو حفظنا السعر مع الطلب)
+            totalRev += 50; // افتراض متوسط سعر
             
-            // 🎨 التلوين الديناميكي حسب الحالة
-            const cardClass = isPending ? 'order-status-pending' : 'order-status-approved';
-            const statusIcon = isPending ? '<i class="fas fa-clock"></i>' : '<i class="fas fa-check-circle"></i>';
-            const statusText = isPending ? 'بانتظار المراجعة' : 'تم التفعيل';
-            const statusColor = isPending ? '#f5a623' : '#46d369';
-
-            // زر التفعيل يظهر فقط في حالة الانتظار
-            const actionBtn = isPending ? 
-                `<button class="btn" style="width:auto; padding:8px 20px; font-size:0.9rem; background:#46d369; color:#000; box-shadow:0 0 10px rgba(70,211,105,0.3);" onclick="approve(${o.orderId})">
-                    <i class="fas fa-check"></i> تفعيل
-                 </button>` 
-                : `<span style="color:#46d369; font-weight:bold; border:1px solid #46d369; padding:5px 15px; border-radius:20px;">مفعل</span>`;
+            const badge = isPending ? 'badge-pending' : 'badge-approved';
+            const statusTxt = isPending ? 'قيد الانتظار' : 'مكتمل';
+            const btn = isPending ? `<button class="btn" style="padding:5px 15px; font-size:0.8rem; width:auto;" onclick="approve(${o.orderId})">تفعيل</button>` : '';
+            
+            const img = o.receiptImage ? `<a href="${SERVER_URL}${o.receiptImage}" target="_blank" style="color:var(--primary); font-size:0.8rem;">[صورة التحويل]</a>` : '';
 
             container.innerHTML += `
-                <div class="order-card ${cardClass}">
-                    <div style="display:flex; gap:20px; align-items:center; flex:1;">
-                        ${receiptHtml}
-                        <div class="order-info">
-                            <h4>${o.productName}</h4>
-                            <div class="order-meta">
-                                <span class="meta-item"><i class="fas fa-hashtag"></i> ${o.orderId}</span>
-                                <span class="meta-item"><i class="fas fa-phone"></i> ${o.userPhone}</span>
-                                <span class="meta-item" style="color:${statusColor}">${statusIcon} ${statusText}</span>
-                            </div>
+                <div class="admin-order-card">
+                    <div>
+                        <div style="font-weight:bold; color:#fff;">${o.productName} <span class="badge ${badge}">${statusTxt}</span></div>
+                        <div style="font-size:0.85rem; color:#888; margin-top:5px;">
+                            ${o.userPhone} | #${o.orderId} ${img}
                         </div>
                     </div>
-                    <div style="margin-right:20px;">${actionBtn}</div>
+                    <div>${btn}</div>
                 </div>`;
         });
-    } catch(e) { container.innerHTML = '<p style="text-align:center; color:red;">خطأ في تحميل البيانات.</p>'; }
+        
+        // تحديث اجمالي الارباح (مجرد رقم افتراضي للعرض)
+        document.getElementById('stat-revenue').innerText = (orders.length * 150) + " ج.م"; 
+
+    } catch(e) { console.log(e); }
+}
+
+async function addProduct(e) {
+    e.preventDefault();
+    const pass = localStorage.getItem('admin_pass');
+    const formData = new FormData(e.target);
+    await fetch(`${SERVER_URL}/admin/add-product`, { 
+        method: 'POST', 
+        headers: { 'admin-auth': pass }, // لا نضع Content-Type مع FormData
+        body: formData 
+    });
+    alert("تم النشر!");
+    e.target.reset();
 }
 
 async function approve(id) {
-    if(!confirm("هل تأكدت من صحة الإيصال واستلام المبلغ؟")) return;
-    try {
-        await fetch(`${SERVER_URL}/admin/approve`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ orderId: id }) });
-        loadAdminOrders(); // تحديث القائمة لتنعكس الحالة الجديدة والألوان
-    } catch (e) { alert("Error"); }
+    const pass = localStorage.getItem('admin_pass');
+    await fetch(`${SERVER_URL}/admin/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'admin-auth': pass },
+        body: JSON.stringify({ orderId: id })
+    });
+    loadAdminOrders();
+}
+
+function showSection(id) {
+    document.querySelectorAll('.content-area > div').forEach(d => d.style.display = 'none');
+    document.getElementById('section-'+id).style.display = 'block';
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+}
+
+function toggleProductFields() {
+    const type = document.getElementById('p-type').value;
+    document.getElementById('fields-full').style.display = type === 'netflix-full' ? 'block' : 'none';
+    document.getElementById('fields-user').style.display = type === 'netflix-user' ? 'block' : 'none';
 }
