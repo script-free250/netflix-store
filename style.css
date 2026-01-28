@@ -1,0 +1,131 @@
+/* --- أضف هذا إلى ملف style.css أو استبدل المحتوى بالكامل --- */
+
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
+
+:root {
+    --primary: #E50914;
+    --primary-light: #ff1f2c;
+    --primary-glow: rgba(229, 9, 20, 0.5);
+    --primary-shadow: 0 10px 30px rgba(229, 9, 20, 0.3);
+    --success: #46d369;
+    --warning: #f5a623;
+    --info: #007BFF;
+    --danger: #dc3545;
+    --bg-main: #0B0B0F;
+    --bg-panel: #141418;
+    --border-color: rgba(255, 255, 255, 0.1);
+    --text-light: #F5F5F7;
+    --text-dark: #A1A1A6;
+    --text-muted: #6E6E73;
+}
+
+/* --- General & Body --- */
+* { box-sizing: border-box; outline: none; margin: 0; padding: 0; }
+body {
+    background-color: var(--bg-main);
+    color: var(--text-light);
+    font-family: 'Cairo', 'Poppins', sans-serif;
+    min-height: 100vh;
+    direction: rtl;
+    overflow-x: hidden;
+}
+.container { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
+
+/* --- Header & Nav --- */
+header {
+    padding: 20px 5%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(11, 11, 15, 0.7);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-color);
+    position: sticky; top: 0; z-index: 1000;
+}
+.logo { font-size: 1.8rem; font-weight: 800; color: var(--primary); text-decoration: none; }
+.logo-span { font-size: 0.5em; color: var(--text-light); font-weight: 300; }
+nav a { color: var(--text-dark); text-decoration: none; margin: 0 15px; font-weight: 600; transition: color 0.3s; }
+nav a:hover { color: var(--text-light); }
+nav a.btn-nav { background-color: var(--primary); color: white; padding: 8px 18px; border-radius: 8px; }
+nav a.btn-nav:hover { background-color: var(--primary-light); }
+
+/* --- Toast Notifications --- */
+#toast-container { position: fixed; top: 20px; left: 20px; z-index: 9999; }
+.toast {
+    background: #333; color: white; padding: 15px 20px; border-radius: 8px;
+    margin-bottom: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    display: flex; align-items: center; gap: 10px;
+    animation: slideInLeft 0.5s, fadeOut 0.5s 2.5s forwards;
+}
+.toast.success { background: var(--success); }
+.toast.error { background: var(--danger); }
+@keyframes slideInLeft { from { transform: translateX(-100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+
+/* --- Auth Forms --- */
+.center-content { display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+.auth-panel { background: var(--bg-panel); padding: 40px; border-radius: 16px; width: 100%; max-width: 420px; text-align: center; }
+.auth-subtext { color: var(--text-dark); margin-bottom: 25px; }
+.auth-switch { margin-top: 20px; color: var(--text-muted); }
+.auth-switch a { color: var(--primary); text-decoration: none; font-weight: bold; }
+.input-group { position: relative; margin-bottom: 20px; }
+.input-group i { position: absolute; top: 50%; right: 15px; transform: translateY(-50%); color: var(--text-muted); }
+.form-control {
+    width: 100%; padding: 14px 14px 14px 50px; background: #0f0f0f;
+    border: 1px solid #333; color: white; border-radius: 8px; transition: 0.3s;
+    font-family: inherit; font-size: 1rem;
+}
+.form-control:focus { border-color: var(--primary); }
+
+/* --- Product Card & Modal --- */
+.card { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 20px; padding: 25px; transition: all 0.4s; position: relative; }
+.card:hover { transform: translateY(-10px); border-color: var(--primary); }
+.star-rating { color: #f5a623; }
+.modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(11, 11, 15, 0.8); backdrop-filter: blur(8px); }
+.modal-content { background: var(--bg-panel); margin: 5% auto; padding: 30px; border-top: 4px solid var(--primary); border-radius: 16px; width: 90%; max-width: 500px; }
+.modal-content.large { max-width: 800px; }
+.close { color: var(--text-muted); font-size: 2rem; font-weight: bold; cursor: pointer; }
+
+/* --- Profile Page --- */
+.profile-card { background: var(--bg-panel); padding: 30px; border-radius: 16px; }
+.orders-container .order-item { background: #1a1a1a; padding: 20px; border-radius: 12px; margin-bottom: 15px; border-right: 4px solid; }
+.order-status-pending { border-color: var(--warning); }
+.order-status-completed { border-color: var(--success); }
+.order-status-rejected { border-color: var(--danger); }
+.rejection-reason { background: rgba(220, 53, 69, 0.1); padding: 10px; border-radius: 6px; margin-top: 10px; font-size: 0.9rem; }
+
+/* --- Admin Dashboard --- */
+.admin-body { margin: 0; }
+.admin-layout { display: flex; min-height: 100vh; }
+.sidebar { width: 260px; background: #000; border-left: 1px solid #333; padding: 25px; display: flex; flex-direction: column; }
+.sidebar h2 { color: var(--primary); text-align: center; margin-bottom: 40px; }
+.content-area { flex: 1; padding: 40px; background: #0a0a0a; }
+.admin-section { display: block; }
+.stat-card { background: var(--bg-panel); padding: 25px; border-radius: 12px; text-align: center; }
+.stat-card h4 { color: var(--text-muted); }
+.stat-card p { font-size: 2.5rem; font-weight: bold; margin: 10px 0 0 0; }
+
+/* --- Helper Classes --- */
+.btn { background: var(--primary); color: white; border: none; padding: 14px 28px; width: 100%; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
+.btn:hover { background: var(--primary-light); transform: translateY(-3px); }
+.btn:disabled { background: #333; cursor: not-allowed; }
+.loader { border: 3px solid var(--border-color); border-top: 3px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 40px auto; }
+@keyframes spin { 100% { transform: rotate(360deg); } }
+
+/* --- Visual Copy Indicator --- */
+.copy-btn { background: none; border: none; color: #555; cursor: pointer; position: relative; }
+.copy-btn.copied::after {
+    content: '✓';
+    position: absolute;
+    top: -20px; right: -5px;
+    background: var(--success);
+    color: white;
+    border-radius: 50%;
+    width: 18px; height: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    animation: pop 0.3s;
+}
+@keyframes pop { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }

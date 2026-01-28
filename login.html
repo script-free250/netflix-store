@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="center-content">
+    <div id="toast-container"></div>
+    <div class="auth-panel">
+        <h2><i class="fas fa-sign-in-alt"></i> تسجيل الدخول</h2>
+        <p class="auth-subtext">مرحباً بعودتك! سجل الدخول للوصول لحسابك.</p>
+        <form id="loginForm" onsubmit="handleLogin(event)">
+            <div class="input-group">
+                <i class="fas fa-envelope"></i>
+                <input type="email" id="email" class="form-control" placeholder="البريد الإلكتروني" required>
+            </div>
+            <div class="input-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" id="password" class="form-control" placeholder="كلمة المرور" required>
+            </div>
+            <button type="submit" class="btn" style="width:100%;">دخول</button>
+        </form>
+        <p class="auth-switch">ليس لديك حساب؟ <a href="register.html">أنشئ حسابًا الآن</a></p>
+    </div>
+    <script src="main.js"></script>
+</body>
+</html>

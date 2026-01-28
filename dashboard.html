@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | لوحة التحكم</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="admin-body">
+    <div id="toast-container"></div>
+    <div class="admin-layout">
+        <div class="sidebar">
+            <h2><i class="fas fa-tools"></i> ADMIN</h2>
+            <div class="nav-item active" onclick="showSection('dashboard', this)"><i class="fas fa-tachometer-alt"></i> <span>الإحصائيات</span></div>
+            <div class="nav-item" onclick="showSection('orders', this)"><i class="fas fa-box-open"></i> <span>الطلبات</span></div>
+            <div class="nav-item" onclick="showSection('products', this)"><i class="fas fa-tag"></i> <span>المنتجات</span></div>
+            <div class="nav-item" onclick="showSection('coupons', this)"><i class="fas fa-percent"></i> <span>الكوبونات</span></div>
+            <div class="nav-item" onclick="showSection('users', this)"><i class="fas fa-users"></i> <span>المستخدمون</span></div>
+            <div style="margin-top: auto;">
+                <a href="index.html" class="nav-item" style="text-decoration:none;"><i class="fas fa-store"></i> <span>عودة للمتجر</span></a>
+                <div class="nav-item" onclick="handleLogout()" style="color: var(--primary);"><i class="fas fa-sign-out-alt"></i> <span>تسجيل الخروج</span></div>
+            </div>
+        </div>
+        <div class="content-area">
+            <!-- Dashboard Section -->
+            <div id="section-dashboard" class="admin-section"></div>
+            <!-- Orders Section -->
+            <div id="section-orders" class="admin-section" style="display:none;"></div>
+            <!-- Products Section -->
+            <div id="section-products" class="admin-section" style="display:none;"></div>
+            <!-- Coupons Section -->
+            <div id="section-coupons" class="admin-section" style="display:none;"></div>
+            <!-- Users Section -->
+            <div id="section-users" class="admin-section" style="display:none;"></div>
+        </div>
+    </div>
+    <script src="main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Protect admin route
+            const token = localStorage.getItem('token');
+            const user = parseJwt(token);
+            if (!user || user.role !== 'admin') {
+                window.location.href = 'login.html';
+                return;
+            }
+            loadAdminDashboard();
+        });
+    </script>
+</body>
+</html>

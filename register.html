@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>حساب جديد</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="center-content">
+    <div id="toast-container"></div>
+    <div class="auth-panel">
+        <h2><i class="fas fa-user-plus"></i> إنشاء حساب جديد</h2>
+        <p class="auth-subtext">انضم إلينا للاستمتاع بأفضل العروض.</p>
+        <form id="registerForm" onsubmit="handleRegister(event)">
+            <div class="input-group">
+                <i class="fas fa-envelope"></i>
+                <input type="email" id="email" class="form-control" placeholder="البريد الإلكتروني" required>
+            </div>
+            <div class="input-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" id="password" class="form-control" placeholder="كلمة المرور" required>
+            </div>
+            <button type="submit" class="btn" style="width:100%;">إنشاء حساب</button>
+        </form>
+        <p class="auth-switch">لديك حساب بالفعل؟ <a href="login.html">سجل الدخول</a></p>
+    </div>
+    <script src="main.js"></script>
+</body>
+</html>
