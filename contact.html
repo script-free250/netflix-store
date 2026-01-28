@@ -4,46 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تواصل معنا - Netflix Store</title>
+    <!-- تم تصحيح المسارات هنا -->
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <!-- حاوية الإشعارات -->
     <div id="toast-container"></div>
-
     <header>
-        <a href="/" class="logo">NETFLIX <span class="logo-span">STORE</span></a>
+        <a href="index.html" class="logo">NETFLIX <span class="logo-span">STORE</span></a>
         <nav>
-            <a href="/">الرئيسية</a>
+            <a href="index.html">الرئيسية</a>
             <a href="contact.html" class="active">تواصل معنا</a>
         </nav>
-        <nav id="nav-auth">
-            <!-- روابط الدخول/الخروج تضاف هنا بواسطة الجافاسكريبت -->
-        </nav>
+        <nav id="nav-auth"></nav>
     </header>
 
     <div class="container" style="max-width: 700px;">
-        <div class="section-title">
-            <i class="fas fa-envelope"></i>
-            <h3>تواصل معنا</h3>
-        </div>
+        <div class="section-title"><i class="fas fa-envelope"></i><h3>تواصل معنا</h3></div>
         <div class="panel">
-            <p style="color: var(--text-dark); margin-bottom: 25px;">لديك استفسار أو مشكلة؟ املأ النموذج أدناه وسيقوم فريق الدعم بالرد عليك في أقرب وقت.</p>
+            <p>لديك استفسار؟ املأ النموذج أدناه.</p>
             <form id="contact-form">
-                <div class="form-group">
-                    <label>الاسم</label>
-                    <input type="text" name="name" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label>البريد الإلكتروني</label>
-                    <input type="email" name="email" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label>الرسالة</label>
-                    <textarea name="message" class="form-control" rows="5" required></textarea>
-                </div>
-                <button type="submit" class="btn">إرسال الرسالة</button>
+                <div class="form-group"><label>الاسم</label><input type="text" class="form-control" required></div>
+                <div class="form-group"><label>البريد الإلكتروني</label><input type="email" class="form-control" required></div>
+                <div class="form-group"><label>الرسالة</label><textarea class="form-control" rows="5" required></textarea></div>
+                <button type="submit" class="btn">إرسال</button>
             </form>
         </div>
     </div>
@@ -52,6 +37,7 @@
         <p>&copy; 2024 Netflix Store. جميع الحقوق محفوظة.</p>
     </footer>
 
+    <!-- تم تصحيح المسار هنا -->
     <script src="script.js"></script>
 </body>
 </html>
