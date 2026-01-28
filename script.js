@@ -4,7 +4,7 @@ const SERVER_URL = "https://hhjk-shop-final-v2.loca.lt";
 let productsData = []; // Store products to access details later
 
 /* =================================================================
-   ✨ 0. NEW - Notification System
+   ✨ 0. نظام الإشعارات (Notification System)
    ================================================================= */
 function showNotification(message, type = 'info') {
     const container = document.getElementById('notification-container');
@@ -175,13 +175,110 @@ async function loadMyOrdersWidget() {
 window.onclick = function (event) { if (event.target == document.getElementById("buyModal")) closeModal(); };
 
 /* =================================================================
-   🔧 3. دوال لوحة الأدمن
+   🔧 3. دوال لوحة الأدمن (النسخة الكاملة)
    ================================================================= */
-function showSection(id, el) { /* ... same as before ... */ }
-function toggleProductFields() { /* ... same as before ... */ }
-async function addProduct(e) { /* ... same as before, uses new showNotification ... */ }
-async function loadAdminOrders() { /* ... same as before ... */ }
-async function approve(id, el) { /* ... same as before, uses new showNotification ... */ }
+// FIX: Full implementation of admin panel functions
+function showSection(id, el) {
+    document.querySelectorAll(".content-area > div").forEach(s => s.style.display = "none");
+    document.getElementById("section-" + id).style.display = "block";
+    document.querySelectorAll(".nav-item").forEach(i => i.classList.remove("active"));
+    el.classList.add("active");
+}
+
+function toggleProductFields() {
+    if (!document.getElementById("p-type")) return;
+    const type = document.getElementById("p-type").value;
+    document.getElementById("fields-full").style.display = type === 'netflix-full' ? "block" : "none";
+    document.getElementById("fields-user").style.display = type === 'netflix-user' ? "block" : "none";
+}
+
+async function addProduct(e) {
+    e.preventDefault();
+    const btn = e.target.querySelector("button");
+    btn.disabled = true; btn.innerText = "جاري النشر...";
+    const formData = new FormData(e.target);
+    try {
+        const res = await fetch(`${SERVER_URL}/admin/add-product`, { method: "POST", body: formData });
+        const data = await res.json();
+        if (data.success) {
+            showNotification("✅ تم نشر المنتج بنجاح!", "success");
+            e.target.reset();
+        } else {
+            showNotification("فشل نشر المنتج.", "error");
+        }
+    } catch (err) {
+        showNotification("خطأ في الاتصال بالسيرفر.", "error");
+    } finally {
+        btn.disabled = false;
+        btn.innerText = "🚀 نشر المنتج";
+    }
+}
+
+async function loadAdminOrders() {
+    const container = document.getElementById("orders-list");
+    if (!container) return;
+    container.innerHTML = '<div class="loader"></div>';
+    try {
+        const res = await fetch(`${SERVER_URL}/admin/orders`);
+        if (!res.ok) throw new Error(`E: ${res.status}`);
+        let orders = await res.json();
+        orders.reverse();
+        container.innerHTML = "";
+        if (orders.length === 0) {
+            container.innerHTML = "<p style='text-align:center; color: var(--text-muted);'>لا توجد طلبات حالياً.</p>";
+            return;
+        }
+        orders.forEach(o => {
+            const receiptUrl = o.receiptImage ? `${SERVER_URL}${o.receiptImage}` : "";
+            const receiptHtml = receiptUrl ? `<a href="${receiptUrl}" target="_blank"><img src="${receiptUrl}" class="receipt-thumb"></a>` : "<div class='receipt-thumb' style='background:#111; display:flex; align-items:center; justify-content:center; color:var(--text-muted); font-size:0.8rem;'>لا يوجد</div>";
+            const actionBtn = o.status === 'pending' ? `<button class="btn" style="width:auto; padding: 8px 16px; font-size:0.9rem; margin:0;" onclick="approve(${o.orderId}, this)">تفعيل</button>` : `<span style="color:var(--success); font-weight:bold;">${o.status === 'completed' ? "مكتمل" : "مُفعّل"}</span>`;
+            
+            const card = document.createElement('div');
+            card.className = `order-card order-status-${o.status}`;
+            card.id = `order-${o.orderId}`;
+            card.innerHTML = `
+                <div class="order-info">
+                    <h4>${o.productName}</h4>
+                    <div class="order-meta">
+                        <span class="meta-item"><i class="fas fa-id-card"></i> #${o.orderId}</span>
+                        <span class="meta-item"><i class="fas fa-user"></i> ID: ${o.userId}</span>
+                        <span class="meta-item"><i class="fas fa-mobile-alt"></i> ${o.userPhone}</span>
+                    </div>
+                </div>
+                <div class="order-actions">
+                    ${receiptHtml}
+                    <div style="text-align:center;">${actionBtn}</div>
+                </div>`;
+            container.appendChild(card);
+        });
+    } catch (e) {
+        console.error(e);
+        container.innerHTML = "<p>خطأ في تحميل الطلبات.</p>";
+    }
+}
+
+async function approve(id, el) {
+    if (!confirm("هل أنت متأكد من تفعيل هذا الطلب؟")) return;
+    el.disabled = true;
+    el.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    try {
+        const res = await fetch(`${SERVER_URL}/admin/approve`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orderId: id }) });
+        const data = await res.json();
+        if (data.success) {
+            el.parentElement.innerHTML = "<span style='color:var(--success); font-weight:bold;'>مُفعّل</span>";
+            const card = document.getElementById(`order-${id}`);
+            card.classList.remove("order-status-pending");
+            card.classList.add("order-status-approved");
+        } else {
+            showNotification("فشل عملية التفعيل.", "error");
+            el.disabled = false;
+        }
+    } catch (e) {
+        showNotification("خطأ في الاتصال بالسيرفر.", "error");
+        el.disabled = false;
+    }
+}
+
 
 /* =================================================================
    📡 4. دوال صفحة التتبع (Track.html)
@@ -203,14 +300,27 @@ async function initTrackPage() {
                 pendingView.style.display = 'none';
                 approvedView.style.display = 'block';
                 const accContainer = document.getElementById('account-display');
-                const descContainer = document.getElementById('product-description-container');
-                if (data.productDescription && descContainer) {
-                    descContainer.innerHTML = `<div class="product-description-box"><h4><i class="fas fa-info-circle"></i> تفاصيل المنتج</h4><p>${data.productDescription}</p></div>`;
-                }
+                
                 if (data.requiresCode) {
-                     // FIXED: Using a reliable image link
-                     const imgSrc = data.profileImage ? `${SERVER_URL}${data.profileImage}` : 'https://i.ibb.co/7QcnP0d/Netflix-avatar.png';
-                     accContainer.innerHTML = `<img src="${imgSrc}" class="profile-avatar"><div class="info-row"><span class="info-label">الإيميل</span><span class="info-value">${data.accountEmail} <button class="copy-btn" onclick="navigator.clipboard.writeText('${data.accountEmail}')"><i class="fas fa-copy"></i></button></span></div><div class="info-row"><span class="info-label">البروفايل</span><span class="info-value">${data.profileName}</span></div><div><span style="font-size:0.8rem;color:#666;">PIN</span><span class="pin-display">${data.profilePin}</span></div>`;
+                     // FIX: Using a reliable public image link as a fallback
+                     const imgSrc = data.profileImage ? `${SERVER_URL}${data.profileImage}` : 'https://upload.wikimedia.org/wikipedia/commons/0/0b/Netflix-avatar.png';
+                     console.log("Profile Image URL:", imgSrc); // For debugging
+                     
+                     accContainer.innerHTML = `
+                        <img src="${imgSrc}" class="profile-avatar" alt="Profile Avatar">
+                        <div class="info-row">
+                            <span class="info-label">الإيميل</span>
+                            <span class="info-value">${data.accountEmail} <button class="copy-btn" onclick="navigator.clipboard.writeText('${data.accountEmail}')"><i class="fas fa-copy"></i></button></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">البروفايل</span>
+                            <span class="info-value">${data.profileName}</span>
+                        </div>
+                        <div>
+                            <span style="font-size:0.8rem;color:#666;">PIN</span>
+                            <span class="pin-display">${data.profilePin}</span>
+                        </div>`;
+
                      document.getElementById('code-section').style.display = 'block';
                      if (data.savedCode) {
                          document.getElementById('code-btn').style.display = 'none';
@@ -218,12 +328,26 @@ async function initTrackPage() {
                          document.getElementById('final-code').innerText = data.savedCode;
                      }
                 } else {
-                    accContainer.innerHTML = `<div class="info-row"><span class="info-label">الإيميل</span><span class="info-value">${data.accountEmail} <button class="copy-btn" onclick="navigator.clipboard.writeText('${data.accountEmail}')"><i class="fas fa-copy"></i></button></span></div><div class="info-row"><span class="info-label">المرور</span><span class="info-value">${data.accountPassword} <button class="copy-btn" onclick="navigator.clipboard.writeText('${data.accountPassword}')"><i class="fas fa-copy"></i></button></span></div>`;
+                    accContainer.innerHTML = `
+                        <div class="info-row">
+                            <span class="info-label">الإيميل</span>
+                            <span class="info-value">${data.accountEmail} <button class="copy-btn" onclick="navigator.clipboard.writeText('${data.accountEmail}')"><i class="fas fa-copy"></i></button></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">المرور</span>
+                            <span class="info-value">${data.accountPassword} <button class="copy-btn" onclick="navigator.clipboard.writeText('${data.accountPassword}')"><i class="fas fa-copy"></i></button></span>
+                        </div>`;
                 }
             }
-        } catch (error) { console.error('[Track] Error fetching status:', error); }
+        } catch (error) { 
+            console.error('[Track] Error fetching status:', error);
+            // Stop checking if there's a persistent error to avoid spamming the server
+            clearInterval(trackInterval);
+        }
     };
-    if (trackInterval) clearInterval(trackInterval); checkStatus(); trackInterval = setInterval(checkStatus, 4000);
+    if (trackInterval) clearInterval(trackInterval); 
+    checkStatus(); 
+    trackInterval = setInterval(checkStatus, 5000); // Increased interval to 5s
 }
 
 async function getCode() {
@@ -253,7 +377,21 @@ async function getCode() {
    ================================================================= */
 document.addEventListener('DOMContentLoaded', () => {
     const currentPage = window.location.pathname.split('/').pop();
-    if (currentPage === 'index.html' || currentPage === '') { updateUserSessionUI(); loadProducts(); loadMyOrdersWidget(); }
-    if (currentPage === 'admin.html') { const firstNavItem = document.querySelector('.nav-item'); if (firstNavItem) showSection('orders', firstNavItem); loadAdminOrders(); toggleProductFields(); }
-    if (currentPage === 'track.html') { initTrackPage(); }
+    
+    if (currentPage === 'index.html' || currentPage === '') { 
+        updateUserSessionUI(); 
+        loadProducts(); 
+        loadMyOrdersWidget(); 
+    }
+    if (currentPage === 'admin.html') { 
+        const firstNavItem = document.querySelector('.nav-item'); 
+        if (firstNavItem) {
+            showSection('orders', firstNavItem);
+        }
+        loadAdminOrders();
+        toggleProductFields(); 
+    }
+    if (currentPage === 'track.html') { 
+        initTrackPage(); 
+    }
 });
