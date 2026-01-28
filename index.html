@@ -1,161 +1,39 @@
-require('dotenv').config();
-const express = require('express');
-const { google } = require('googleapis');
-const cors = require('cors');
-const bodyParser = require('body-parser');
-const fs = require('fs');
-const localtunnel = require('localtunnel');
-const https = require('https');
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Netflix Store</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <header>
+        <a href="#" class="logo">NETFLIX</a>
+    </header>
+    <div class="container">
+        <div class="hero">
+            <h2>المتجر العربي الأول 🍿</h2>
+            <p>حسابات نتفلكس أصلية - تسليم فوري</p>
+        </div>
 
-const app = express();
-app.use(cors({ origin: '*' }));
-app.use(bodyParser.json());
+        <h3 style="margin-top:40px;">🔥 العروض المتاحة</h3>
+        <div id="products-container" class="grid">
+            <div class="loader"></div>
+        </div>
 
-const PORT = process.env.PORT || 7026;
-const SUBDOMAIN = 'hhjk-shop-final-v2'; // الاسم الثابت
-
-let CURRENT_TUNNEL_URL = "";
-let ADMIN_REAL_EMAIL = "";
-let tunnelInstance = null;
-let isReconnecting = false;
-
-// --- نظام الاستقرار ---
-function startKeepAlive() {
-    setInterval(() => {
-        if (CURRENT_TUNNEL_URL) https.get(CURRENT_TUNNEL_URL, (res) => {}).on('error', ()=>{});
-    }, 20000); 
-}
-
-async function startTunnel() {
-    if (isReconnecting) return;
-    isReconnecting = true;
-    try {
-        if (tunnelInstance) try { tunnelInstance.close(); } catch(e){}
-        console.log(`🔄 اتصال بالنفق (${SUBDOMAIN})...`);
-        tunnelInstance = await localtunnel({ port: PORT, subdomain: SUBDOMAIN });
-        
-        if (!tunnelInstance.url.includes(SUBDOMAIN)) {
-            console.log("⚠️ الاسم مشغول. إعادة المحاولة خلال 10 ثواني...");
-            tunnelInstance.close();
-            setTimeout(() => { isReconnecting = false; startTunnel(); }, 10000); 
-            return;
-        }
-        CURRENT_TUNNEL_URL = tunnelInstance.url.replace('http:', 'https:');
-        console.log(`✅ الرابط: ${CURRENT_TUNNEL_URL}`);
-        isReconnecting = false;
-        tunnelInstance.on('close', () => { if(!isReconnecting) { isReconnecting = false; setTimeout(startTunnel, 2000); } });
-    } catch (error) { setTimeout(() => { isReconnecting = false; startTunnel(); }, 5000); }
-}
-
-// --- قاعدة البيانات ---
-const DB_FILE = 'database.json';
-let db = { products: [], orders: [] };
-if (fs.existsSync(DB_FILE)) db = JSON.parse(fs.readFileSync(DB_FILE));
-function saveDb() { fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2)); }
-
-// --- Gmail ---
-const getOAuthClient = () => new google.auth.OAuth2(process.env.CLIENT_ID, process.env.CLIENT_SECRET, `${CURRENT_TUNNEL_URL}/auth/google/callback`);
-
-async function fetchAdminProfile() {
-    try {
-        if (!fs.existsSync('tokens.json')) return;
-        const oauth2Client = getOAuthClient();
-        oauth2Client.setCredentials(JSON.parse(fs.readFileSync('tokens.json')));
-        const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
-        const profile = await gmail.users.getProfile({ userId: 'me' });
-        ADMIN_REAL_EMAIL = profile.data.emailAddress;
-    } catch (e) {}
-}
-
-async function getNetflixCode() {
-    const oauth2Client = getOAuthClient();
-    if (fs.existsSync('tokens.json')) oauth2Client.setCredentials(JSON.parse(fs.readFileSync('tokens.json')));
-    else throw new Error("يجب ربط الحساب");
-    const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
-    const res = await gmail.users.messages.list({ userId: 'me', q: 'from:info@account.netflix.com', maxResults: 1 });
-    if (!res.data.messages || res.data.messages.length === 0) throw new Error("لا توجد رسائل");
-    const message = await gmail.users.messages.get({ userId: 'me', id: res.data.messages[0].id, format: 'full' });
-    let emailBody = message.data.snippet; // تبسيط للكود (المفصل موجود في ردودي السابقة)
-    // (يمكنك وضع كود فك التشفير الكامل هنا إذا أردت دقة 100%)
-    const codeMatch = emailBody.match(/\b\d{4}\b/);
-    if (codeMatch) return codeMatch[0];
-    throw new Error("لم أجد كود");
-}
-
-// --- الروابط ---
-app.get('/auth/google', (req, res) => {
-    res.redirect(getOAuthClient().generateAuthUrl({ access_type: 'offline', prompt: 'consent', scope: ['https://www.googleapis.com/auth/gmail.readonly', 'https://www.googleapis.com/auth/userinfo.email'] }));
-});
-app.get('/auth/google/callback', async (req, res) => {
-    const { code } = req.query;
-    try {
-        const { tokens } = await getOAuthClient().getToken(code);
-        fs.writeFileSync('tokens.json', JSON.stringify(tokens));
-        await fetchAdminProfile();
-        res.send("✅ تم الربط");
-    } catch (error) { res.send("Error"); }
-});
-
-app.get('/products', (req, res) => res.json(db.products));
-app.post('/admin/add-product', (req, res) => { db.products.push({ id: Date.now(), ...req.body }); saveDb(); res.json({ success: true }); });
-app.post('/buy', (req, res) => { 
-    db.orders.push({ orderId: Date.now(), ...req.body, status: 'pending', fetchedCode: null }); 
-    saveDb(); 
-    res.json({ success: true, orderId: Date.now() }); 
-});
-
-// حالة الطلب (تعديل: إرجاع الكود المحفوظ إذا وجد)
-app.get('/order-status/:orderId', (req, res) => {
-    const order = db.orders.find(o => o.orderId == req.params.orderId);
-    if (!order) return res.json({ status: 'not-found' });
-
-    if (order.status === 'approved' || order.status === 'completed') {
-        const product = db.products.find(p => p.id == order.productId);
-        let email = product.accountEmail;
-        let pass = product.accountPassword;
-        if (product.type === 'netflix-user' && ADMIN_REAL_EMAIL) { email = ADMIN_REAL_EMAIL; pass = "مشترك"; }
-        
-        return res.json({ 
-            status: order.status, 
-            accountEmail: email, 
-            accountPassword: pass, 
-            requiresCode: product.type === 'netflix-user',
-            savedCode: order.fetchedCode // إرجاع الكود لو كان محفوظ
-        });
-    }
-    res.json({ status: order.status });
-});
-
-app.get('/admin/orders', (req, res) => res.json(db.orders)); // إرجاع كل الطلبات للأدمن
-
-app.post('/admin/approve', (req, res) => { 
-    const order = db.orders.find(o => o.orderId == req.body.orderId); 
-    if(order) { order.status = 'approved'; saveDb(); res.json({success:true}); } 
-    else res.json({success:false}); 
-});
-
-// جلب الكود (وحفظه للأبد)
-app.post('/get-code-secure', async (req, res) => {
-    const { orderId } = req.body;
-    const order = db.orders.find(o => o.orderId == orderId);
-    
-    if (!order) return res.json({ success: false, message: "طلب غير موجود" });
-    if (order.fetchedCode) return res.json({ success: true, code: order.fetchedCode, message: "تم الجلب سابقاً" }); // لو موجود هاته علطول
-
-    try {
-        const code = await getNetflixCode();
-        // تحديث الطلب: حفظ الكود وتغيير الحالة لمكتمل
-        order.fetchedCode = code;
-        order.status = 'completed'; 
-        saveDb();
-        res.json({ success: true, code });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-});
-
-app.listen(PORT, '0.0.0.0', async () => {
-    await fetchAdminProfile();
-    await startTunnel();
-    startKeepAlive();
-});
+        <!-- قسم طلباتي الجديد -->
+        <div class="my-orders-section">
+            <div class="my-orders-header">
+                <i class="fas fa-history" style="font-size:1.5rem; color:var(--primary);"></i>
+                <h3>طلباتي الأخيرة</h3>
+            </div>
+            <div id="my-orders-list">
+                <!-- هنا ستظهر الطلبات تلقائياً -->
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+    <script>window.onload = loadProducts;</script>
+</body>
+</html>
