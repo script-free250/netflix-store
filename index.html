@@ -1,140 +1,0 @@
-<!DOCTYPE html>
-<html dir="rtl" lang="ar">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Netflix Store | المتجر الرسمي</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
-<body>
-    
-    <!-- Header -->
-    <header>
-        <div class="container header-content">
-            <a href="#" class="logo">NETFLIX <span class="logo-sub">STORE</span></a>
-            <a href="track.html" class="nav-link"><i class="fas fa-search"></i> تتبع طلبك</a>
-        </div>
-    </header>
-
-    <!-- Hero Section -->
-    <section class="hero-section">
-        <div class="hero-bg"></div>
-        <div class="container hero-content">
-            <h1>عالم من الترفيه، <br>بأسعار لا تقبل المنافسة.</h1>
-            <p>اشتراكات نتفلكس رسمية، ضمان كامل طوال المدة، وتسليم فوري.</p>
-            <a href="#products-container" class="btn-hero">تصفح العروض <i class="fas fa-arrow-down"></i></a>
-        </div>
-    </section>
-
-    <div class="container main-wrapper">
-        
-        <!-- Features Section -->
-        <div class="features-grid">
-            <div class="feature-box">
-                <i class="fas fa-shield-alt"></i>
-                <h4>ضمان كامل</h4>
-                <p>اشتراكك مضمون 100% طوال الفترة.</p>
-            </div>
-            <div class="feature-box">
-                <i class="fas fa-bolt"></i>
-                <h4>تسليم سريع</h4>
-                <p>تفعيل الطلبات يتم في أسرع وقت.</p>
-            </div>
-            <div class="feature-box">
-                <i class="fas fa-headset"></i>
-                <h4>دعم فني</h4>
-                <p>متواجدون للمساعدة في أي وقت.</p>
-            </div>
-        </div>
-
-        <!-- Products Section -->
-        <div class="section-title">
-            <i class="fas fa-fire-alt"></i>
-            <h3>أحدث الباقات والعروض</h3>
-        </div>
-        
-        <div id="products-container" class="grid products-grid">
-            <div class="loader"></div>
-        </div>
-
-        <!-- My Orders Section -->
-        <div class="my-orders-section">
-            <div class="section-title">
-                <i class="fas fa-history"></i>
-                <h3>سجل طلباتك الأخيرة</h3>
-            </div>
-            <div id="my-orders-list" class="orders-list-container">
-                <!-- سيتم ملؤها بالجافاسكريبت -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Footer -->
-    <footer>
-        <div class="container">
-            <p>جميع الحقوق محفوظة &copy; 2024 Netflix Store</p>
-            <div class="social-icons">
-                <a href="#"><i class="fab fa-whatsapp"></i></a>
-                <a href="#"><i class="fab fa-telegram"></i></a>
-            </div>
-            <a href="login.html" class="admin-link">دخول المشرفين</a>
-        </div>
-    </footer>
-
-    <!-- Buy Modal -->
-    <div id="buyModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>إكمال الطلب 🛒</h3>
-                <span class="close" onclick="closeModal()">&times;</span>
-            </div>
-            
-            <div class="product-summary">
-                <p>أنت تطلب: <span id="modal-product-name"></span></p>
-            </div>
-            
-            <form id="purchaseForm" onsubmit="submitOrder(event)">
-                <input type="hidden" id="modal-product-id" name="productId">
-                
-                <div class="form-group">
-                    <label>رقم المحفظة (فودافون كاش)</label>
-                    <div class="input-icon-wrapper">
-                        <i class="fas fa-mobile-alt"></i>
-                        <input type="text" name="userPhone" class="form-input" placeholder="010xxxxxxx" required>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>إيصال التحويل</label>
-                    <label class="file-upload-wrapper" for="receipt-file">
-                        <div class="upload-content">
-                            <i class="fas fa-cloud-upload-alt"></i>
-                            <span id="file-label-text">اضغط هنا لإرفاق صورة التحويل</span>
-                        </div>
-                        <input type="file" id="receipt-file" name="receipt" accept="image/*" required onchange="updateFileName(this)">
-                    </label>
-                </div>
-
-                <button type="submit" class="btn btn-submit">
-                    تأكيد ودفع <i class="fas fa-check-circle"></i>
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <script src="script.js"></script>
-    <script>
-        window.onload = loadProducts;
-        function updateFileName(input) {
-            const label = document.getElementById('file-label-text');
-            const wrapper = document.querySelector('.file-upload-wrapper');
-            if(input.files && input.files[0]) {
-                label.innerText = "✅ تم اختيار: " + input.files[0].name;
-                label.style.color = "#46d369";
-                wrapper.style.borderColor = "#46d369";
-            }
-        }
-    </script>
-</body>
-</html>
