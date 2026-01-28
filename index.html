@@ -3,54 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Netflix Store | متجر الحسابات</title>
+    <title>Netflix Store | المتجر الرسمي</title>
     <link rel="stylesheet" href="style.css">
-    <!-- أيقونات FontAwesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
+
     <header>
-        <div class="header-content">
-            <h1>NETFLIX <span style="color:white; font-weight:300;">STORE</span></h1>
-            <p>أسرع متجر لتسليم الحسابات فوري ⚡</p>
-        </div>
+        <a href="index.html" class="logo">NETFLIX <span style="font-weight:300; color:white;">STORE</span></a>
+        <!-- زر لمتابعة الطلب يدوياً -->
+        <a href="track.html" class="tag" style="text-decoration:none; cursor:pointer;">
+            <i class="fas fa-search"></i> متابعة طلب
+        </a>
     </header>
 
     <div class="container">
-        <div class="alert-box">
-            <i class="fas fa-info-circle"></i> الدفع عبر <strong>فودافون كاش</strong>. الحساب يصلك فور تحويل المبلغ.
+        <div class="hero">
+            <h2>اشترك واستمتع بأفضل العروض 🍿</h2>
+            <p>تسليم فوري - ضمان كامل - دفع آمن عبر فودافون كاش</p>
         </div>
-        
-        <h2 class="section-title">الباقات المتاحة</h2>
+
         <div id="products-container" class="grid">
-            <!-- المنتجات تظهر هنا -->
+            <div class="loader"></div> <!-- سيختفي عند التحميل -->
         </div>
     </div>
 
-    <!-- نافذة الشراء والانتظار -->
-    <div id="wait-modal" class="modal">
-        <div class="modal-content">
-            <div class="loader"></div>
-            <h3>جاري مراجعة الطلب...</h3>
-            <p>يرجى الانتظار، سيقوم الأدمن بتأكيد استلام المبلغ خلال لحظات.</p>
-            <div id="status-msg" class="status-pending">قيد الانتظار...</div>
-
-            <div id="result-area" style="display:none; text-align:left; direction:ltr; margin-top:20px;">
-                <div class="account-box">
-                    <p>📧 Email: <strong id="acc-email" style="color:#fff;"></strong></p>
-                    <p>🔑 Pass: <strong id="acc-pass" style="color:#fff;"></strong></p>
-                </div>
-
-                <div id="code-section" style="display:none; text-align:center; margin-top:15px; direction:rtl;">
-                    <hr style="border-color:#333;">
-                    <p style="color:#ccc; font-size:14px;">هذا الحساب يتطلب كود دخول، اضغط الزر أدناه عند طلب نتفلكس للكود.</p>
-                    <button id="code-btn" class="btn" onclick="getCode()">طلب كود الدخول (Get Code)</button>
-                    <div id="code-display" class="code-box"></div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <footer>
+        <p>جميع الحقوق محفوظة &copy; 2026 Netflix Store</p>
+    </footer>
 
     <script src="script.js"></script>
+    <script>
+        // تشغيل تحميل المنتجات فقط في هذه الصفحة
+        window.onload = loadProducts;
+    </script>
 </body>
 </html>
