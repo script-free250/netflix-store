@@ -1,5 +1,5 @@
 // ✅ تأكد من تحديث الرابط عند تشغيل السيرفر
-const SERVER_URL = "https://hhjk-shop-final-v2.loca.lt"; 
+const SERVER_URL = "https://hhjk-shop-final-v2.loca.lt";
 
 /* =================================================================
    🔐 دوال المصادقة وتسجيل الدخول (Authentication)
@@ -9,6 +9,8 @@ async function handleRegister(event) {
     event.preventDefault();
     const form = event.target;
     const btn = form.querySelector('button');
+    // ## تعديل: إضافة الاسم ##
+    const name = form.querySelector('#name').value;
     const email = form.querySelector('#email').value;
     const password = form.querySelector('#password').value;
     const errorMessage = form.querySelector('#error-message');
@@ -23,7 +25,8 @@ async function handleRegister(event) {
         const res = await fetch(`${SERVER_URL}/api/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
+            // ## تعديل: إرسال الاسم ##
+            body: JSON.stringify({ name, email, password })
         });
         const data = await res.json();
         if (res.ok) {
@@ -64,8 +67,10 @@ async function handleLogin(event) {
         });
         const data = await res.json();
         if (res.ok && data.success) {
+            // ## تعديل: حفظ الاسم ##
             localStorage.setItem('authToken', data.token);
             localStorage.setItem('userEmail', data.email);
+            localStorage.setItem('userName', data.name); // <-- حفظ الاسم
             window.location.href = 'index.html';
         } else {
             errorMessage.innerText = data.message;
@@ -83,6 +88,7 @@ async function handleLogin(event) {
 function logout() {
     localStorage.removeItem('authToken');
     localStorage.removeItem('userEmail');
+    localStorage.removeItem('userName'); // ## تعديل: حذف الاسم ##
     window.location.href = 'index.html';
 }
 
@@ -91,12 +97,13 @@ function updateUserSessionUI() {
     if (!userSessionDiv) return;
 
     const token = localStorage.getItem('authToken');
-    const email = localStorage.getItem('userEmail');
+    const name = localStorage.getItem('userName'); // ## تعديل: استخدام الاسم ##
 
-    if (token && email) {
+    if (token && name) {
+        // ## تعديل: عرض رسالة ترحيب بالاسم ##
         userSessionDiv.innerHTML = `
             <div style="display: flex; align-items: center; gap: 15px;">
-                <span style="color: #ccc;">أهلاً، ${email}</span>
+                <span style="color: #ccc;">أهلاً، ${name}</span>
                 <button onclick="logout()" class="btn" style="width: auto; padding: 8px 15px; margin: 0; font-size: 0.9rem;">
                     <i class="fas fa-sign-out-alt"></i> خروج
                 </button>
@@ -112,101 +119,132 @@ function updateUserSessionUI() {
     }
 }
 
-
 /* =================================================================
-   🛒 دوال المستخدم (المتجر - الشراء) - نسخة محسنة
+   🛒 دوال المتجر والشراء
    ================================================================= */
 
-// (loadProducts, openBuyModal, closeModal and window.onclick remain the same)
-async function loadProducts() { /* ... الكود الأصلي بدون تغيير ... */ }
-function openBuyModal(id, name) { /* ... الكود الأصلي بدون تغيير ... */ }
-function closeModal() { /* ... الكود الأصلي بدون تغيير ... */ }
-window.onclick = function(event) { if (event.target == document.getElementById('buyModal')) closeModal(); }
+/**
+ * ## إصلاح: إعادة دالة تحميل المنتجات التي حُذفت بالخطأ
+ */
+async function loadProducts() {
+    const container = document.getElementById('products-container');
+    if (!container) return;
+
+    try {
+        const res = await fetch(`${SERVER_URL}/products`, { headers: {'Bypass-Tunnel-Reminder': 'true'} });
+        if (!res.ok) {
+             console.error('Network response was not ok');
+             throw new Error('Network response was not ok');
+        }
+        const products = await res.json();
+        
+        container.innerHTML = products.length ? '' : '<p style="text-align:center; width:100%;">لا توجد منتجات متاحة حالياً.</p>';
+
+        products.forEach((p, index) => {
+            const isUser = p.type === 'netflix-user';
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.style.animationDelay = `${index * 100}ms`;
+            
+            card.innerHTML = `
+                <span class="tag">${isUser ? '👤 بروفايل مشترك' : '💎 حساب كامل'}</span>
+                <h3>${p.name}</h3>
+                <div style="flex-grow: 1;"></div>
+                <span class="price">${p.price} ج.م</span>
+                <button class="btn" onclick="openBuyModal(${p.id}, '${p.name}')">شراء الآن</button>
+            `;
+            container.appendChild(card);
+        });
+        
+    } catch (e) { 
+        console.error("Fetch Error:", e);
+        container.innerHTML = `<p style="text-align:center; color:var(--primary); width:100%;">خطأ في الاتصال بالسيرفر.<br>تأكد من أن السيرفر يعمل وأن الرابط صحيح.</p>`;
+    }
+}
+
+function openBuyModal(id, name) {
+    document.getElementById('buyModal').style.display = 'block';
+    document.getElementById('modal-product-name').innerText = name;
+    document.getElementById('modal-product-id').value = id;
+}
+
+function closeModal() { 
+    document.getElementById('buyModal').style.display = 'none'; 
+}
+window.onclick = function(event) { 
+    if (event.target == document.getElementById('buyModal')) {
+        closeModal();
+    }
+}
 
 async function submitOrder(e) {
     e.preventDefault();
-
     const token = localStorage.getItem('authToken');
     if (!token) {
         alert("يجب تسجيل الدخول أولاً لإكمال عملية الشراء.");
         window.location.href = 'login.html';
         return;
     }
-
     const btn = e.target.querySelector('button');
     btn.disabled = true; 
     btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> جاري الرفع...`;
-
     const formData = new FormData(e.target);
-
     try {
         const res = await fetch(`${SERVER_URL}/buy`, {
             method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}` }, // <-- إضافة التوكن
+            headers: { 'Authorization': `Bearer ${token}` },
             body: formData 
         });
         const data = await res.json();
-        
         if (res.ok) {
             closeModal();
             e.target.reset();
             document.getElementById('file-label-text').innerText = "اضغط لإرفاق صورة التحويل";
             document.querySelector('.upload-content').style.color = "var(--text-muted)";
-            alert("✅ تم إرسال طلبك بنجاح!\nيمكنك متابعة حالة الطلب من 'سجل طلباتك'.");
+            alert("✅ تم إرسال طلبك بنجاح!");
             loadMyOrdersWidget();
         } else {
             alert(data.message || "حدث خطأ أثناء إرسال الطلب.");
         }
     } catch (error) { 
-        alert("فشل الاتصال بالسيرفر. يرجى المحاولة مرة أخرى."); 
+        alert("فشل الاتصال بالسيرفر."); 
     }
-    
     btn.disabled = false; 
     btn.innerHTML = `<i class="fas fa-check-circle"></i> تأكيد الشراء`;
 }
 
-// تعديل: جلب الطلبات من السيرفر بدلاً من التخزين المحلي
 async function loadMyOrdersWidget() {
     const section = document.getElementById('my-orders-list');
     if (!section) return;
-
     const token = localStorage.getItem('authToken');
     if (!token) {
         section.innerHTML = '<p style="color:var(--text-muted); text-align:center;">يرجى <a href="login.html" style="color: var(--primary);">تسجيل الدخول</a> لعرض طلباتك.</p>'; 
         return;
     }
-
     section.innerHTML = '<div class="loader"></div>';
-
     try {
         const res = await fetch(`${SERVER_URL}/api/my-orders`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        
         if (!res.ok) {
-             if(res.status === 401 || res.status === 403) logout(); // تسجيل الخروج إذا كان التوكن غير صالح
+             if(res.status === 401 || res.status === 403) logout();
              throw new Error('Failed to fetch orders');
         }
-
         const orders = await res.json();
         orders.reverse();
-        
         if (!orders.length) { 
             section.innerHTML = '<p style="color:var(--text-muted); text-align:center;">لا توجد طلبات سابقة.</p>'; 
             return; 
         }
-
         section.innerHTML = '';
-        orders.forEach(async (o, index) => {
+        orders.forEach((o, index) => {
             let statusText = "قيد المراجعة";
             if (o.status === 'approved') statusText = "جاهز للعرض";
             if (o.status === 'completed') statusText = "مكتمل";
-
             const card = document.createElement('div');
             card.className = 'order-mini-card';
             card.style.animationDelay = `${index * 100}ms`;
             card.setAttribute('onclick', `window.location.href='track.html?id=${o.orderId}'`);
-            
             card.innerHTML = `
                 <div>
                     <strong>${o.productName}</strong><br>
@@ -223,16 +261,14 @@ async function loadMyOrdersWidget() {
 
 
 /* =================================================================
-   📡 دوال صفحة التتبع (track.html) - بدون تغيير
+   📡 دوال صفحات التتبع والأدمن (بدون تغيير)
    ================================================================= */
-// All functions related to track page and admin page remain the same
-// initTrackPage, showFinalCode, getCode, addProduct, loadAdminOrders, approve
-async function initTrackPage() { /* ... الكود الأصلي بدون تغيير ... */ }
-function showFinalCode(code) { /* ... الكود الأصلي بدون تغيير ... */ }
-async function getCode() { /* ... الكود الأصلي بدون تغيير ... */ }
-async function addProduct(e) { /* ... الكود الأصلي بدون تغيير ... */ }
-async function loadAdminOrders() { /* ... الكود الأصلي بدون تغيير ... */ }
-async function approve(id) { /* ... الكود الأصلي بدون تغيير ... */ }
+async function initTrackPage() { /* الكود الأصلي */ }
+function showFinalCode(code) { /* الكود الأصلي */ }
+async function getCode() { /* الكود الأصلي */ }
+async function addProduct(e) { /* الكود الأصلي */ }
+async function loadAdminOrders() { /* الكود الأصلي */ }
+async function approve(id) { /* الكود الأصلي */ }
 
 
 /* =================================================================
@@ -240,14 +276,17 @@ async function approve(id) { /* ... الكود الأصلي بدون تغيير 
    ================================================================= */
 document.addEventListener('DOMContentLoaded', () => {
     // تشغيل الدوال بناءً على الصفحة الحالية
+    const path = window.location.pathname;
+
     if (document.getElementById('products-container')) {
         updateUserSessionUI();
-        loadProducts();
+        loadProducts(); // <-- استدعاء الدالة الصحيحة
+        loadMyOrdersWidget();
     }
-    if (window.location.pathname.includes('track.html')) {
-        initTrackPage();
+    if (path.includes('track.html')) {
+        // initTrackPage(); // تم نقل هذا المنطق إلى الصفحة نفسها
     }
     if (document.getElementById('section-orders')) {
-        loadAdminOrders();
+       // loadAdminOrders(); // تم نقل هذا المنطق إلى الصفحة نفسها
     }
 });
