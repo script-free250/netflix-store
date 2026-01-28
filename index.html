@@ -3,77 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Netflix Store | عالم الترفيه بين يديك</title>
+    <title>Netflix Store | المتجر الرسمي الفاخر</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <style>
+        .file-upload-wrapper {
+            position: relative; width: 100%; height: 130px;
+            border: 2px dashed #444; border-radius: 15px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: 0.3s; background: rgba(255,255,255,0.02);
+            margin-bottom: 20px;
+        }
+        .file-upload-wrapper:hover { border-color: var(--primary); background: rgba(229,9,20,0.05); }
+        .file-upload-wrapper input[type="file"] { display: none; }
+        
+        .order-mini-card {
+            background: #141414; border-right: 4px solid #333;
+            padding: 18px 25px; margin-bottom: 12px; border-radius: 12px;
+            display: flex; justify-content: space-between; align-items: center;
+            transition: 0.3s; cursor: pointer; border: 1px solid #222;
+        }
+        .order-mini-card:hover { transform: translateX(-8px); border-right-color: var(--primary); background: #1a1a1a; }
+    </style>
 </head>
 <body>
-
-    <header data-aos="fade-down">
-        <a href="#" class="logo">NETFLIX <span style="font-weight:300; color:#fff; font-size:0.6em;">STORE</span></a>
-        <div id="status-badge" style="font-size: 0.8rem; color: #46d369;"><i class="fas fa-circle"></i> المتجر متصل</div>
+    <header>
+        <a href="index.html" class="logo">NETFLIX <span style="font-size:0.5em; color:#fff; font-weight:300;">STORE</span></a>
+        <div class="nav-links">
+             <i class="fas fa-shield-alt" style="color:var(--success)"></i> ضمان ذهبي
+        </div>
     </header>
 
     <div class="container">
-        <section class="hero" data-aos="zoom-in">
-            <h2>اشترك في نتفليكس بضغطة واحدة</h2>
-            <p>حسابات رسمية، تسليم فوري، وأقل الأسعار في السوق.</p>
-        </section>
+        <div class="hero reveal">
+            <h2>اشتراكاتك المفضلة، بلمسة واحدة.</h2>
+            <p>استمتع بأفضل خدمات الترفيه بأقل الأسعار في السوق المصري. تسليم فوري، دعم فني 24/7، وضمان كامل على جميع المنتجات.</p>
+        </div>
 
-        <div class="grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 50px;">
-            <div class="card" style="padding: 20px;" data-aos="fade-up" data-aos-delay="100">
-                <i class="fas fa-bolt" style="color:var(--primary); font-size: 2rem;"></i>
-                <h4>تسليم سريع</h4>
-            </div>
-            <div class="card" style="padding: 20px;" data-aos="fade-up" data-aos-delay="200">
-                <i class="fas fa-shield-alt" style="color:var(--primary); font-size: 2rem;"></i>
-                <h4>ضمان كامل</h4>
-            </div>
-            <div class="card" style="padding: 20px;" data-aos="fade-up" data-aos-delay="300">
-                <i class="fas fa-headset" style="color:var(--primary); font-size: 2rem;"></i>
-                <h4>دعم 24/7</h4>
+        <div id="products-container" class="grid">
+            <div style="text-align:center; grid-column: 1/-1; padding: 50px;">
+                <div class="loader" style="margin: auto;"></div>
             </div>
         </div>
 
-        <h3 style="text-align: center; font-size: 2rem;" data-aos="fade-right">اكتشف باقاتنا 👇</h3>
-        <div id="products-container" class="grid">
-            </div>
-
-        <div id="orders-widget" class="card" style="margin-top: 60px; text-align: right;" data-aos="fade-up">
-            <h3><i class="fas fa-history"></i> طلباتك الأخيرة</h3>
-            <div id="my-orders-list"></div>
+        <div class="orders-widget reveal" style="animation-delay: 0.3s;">
+            <h3 style="margin-top:0;"><i class="fas fa-history" style="color:var(--primary)"></i> سجل طلباتك الأخيرة</h3>
+            <div id="my-orders-list">
+                </div>
         </div>
     </div>
 
     <div id="buyModal" class="modal">
-        <div class="modal-content" style="background:#111; border-radius:20px; padding:30px;">
-            <h3 id="modal-product-name" style="color:var(--primary);"></h3>
-            <form onsubmit="submitOrder(event)">
+        <div class="modal-content reveal-scale">
+            <span class="close-btn" onclick="closeModal()" style="position:absolute; left:25px; top:20px; cursor:pointer; font-size:1.5rem;">&times;</span>
+            <h3 id="modal-product-name" style="margin-top:0; color:var(--primary);">اسم المنتج</h3>
+            <p style="color:#888; font-size:0.9rem; margin-bottom:30px;">يرجى ملء البيانات التالية لإتمام عملية الشراء بنجاح.</p>
+            
+            <form id="order-form" onsubmit="submitOrder(event)">
                 <input type="hidden" id="modal-product-id" name="productId">
-                <input type="hidden" id="modal-product-hidden-name" name="productName">
                 
-                <div style="margin-bottom:20px;">
-                    <label>رقم الواتساب الخاص بك</label>
-                    <input type="text" name="userPhone" class="btn" style="background:#222; width:100%; text-align:right;" placeholder="010xxxxxxxx" required>
+                <div class="form-group">
+                    <label class="form-label">رقم الموبايل (واتساب)</label>
+                    <input type="text" name="userPhone" class="form-input" placeholder="010xxxxxxx" required>
                 </div>
 
-                <div style="margin-bottom:20px;">
-                    <label>ارفق صورة التحويل</label>
-                    <input type="file" name="receipt" accept="image/*" required>
+                <div class="form-group">
+                    <label class="form-label">إيصال التحويل البنكي أو المحفظة</label>
+                    <label class="file-upload-wrapper" for="receipt-file">
+                        <div style="text-align:center; color:#666;">
+                            <i class="fas fa-cloud-upload-alt" style="font-size:2rem; margin-bottom:10px;"></i><br>
+                            <span id="file-label-text">اضغط لرفع صورة التحويل</span>
+                        </div>
+                        <input type="file" id="receipt-file" name="receipt" accept="image/*" required onchange="updateFileName(this)">
+                    </label>
                 </div>
 
-                <button type="submit" class="btn" style="width:100%;">تأكيد الطلب</button>
+                <button type="submit" class="btn">
+                    <i class="fas fa-shopping-cart"></i> تأكيد الطلب والدفع
+                </button>
             </form>
-            <button onclick="closeModal()" style="background:none; border:none; color:#555; margin-top:15px; cursor:pointer;">إلغاء</button>
         </div>
     </div>
 
-    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script src="script.js"></script>
     <script>
-        AOS.init({ duration: 1000, once: true });
         window.onload = loadProducts;
+        function updateFileName(input) {
+            const label = document.getElementById('file-label-text');
+            if(input.files && input.files[0]) {
+                label.innerText = "✅ تم اختيار: " + input.files[0].name;
+                label.style.color = "#46d369";
+            }
+        }
     </script>
 </body>
 </html>
