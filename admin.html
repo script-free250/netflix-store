@@ -2,64 +2,163 @@
 <html dir="rtl" lang="ar">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* إصلاح تخطيط الأدمن */
+        body {
+            background-color: #0a0a0a;
+            overflow-x: hidden; /* لمنع التمرير العرضي */
+        }
+
+        /* القائمة الجانبية الثابتة يميناً */
+        .sidebar {
+            width: 260px;
+            background: #000;
+            border-left: 1px solid #333;
+            padding: 20px;
+            position: fixed;
+            top: 0;
+            right: 0;
+            height: 100vh; /* طول الشاشة بالكامل */
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        /* المحتوى الرئيسي - يبتعد عن اليمين بمقدار عرض القائمة */
+        .main-content {
+            margin-right: 260px; /* نفس عرض القائمة */
+            width: calc(100% - 260px); /* الباقي من العرض */
+            padding: 40px;
+            min-height: 100vh;
+        }
+
+        /* تحسينات للشاشات الصغيرة */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 70px; /* تصغير القائمة */
+                padding: 10px;
+            }
+            .sidebar h2, .nav-item span { display: none; } /* إخفاء النصوص */
+            .nav-item i { margin: 0; font-size: 1.5rem; text-align: center; width: 100%; }
+            .main-content {
+                margin-right: 70px;
+                width: calc(100% - 70px);
+                padding: 20px;
+            }
+        }
+
+        /* تنسيق العناصر */
+        .nav-item {
+            color: #aaa; padding: 15px; margin-bottom: 8px; cursor: pointer; border-radius: 8px; transition: 0.3s; display: flex; align-items: center;
+        }
+        .nav-item:hover, .nav-item.active { background: #222; color: white; border-right: 4px solid var(--primary); }
+        .nav-item i { margin-left: 10px; width: 25px; text-align: center; }
+        
+        .panel { background: #151515; padding: 30px; border-radius: 12px; margin-bottom: 30px; border: 1px solid #222; }
+        .form-control { width: 100%; padding: 12px; background: #222; border: 1px solid #444; color: white; border-radius: 6px; margin-bottom: 15px; }
+        
+        .detail-row { border-bottom: 1px solid #333; padding: 10px 0; display: flex; justify-content: space-between; }
+        .detail-row strong { color: #888; }
+    </style>
 </head>
 <body>
+
+    <!-- القائمة الجانبية -->
     <div class="sidebar">
-        <h2>ADMIN</h2>
-        <div class="nav-item active" onclick="showSection('orders')">الطلبات الواردة</div>
-        <div class="nav-item" onclick="showSection('search')">تفاصيل (Logs)</div>
-        <div class="nav-item" onclick="showSection('add-product')">إضافة منتج</div>
-        <a href="index.html" class="nav-item" style="text-decoration:none;">معاينة المتجر</a>
+        <h2 style="color:var(--primary); text-align:center; margin-bottom:40px;">ADMIN</h2>
+        
+        <div class="nav-item active" onclick="showSection('orders')">
+            <i class="fas fa-shopping-cart"></i> <span>الطلبات الواردة</span>
+        </div>
+        <div class="nav-item" onclick="showSection('search')">
+            <i class="fas fa-search"></i> <span>تفاصيل (Logs)</span>
+        </div>
+        <div class="nav-item" onclick="showSection('add-product')">
+            <i class="fas fa-plus-circle"></i> <span>إضافة منتج</span>
+        </div>
+        
+        <a href="index.html" class="nav-item" style="text-decoration:none; margin-top:50px;">
+            <i class="fas fa-external-link-alt"></i> <span>معاينة المتجر</span>
+        </a>
     </div>
 
+    <!-- المحتوى الرئيسي (لن يغطيه القائمة الآن) -->
     <div class="main-content">
-        <!-- 1. الطلبات -->
+        
+        <!-- قسم 1: الطلبات -->
         <div id="section-orders">
             <div class="panel">
-                <h3>📦 الطلبات الأخيرة <button class="btn" style="width:auto; float:left; margin:0; padding:5px 10px;" onclick="loadAdminOrders()">تحديث</button></h3>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                    <h3 style="margin:0;">📦 الطلبات الأخيرة</h3>
+                    <button class="btn" style="width:auto; margin:0; padding:5px 15px;" onclick="loadAdminOrders()">
+                        <i class="fas fa-sync"></i> تحديث
+                    </button>
+                </div>
                 <div id="orders-list"></div>
             </div>
         </div>
 
-        <!-- 2. التفاصيل -->
+        <!-- قسم 2: البحث والتفاصيل -->
         <div id="section-search" style="display:none;">
             <div class="panel">
                 <h3>🔍 استعلام شامل</h3>
-                <div style="display:flex; gap:10px;">
+                <div style="display:flex; gap:10px; margin-bottom:20px;">
                     <input id="detail-search-input" class="form-control" style="margin:0;" placeholder="أدخل رقم الطلب">
                     <button class="btn" style="width:auto; margin:0;" onclick="searchOrderDetails()">بحث</button>
                 </div>
-                <div id="order-details-result" style="display:none; margin-top:20px; background:#1a1a1a; padding:20px; border-radius:8px; border:1px solid #333;">
+
+                <div id="order-details-result" style="display:none; background:#111; padding:20px; border-radius:8px; border:1px solid #333;">
                     <div class="detail-row"><strong>الرقم:</strong> <span id="d-id" style="font-family:monospace"></span></div>
                     <div class="detail-row"><strong>المنتج:</strong> <span id="d-product"></span></div>
                     <div class="detail-row"><strong>الهاتف:</strong> <span id="d-phone"></span></div>
                     <div class="detail-row"><strong>IP:</strong> <span id="d-ip" style="font-family:monospace; background:#333;"></span></div>
                     <div class="detail-row"><strong>الحالة:</strong> <span id="d-status"></span></div>
-                    <hr style="border-color:#333">
+                    
+                    <h4 style="margin:20px 0 10px; color:var(--primary);">التوقيتات</h4>
                     <div class="detail-row"><strong>وقت الطلب:</strong> <span id="d-time-create"></span></div>
                     <div class="detail-row"><strong>وقت التفعيل:</strong> <span id="d-time-approve"></span></div>
-                    <div class="detail-row"><strong>وقت الكود:</strong> <span id="d-time-code"></span></div>
-                    <div class="detail-row"><strong>الكود:</strong> <span id="d-code" style="color:#fff; font-weight:bold;"></span></div>
-                    <div class="detail-row"><strong>الإيصال:</strong> <span id="d-img-container"></span></div>
+                    <div class="detail-row"><strong>وقت سحب الكود:</strong> <span id="d-time-code"></span></div>
+                    
+                    <h4 style="margin:20px 0 10px; color:var(--primary);">البيانات</h4>
+                    <div class="detail-row"><strong>الكود المسحوب:</strong> <span id="d-code" style="color:#fff; font-weight:bold;"></span></div>
+                    <div class="detail-row" style="display:block;">
+                        <strong>صورة التحويل:</strong>
+                        <div id="d-img-container" style="margin-top:10px;"></div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- 3. إضافة منتج -->
+        <!-- قسم 3: إضافة منتج -->
         <div id="section-add-product" style="display:none;">
             <div class="panel">
-                <h3>➕ إضافة منتج</h3>
-                <select id="p-type" class="form-control"><option value="netflix-user">يوزر</option><option value="netflix-full">كامل</option></select>
-                <input id="p-name" class="form-control" placeholder="اسم المنتج">
-                <input id="p-price" class="form-control" placeholder="السعر">
-                <input id="p-email" class="form-control" placeholder="الإيميل">
-                <input id="p-pass" class="form-control" placeholder="باسورد">
-                <button class="btn" onclick="addProduct()">نشر</button>
+                <h3>➕ إضافة منتج جديد</h3>
+                
+                <label>نوع المنتج</label>
+                <select id="p-type" class="form-control">
+                    <option value="netflix-user">نتفلكس يوزر (يتطلب كود)</option>
+                    <option value="netflix-full">نتفلكس حساب كامل</option>
+                </select>
+
+                <label>اسم المنتج</label>
+                <input id="p-name" class="form-control" placeholder="مثال: شاشة 4K">
+
+                <label>السعر</label>
+                <input id="p-price" class="form-control" placeholder="50">
+
+                <label>إيميل الحساب</label>
+                <input id="p-email" class="form-control" placeholder="email@netflix.com">
+
+                <label>كلمة المرور</label>
+                <input id="p-pass" class="form-control" placeholder="password">
+
+                <button class="btn" onclick="addProduct()">نشر المنتج</button>
             </div>
         </div>
+
     </div>
 
     <script src="script.js"></script>
@@ -70,6 +169,8 @@
             document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
             event.currentTarget.classList.add('active');
         }
+        
+        // تحميل الطلبات تلقائياً
         window.onload = loadAdminOrders;
     </script>
 </body>
