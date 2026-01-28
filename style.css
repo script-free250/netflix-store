@@ -1,152 +1,38 @@
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;800&display=swap');
-
-:root {
-    --primary: #e50914;
-    --primary-glow: rgba(229, 9, 20, 0.5);
-    --bg-main: #000000;
-    --bg-sec: #121212;
-    --glass: rgba(30, 30, 30, 0.6);
-    --text: #ffffff;
-    --success: #46d369;
-    --warning: #f5a623;
-}
-
+:root { --primary: #e50914; --primary-glow: rgba(229, 9, 20, 0.5); --bg-main: #000000; --glass: rgba(30, 30, 30, 0.6); --text: #ffffff; --success: #46d369; --warning: #f5a623; }
 * { box-sizing: border-box; outline: none; }
-
-body {
-    background-color: var(--bg-main);
-    background-image: radial-gradient(circle at 50% 0%, #2a0505 0%, #000 70%);
-    color: var(--text);
-    font-family: 'Cairo', sans-serif;
-    margin: 0;
-    min-height: 100vh;
-    direction: rtl;
-}
-
-/* Header */
-header {
-    padding: 20px 5%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-}
-
-.logo {
-    font-size: 1.8rem;
-    font-weight: 900;
-    color: var(--primary);
-    text-shadow: 0 0 20px var(--primary-glow);
-    text-decoration: none;
-    letter-spacing: 1px;
-}
-
-/* Container */
-.container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-
-/* Hero */
-.hero { text-align: center; padding: 60px 20px; animation: fadeIn 1s ease; }
-.hero h2 { font-size: 2.8rem; margin: 0; }
-.hero p { color: #888; font-size: 1.2rem; margin-top: 10px; }
-
-/* Cards */
-.grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 30px;
-    margin-top: 40px;
-}
-
-.card {
-    background: var(--glass);
-    border: 1px solid rgba(255,255,255,0.05);
-    border-radius: 16px;
-    padding: 20px;
-    transition: 0.3s;
-    position: relative;
-    overflow: hidden;
-}
-
-.card:hover {
-    transform: translateY(-10px);
-    border-color: var(--primary);
-    box-shadow: 0 10px 30px rgba(229, 9, 20, 0.2);
-}
-
-.card h3 { font-size: 1.5rem; margin: 10px 0; }
-.price { font-size: 1.8rem; color: var(--success); font-weight: bold; }
+body { background-color: var(--bg-main); background-image: radial-gradient(circle at 50% 0%, #2a0505 0%, #000 70%); color: var(--text); font-family: 'Cairo', sans-serif; margin: 0; min-height: 100vh; direction: rtl; display:flex; flex-direction:column;}
+header { padding: 20px 5%; display: flex; justify-content: space-between; align-items: center; backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.1); position: sticky; top: 0; z-index: 1000; }
+.logo { font-size: 1.8rem; font-weight: 900; color: var(--primary); text-shadow: 0 0 20px var(--primary-glow); text-decoration: none; }
+.container { max-width: 1200px; margin: 0 auto; padding: 20px; flex:1; width:100%; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px; margin-top: 40px; }
+.card { background: var(--glass); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 20px; transition: 0.3s; position: relative; overflow: hidden; }
+.card:hover { transform: translateY(-10px); border-color: var(--primary); box-shadow: 0 10px 30px rgba(229, 9, 20, 0.2); }
+.btn { background: var(--primary); color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 15px; transition: 0.3s; }
+.btn:hover { background: #ff1f2c; } .btn:disabled { background: #333; cursor: not-allowed; }
 .tag { background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; color: #ccc; }
+.price { font-size: 1.5rem; color: var(--success); font-weight: bold; display:block; margin:10px 0; }
 
-.btn {
-    background: var(--primary);
-    color: white;
-    border: none;
-    padding: 15px;
-    width: 100%;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: bold;
-    cursor: pointer;
-    margin-top: 20px;
-    transition: 0.3s;
-}
-
-.btn:hover { background: #ff1f2c; box-shadow: 0 0 15px var(--primary-glow); }
-.btn:disabled { background: #333; cursor: not-allowed; box-shadow: none; }
-
-/* My Orders Section (New) */
-.my-orders-section {
-    margin-top: 60px;
-    border-top: 1px solid #333;
-    padding-top: 40px;
-}
-.my-orders-header { display: flex; align-items: center; margin-bottom: 20px; }
-.my-orders-header h3 { margin: 0; margin-left: 10px; color: #fff; }
-
-.order-mini-card {
-    background: #1a1a1a;
-    border-right: 4px solid #555;
-    padding: 15px;
-    margin-bottom: 10px;
-    border-radius: 6px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    transition: 0.3s;
-}
+/* My Orders */
+.my-orders-header { margin-top: 50px; border-top: 1px solid #333; padding-top: 20px; color:#ccc; }
+.order-mini-card { background: #111; border-right: 4px solid #555; padding: 15px; margin-bottom: 10px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; cursor:pointer; transition:0.2s; }
 .order-mini-card:hover { background: #222; }
-.order-mini-card.approved { border-color: var(--success); }
-.order-mini-card.pending { border-color: var(--warning); }
-.order-mini-card.completed { border-color: #00bcd4; }
+.bg-pending { color: var(--warning); } .bg-success { color: var(--success); } .bg-blue { color: #00bcd4; }
 
-.status-badge { padding: 5px 10px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; }
-.bg-pending { background: rgba(245, 166, 35, 0.2); color: var(--warning); }
-.bg-success { background: rgba(70, 211, 105, 0.2); color: var(--success); }
-.bg-blue { background: rgba(0, 188, 212, 0.2); color: #00bcd4; }
-
-/* Status Page */
-.status-page-box {
-    background: var(--bg-sec);
-    padding: 40px;
-    border-radius: 20px;
-    text-align: center;
-    max-width: 500px;
-    margin: 50px auto;
-    border: 1px solid #333;
-}
-.big-icon { font-size: 4rem; margin-bottom: 20px; }
-.acc-info { background: #000; padding: 20px; border-radius: 10px; margin: 20px 0; text-align: left; direction: ltr; border: 1px solid #333; }
-.acc-info p { margin: 5px 0; font-family: monospace; font-size: 1.1rem; }
-
-/* Animations */
-@keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-.loader { border: 3px solid #333; border-top: 3px solid var(--primary); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 0 auto; }
+/* Modal */
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; justify-content: center; align-items: center; animation: fadeIn 0.3s; }
+.payment-box { background: #1a1a1a; border: 1px solid #333; padding: 30px; border-radius: 16px; width: 90%; max-width: 450px; text-align: center; }
+.payment-input { width: 100%; padding: 15px; background: #222; border: 1px solid #444; color: white; border-radius: 8px; margin: 10px 0; }
+.file-upload-wrapper { margin: 15px 0; border: 2px dashed #444; border-radius: 8px; padding: 20px; cursor: pointer; display:block; }
+.file-upload-wrapper:hover { border-color: var(--primary); }
+.preview-image { max-width: 100%; max-height: 150px; margin-top: 10px; display: none; border-radius:8px; }
+.modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+.btn-cancel { background: #333; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; flex: 1; }
 
 /* Admin */
-.admin-search { width: 100%; padding: 15px; background: #222; border: 1px solid #444; color: white; border-radius: 8px; margin-bottom: 20px; }
+.sidebar { width: 250px; background: #000; border-left: 1px solid #333; padding: 20px; position: fixed; height: 100%; right: 0; }
+.main-content { margin-right: 250px; padding: 40px; width: 100%; }
+@media (max-width: 700px) { .sidebar { display:none; } .main-content { margin-right: 0; } }
+.detail-row { border-bottom: 1px solid #222; padding: 10px 0; }
+.detail-row strong { color: #888; display: inline-block; width: 140px; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
