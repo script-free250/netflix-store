@@ -346,3 +346,16 @@ header {
     animation: spin 1s linear infinite; 
     margin: 40px auto; 
 }
+/* Styles for Header User Area */
+.btn-outline {
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    color: var(--text-light);
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+.btn-outline:hover {
+    background-color: var(--border-color);
+}
