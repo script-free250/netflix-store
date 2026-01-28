@@ -1,11 +1,11 @@
-// ✅ تأكد أن هذا الرابط مطابق للسيرفر (V5)
-const SERVER_URL = "https://hhjk-shop-final-v2.loca.lt"; 
+// ✅ الرابط الثابت (تأكد أنه نفس الرابط في السيرفر)
+const SERVER_URL = "https://hhjk-shop-final-v5.loca.lt"; 
 
-/* =========================================
-   🛒 دوال المستخدم (User Side)
-   ========================================= */
+/* =================================================================
+   🛒 1. دوال المستخدم (المتجر - الشراء - عرض الطلبات)
+   ================================================================= */
 
-// تخزين الطلبات محلياً
+// حفظ الطلب في المتصفح
 function saveLocalOrder(order) {
     let orders = JSON.parse(localStorage.getItem('my_orders') || '[]');
     if (!orders.find(o => o.id === order.id)) {
@@ -15,7 +15,7 @@ function saveLocalOrder(order) {
 }
 function getLocalOrders() { return JSON.parse(localStorage.getItem('my_orders') || '[]'); }
 
-// تحميل الصفحة الرئيسية
+// تحميل المنتجات
 async function loadProducts() {
     const container = document.getElementById('products-container');
     if (!container) return;
@@ -23,211 +23,272 @@ async function loadProducts() {
     try {
         const res = await fetch(`${SERVER_URL}/products`, { headers: {'Bypass-Tunnel-Reminder': 'true'} });
         const products = await res.json();
-        container.innerHTML = products.length ? '' : '<p style="text-align:center; color:#777">لا توجد عروض حالياً</p>';
+        container.innerHTML = products.length ? '' : '<p style="text-align:center; width:100%;">لا توجد منتجات حالياً.</p>';
 
         products.forEach(p => {
-            const isUser = p.type === 'netflix-user';
             container.innerHTML += `
                 <div class="card">
-                    <span class="badge">${isUser ? 'مشترك' : 'كامل'}</span>
+                    <span class="badge">${p.type === 'netflix-user' ? 'مشترك' : 'كامل'}</span>
                     <div class="card-content">
                         <h3>${p.name}</h3>
                         <span class="price">${p.price} ج.م</span>
-                        <p class="desc">شامل الضمان - تسليم فوري وتلقائي</p>
-                        <button class="btn" onclick="openPaymentModal(${p.id}, '${p.name}')">اشتري الآن</button>
+                        <p class="desc">تسليم فوري وتلقائي</p>
+                        <button class="btn" onclick="openPaymentModal(${p.id}, '${p.name}')">شراء الآن</button>
                     </div>
                 </div>`;
         });
         
-        loadMyOrdersWidget(); // تحميل الطلبات وتحديث حالتها
+        // تشغيل ودجت الطلبات
+        loadMyOrdersWidget();
+
     } catch (e) { 
-        container.innerHTML = `<p style="text-align:center; color:#e50914;">يرجى تشغيل السيرفر وفتح الرابط</p>`; 
+        container.innerHTML = `<p style="text-align:center; color:red;">يرجى التأكد من تشغيل السيرفر.</p>`; 
     }
 }
 
-// تحميل ويدجت "طلباتي" (مع التحديث الفوري للحالة)
+// 🔥 إصلاح مشكلة عدم ظهور حالة الطلب في القائمة الرئيسية 🔥
 function loadMyOrdersWidget() {
     const section = document.getElementById('my-orders-list');
     if (!section) return;
 
     const localOrders = getLocalOrders().reverse();
-    if (!localOrders.length) { section.innerHTML = '<p style="color:#555">لا توجد طلبات سابقة.</p>'; return; }
+    if (!localOrders.length) { 
+        section.innerHTML = '<p style="color:#555; text-align:center;">لا توجد طلبات سابقة.</p>'; 
+        return; 
+    }
     
-    section.innerHTML = '';
-    
-    localOrders.forEach(async (o) => {
-        // الحالة الافتراضية
-        let statusText = "جاري المراجعة ⏳";
-        let statusClass = "status-pending";
-        
-        try {
-            // 🔥 جلب الحالة الحقيقية من السيرفر الآن 🔥
-            const r = await fetch(`${SERVER_URL}/order-status/${o.id}`);
-            const d = await r.json();
-            
-            if (d.status === 'approved') { 
-                statusText = "جاهز (اضغط للدخول) ✅"; 
-                statusClass = "status-approved"; 
-            } else if (d.status === 'completed') { 
-                statusText = "تم الاستلام 🏁"; 
-                statusClass = "status-completed"; 
-            }
-        } catch(e) { console.log("خطأ في تحديث الحالة"); }
-        
-        // رسم الكارت
-        const cardHtml = `
-            <div class="order-item ${statusClass}" onclick="window.location.href='track.html?id=${o.id}'">
-                <div>
-                    <div style="font-weight:bold; font-size:1.1rem;">${o.name}</div>
-                    <div style="color:#777; font-size:0.8rem;">ID: ${o.id}</div>
-                </div>
-                <div class="status-label ${getStatusClass(statusClass)}">${statusText}</div>
-            </div>`;
-            
-        section.insertAdjacentHTML('beforeend', cardHtml);
+    section.innerHTML = ''; // تنظيف
+
+    localOrders.forEach(o => {
+        // إنشاء العنصر HTML أولاً (Placeholder)
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'order-mini-card';
+        itemDiv.onclick = () => window.location.href = `track.html?id=${o.id}`;
+        itemDiv.innerHTML = `
+            <div>
+                <strong>${o.name}</strong><br>
+                <span style="font-size:0.75rem; color:#777">#${o.id}</span>
+            </div>
+            <span id="status-badge-${o.id}" class="status-badge bg-pending">جاري التحميل...</span>
+        `;
+        section.appendChild(itemDiv);
+
+        // ثم جلب الحالة وتحديثها
+        fetch(`${SERVER_URL}/order-status/${o.id}`)
+            .then(res => res.json())
+            .then(d => {
+                const badge = document.getElementById(`status-badge-${o.id}`);
+                if (badge) {
+                    if(d.status === 'approved') { 
+                        badge.innerText = "جاهز (اضغط للدخول)"; 
+                        badge.className = "status-badge bg-success"; 
+                    } else if(d.status === 'completed') { 
+                        badge.innerText = "تم الاستلام ✅"; 
+                        badge.className = "status-badge bg-blue"; 
+                    } else {
+                        badge.innerText = "قيد المراجعة ⏳";
+                        badge.className = "status-badge bg-pending";
+                    }
+                }
+            })
+            .catch(() => {});
     });
 }
 
-function getStatusClass(cls) {
-    if(cls.includes('approved')) return 'st-done';
-    if(cls.includes('completed')) return 'st-comp';
-    return 'st-wait';
-}
-
 // --- نافذة الدفع ---
-let selId, selName;
+let selectedProductId = null;
+let selectedProductName = null;
+
 function openPaymentModal(id, name) {
-    selId = id; selName = name;
+    selectedProductId = id; selectedProductName = name;
     document.getElementById('pay-phone').value = '';
-    document.getElementById('pay-img').value = '';
-    document.getElementById('img-prev').style.display = 'none';
+    document.getElementById('pay-screenshot').value = '';
+    document.getElementById('img-preview').style.display = 'none';
     document.getElementById('payment-modal').style.display = 'flex';
 }
+
 function closePaymentModal() { document.getElementById('payment-modal').style.display = 'none'; }
 
 function previewFile() {
-    const f = document.getElementById('pay-img').files[0];
-    const prev = document.getElementById('img-prev');
-    if (f) {
-        const r = new FileReader();
-        r.onload = () => { prev.src = r.result; prev.style.display = 'block'; }
-        r.readAsDataURL(f);
+    const file = document.getElementById('pay-screenshot').files[0];
+    const preview = document.getElementById('img-preview');
+    if (file) {
+        if(file.size > 5 * 1024 * 1024) { alert("الصورة كبيرة جداً"); return; }
+        const reader = new FileReader();
+        reader.onloadend = function() { preview.src = reader.result; preview.style.display = 'block'; }
+        reader.readAsDataURL(file);
     }
 }
 
 async function confirmPurchase() {
     const phone = document.getElementById('pay-phone').value;
-    const file = document.getElementById('pay-img').files[0];
-    const btn = document.getElementById('btn-pay');
+    const fileInput = document.getElementById('pay-screenshot');
+    const btn = document.getElementById('btn-confirm-pay');
 
-    if(!phone || !file) return alert("أكمل البيانات");
-    
-    btn.innerText = "جاري الإرسال..."; btn.disabled = true;
-    
+    if (!phone || !fileInput.files[0]) return alert("يرجى إدخال الرقم والصورة");
+
+    btn.innerText = "جاري الرفع..."; btn.disabled = true;
+
     const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = async () => {
+    reader.readAsDataURL(fileInput.files[0]);
+    reader.onload = async function () {
         try {
             const res = await fetch(`${SERVER_URL}/buy`, {
-                method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ productId: selId, userPhone: phone, screenshot: reader.result })
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ 
+                    productId: selectedProductId, 
+                    userPhone: phone, 
+                    screenshot: reader.result 
+                })
             });
             const data = await res.json();
-            if(data.success) {
-                saveLocalOrder({ id: data.orderId, name: selName });
+            
+            if (data.success) {
+                saveLocalOrder({ id: data.orderId, name: selectedProductName });
                 window.location.href = `track.html?id=${data.orderId}`;
-            } else alert("خطأ");
-        } catch(e) { alert("فشل الاتصال"); }
+            } else { alert("خطأ في السيرفر"); }
+        } catch (e) { alert("فشل الاتصال"); }
         btn.innerText = "تأكيد"; btn.disabled = false;
     };
 }
 
-/* =========================================
-   📡 صفحة التتبع (Track.html)
-   ========================================= */
-let trackTimer;
+
+/* =================================================================
+   📡 2. صفحة التتبع (Track.html) - التحديث المباشر
+   ================================================================= */
+let trackInterval;
+
 async function initTrackPage() {
     const id = new URLSearchParams(window.location.search).get('id');
     if (!id) return;
     
-    const check = async () => {
+    // عرض الرقم
+    const dispId = document.getElementById('disp-id');
+    if(dispId) dispId.innerText = id;
+
+    const checkStatus = async () => {
         try {
             const res = await fetch(`${SERVER_URL}/order-status/${id}`);
             const data = await res.json();
-            
+
+            // 🔥 اللحظة الحاسمة: إذا تمت الموافقة، اقلب الصفحة فوراً 🔥
             if (data.status === 'approved' || data.status === 'completed') {
-                document.getElementById('view-pending').style.display = 'none';
-                document.getElementById('view-approved').style.display = 'block';
                 
-                document.getElementById('acc-email').innerText = data.accountEmail;
-                document.getElementById('acc-pass').innerText = data.accountPassword;
+                // إخفاء الانتظار
+                document.getElementById('pending-view').style.display = 'none';
+                // إظهار الموافقة
+                document.getElementById('approved-view').style.display = 'block';
                 
+                // تعبئة البيانات
+                document.getElementById('acc-email').innerText = data.accountEmail || "---";
+                document.getElementById('acc-pass').innerText = data.accountPassword || "---";
+
+                // التعامل مع الكود
                 if (data.requiresCode) {
-                    document.getElementById('sec-code').style.display = 'block';
-                    // الكود يظهر مرة واحدة فقط
-                    if (data.savedCode) showCode(data.savedCode);
+                    document.getElementById('code-section').style.display = 'block';
+                    if (data.savedCode) {
+                        showFinalCode(data.savedCode);
+                    }
                 }
-                
-                if (data.status === 'completed') document.getElementById('status-head').innerText = "تم تسليم الطلب ✅";
-                clearInterval(trackTimer);
+
+                if (data.status === 'completed' && !data.requiresCode) {
+                    document.getElementById('status-title').innerText = "تم التسليم ✅";
+                }
+
+                // إيقاف التحديث المتكرر (عشان ميحملش على السيرفر)
+                // إلا لو لسه محتاجين كود، ممكن نسيبه شغال لو في تحديثات تانية
+                if (data.status === 'completed' || (data.status === 'approved' && !data.requiresCode)) {
+                    clearInterval(trackInterval);
+                }
             }
-        } catch(e){}
+        } catch(e) { console.error("Tracking error:", e); }
     };
-    check();
-    trackTimer = setInterval(check, 3000);
+
+    // تشغيل الفحص فوراً ثم كل 3 ثواني
+    checkStatus();
+    trackInterval = setInterval(checkStatus, 3000);
 }
 
-function showCode(c) {
-    document.getElementById('btn-get-code').style.display = 'none';
-    document.getElementById('res-code').style.display = 'block';
-    document.getElementById('final-code').innerText = c;
+function showFinalCode(code) {
+    document.getElementById('code-btn').style.display = 'none';
+    document.getElementById('code-result').style.display = 'block';
+    document.getElementById('final-code').innerText = code;
 }
 
 async function getCode() {
     const id = new URLSearchParams(window.location.search).get('id');
-    const btn = document.getElementById('btn-get-code');
+    const btn = document.getElementById('code-btn');
     btn.innerText = "جاري الاتصال..."; btn.disabled = true;
-    
+
     try {
         const res = await fetch(`${SERVER_URL}/get-code-secure`, {
             method: 'POST', headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ orderId: id })
         });
-        const d = await res.json();
-        if(d.success) showCode(d.code);
-        else { alert(d.message || "انتظر قليلاً"); btn.innerText = "محاولة مجدداً"; btn.disabled = false; }
-    } catch(e) { alert("خطأ"); btn.disabled = false; }
+        const data = await res.json();
+
+        if (data.success) {
+            showFinalCode(data.code);
+        } else {
+            alert(data.message || "لم يصل الكود بعد. تأكد من إرساله من نتفلكس.");
+            btn.innerText = "محاولة مجدداً"; btn.disabled = false;
+        }
+    } catch (e) { 
+        alert("خطأ في الاتصال"); btn.disabled = false; 
+    }
 }
 
-/* =========================================
-   🔧 الأدمن (Admin)
-   ========================================= */
+
+/* =================================================================
+   🔧 3. دوال الأدمن (Admin Dashboard)
+   ================================================================= */
+
+async function addProduct() {
+    const d = {
+        type: document.getElementById('p-type').value,
+        name: document.getElementById('p-name').value,
+        price: document.getElementById('p-price').value,
+        accountEmail: document.getElementById('p-email').value,
+        accountPassword: document.getElementById('p-pass').value
+    };
+    if(!d.name || !d.price) return alert("أكمل البيانات");
+    
+    await fetch(`${SERVER_URL}/admin/add-product`, {
+        method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(d)
+    });
+    alert("تم النشر");
+}
+
 async function loadAdminOrders() {
-    const list = document.getElementById('admin-list');
-    if(!list) return;
-    list.innerHTML = '<p style="color:#666">تحميل...</p>';
+    const list = document.getElementById('admin-list'); // في صفحة الأدمن فقط
+    if(!list) return; // لو مش في الأدمن، اخرج
+
+    list.innerHTML = '<p style="text-align:center; color:#777">جاري التحديث...</p>';
     
     try {
         const res = await fetch(`${SERVER_URL}/admin/orders`);
-        const orders = await res.json();
+        let orders = await res.json();
         orders.reverse();
-        list.innerHTML = orders.length ? '' : '<p>لا توجد طلبات</p>';
+        
+        list.innerHTML = orders.length ? '' : '<p style="text-align:center">لا توجد طلبات</p>';
         
         orders.forEach(o => {
-            let st = o.status === 'pending' ? '<span class="status-label st-wait">انتظار</span>' : '<span class="status-label st-done">تم</span>';
-            let act = o.status === 'pending' ? `<button class="btn" style="width:auto; padding:5px 15px;" onclick="approve(${o.orderId})">تفعيل</button>` : '';
-            let imgBtn = o.hasScreenshot ? `<i class="fas fa-image" style="color:#00bcd4; margin-left:5px; cursor:pointer;" onclick="searchOrderDetails(${o.orderId})"></i>` : '';
+            let st = o.status === 'pending' ? '<span class="status-badge bg-pending">انتظار</span>' : '<span class="status-badge bg-success">تم</span>';
+            let btn = o.status === 'pending' ? `<button class="btn" style="width:auto; padding:5px 15px; font-size:0.8rem;" onclick="approve(${o.orderId})">تفعيل</button>` : '';
+            let img = o.hasScreenshot ? '📷' : '';
 
             list.innerHTML += `
-                <div class="order-item">
+                <div style="background:#1a1a1a; padding:15px; margin-bottom:10px; border-radius:6px; display:flex; justify-content:space-between; align-items:center;">
                     <div>
-                        <div style="font-weight:bold; color:var(--text-white)">${o.productName} ${imgBtn}</div>
-                        <div style="font-size:0.8rem; color:#777">#${o.orderId} | 📱 ${o.userPhone}</div>
+                        <div style="color:#fff; font-weight:bold;">${o.productName} ${img}</div>
+                        <div style="font-size:0.8rem; color:#aaa; cursor:pointer;" onclick="prompt('نسخ المعرف', '${o.orderId}')">#${o.orderId}</div>
+                        <div style="font-size:0.9rem; margin-top:5px;">📱 ${o.userPhone}</div>
                     </div>
-                    <div style="text-align:left">${st}<br>${act}</div>
+                    <div style="text-align:left;">${st}<br>${btn}</div>
                 </div>`;
         });
-    } catch(e) { list.innerHTML = '<p style="color:red">خطأ</p>'; }
+    } catch(e) { list.innerHTML = '<p style="color:red; text-align:center">فشل الاتصال</p>'; }
 }
 
 async function approve(id) {
@@ -238,21 +299,8 @@ async function approve(id) {
     loadAdminOrders();
 }
 
-async function addProduct() {
-    const d = {
-        type: document.getElementById('p-type').value,
-        name: document.getElementById('p-name').value,
-        price: document.getElementById('p-price').value,
-        accountEmail: document.getElementById('p-email').value,
-        accountPassword: document.getElementById('p-pass').value
-    };
-    if(!d.name || !d.price) return alert("ناقص");
-    await fetch(`${SERVER_URL}/admin/add-product`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(d) });
-    alert("تم");
-}
-
-async function searchOrderDetails(directId = null) {
-    const id = directId || document.getElementById('search-inp').value;
+async function searchOrderDetails() {
+    const id = document.getElementById('detail-search-input').value.trim();
     if(!id) return alert("الرقم؟");
     
     try {
@@ -261,20 +309,34 @@ async function searchOrderDetails(directId = null) {
         if(o.error) return alert("غير موجود");
         
         document.getElementById('d-id').innerText = o.orderId;
+        document.getElementById('d-status').innerText = o.status;
         document.getElementById('d-name').innerText = o.productName;
         document.getElementById('d-phone').innerText = o.userPhone;
         document.getElementById('d-ip').innerText = o.userIp;
+        document.getElementById('d-time-create').innerText = new Date(o.createdAt).toLocaleString();
+        document.getElementById('d-time-approve').innerText = o.approvedAt ? new Date(o.approvedAt).toLocaleString() : '--';
+        document.getElementById('d-time-code').innerText = o.codeFetchedAt ? new Date(o.codeFetchedAt).toLocaleString() : '--';
+        document.getElementById('d-code').innerText = o.fetchedCode || '----';
         
-        const imgDiv = document.getElementById('d-img');
-        imgDiv.innerHTML = o.screenshot ? `<img src="${o.screenshot}" style="max-width:100%; border-radius:8px; border:1px solid #333;">` : 'لا يوجد';
+        const imgContainer = document.getElementById('d-img');
+        imgContainer.innerHTML = o.screenshot ? `<button class="btn" style="width:auto; background:#00bcd4;" onclick="window.open().document.write('<img src=\\'${o.screenshot}\\' style=\\'width:100%\\'>')">مشاهدة الإيصال</button>` : 'لا يوجد';
         
-        document.getElementById('search-res').style.display = 'block';
+        document.getElementById('order-details-result').style.display = 'block';
     } catch(e) { alert("خطأ"); }
 }
 
-// Router
+// 🔥 الموجه الذكي (Router) لتشغيل الكود المناسب للصفحة 🔥
 document.addEventListener("DOMContentLoaded", () => {
-    if(document.getElementById('admin-list')) loadAdminOrders();
-    else if(window.location.href.includes('track.html')) initTrackPage();
-    else if(document.getElementById('products-container')) loadProducts();
+    // لو إحنا في صفحة الأدمن (فيها قائمة الطلبات)
+    if(document.getElementById('admin-list')) {
+        loadAdminOrders();
+    }
+    // لو إحنا في صفحة التتبع (فيها عنصر Pending)
+    else if(document.getElementById('pending-view')) {
+        initTrackPage();
+    }
+    // لو إحنا في الصفحة الرئيسية (فيها المنتجات)
+    else if(document.getElementById('products-container')) {
+        loadProducts();
+    }
 });
