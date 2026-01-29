@@ -1,5 +1,5 @@
 // ✅ تأكد من تحديث الرابط عند تشغيل السيرفر
-const SERVER_URL = "https://hhjk-shop-final-v2.loca.lt";
+const SERVER_URL = "https://hhjk-shop-final-v3.loca.lt";
 
 let productsData = []; // Store products to access details later
 
