@@ -32,9 +32,6 @@
         .order-actions { display: flex; align-items: center; gap: 20px; }
         .receipt-thumb { width: 70px; height: 70px; object-fit: cover; border-radius: 8px; border: 1px solid #444; cursor: pointer; transition: 0.3s; }
         .receipt-thumb:hover { transform: scale(1.1); border-color: #fff; }
-        /* ستايل خاص لخانات المخزون */
-        .stock-item-box { background: #111; padding: 15px; border: 1px dashed #444; margin-bottom: 15px; border-radius: 8px; position: relative; }
-        .stock-item-box h5 { margin: 0 0 10px 0; color: var(--primary); font-size: 0.9rem; }
     </style>
 </head>
 <body>
@@ -65,32 +62,18 @@
                 <div class="panel">
                     <form id="addProductForm" onsubmit="addProduct(event)">
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                            <div>
-                                <label class="form-label">نوع المنتج</label>
-                                <select name="type" id="p-type" class="form-control" onchange="generateStockFields()">
-                                    <option value="netflix-user">بروفايل</option>
-                                    <option value="netflix-full">حساب كامل</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="form-label">السعر (ج.م)</label>
-                                <input type="number" name="price" class="form-control" required>
-                            </div>
+                            <div><label class="form-label">نوع المنتج</label><select name="type" id="p-type" class="form-control" onchange="toggleProductFields()"><option value="netflix-user">بروفايل</option><option value="netflix-full">حساب كامل</option></select></div>
+                            <div><label class="form-label">السعر (ج.م)</label><input type="number" name="price" class="form-control" required></div>
                         </div>
-                        <label class="form-label">اسم المنتج للعرض</label>
-                        <input type="text" name="name" class="form-control" placeholder="مثال: اشتراك شهر 4K" required>
+                        <label class="form-label">اسم المنتج للعرض</label><input type="text" name="name" class="form-control" placeholder="مثال: اشتراك شهر 4K" required>
                         
+                        <!-- ## بداية الإضافة: حقل تفاصيل المنتج ## -->
                         <label class="form-label">تفاصيل المنتج (الوصف)</label>
-                        <textarea name="description" class="form-control" rows="3" placeholder="اكتب هنا تفاصيل المنتج..."></textarea>
-                        
-                        <div style="background: #222; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
-                            <label class="form-label" style="color: #fff;"><i class="fas fa-cubes"></i> عدد المخزون (كم حساب متوفر؟)</label>
-                            <input type="number" id="stock-qty" class="form-control" value="1" min="1" oninput="generateStockFields()" style="margin-bottom:0;">
-                            <small style="color: #888;">سيتم توليد خانات لإدخال البيانات بناءً على هذا الرقم.</small>
-                        </div>
+                        <textarea name="description" class="form-control" rows="3" placeholder="اكتب هنا تفاصيل المنتج التي ستظهر للمشتري عند استلام الطلب..."></textarea>
+                        <!-- ## نهاية الإضافة ## -->
 
-                        <div id="dynamic-stock-container"></div>
-
+                        <div id="fields-full" style="display:none;"><label class="form-label">بيانات الحساب:</label><input type="email" name="accountEmail" class="form-control" placeholder="Email"><input type="text" name="accountPassword" class="form-control" placeholder="Password"></div>
+                        <div id="fields-user"><label class="form-label">بيانات البروفايل:</label><input type="text" name="profileName" class="form-control" placeholder="اسم البروفايل"><input type="text" name="profilePin" class="form-control" placeholder="PIN"><label class="form-label">صورة البروفايل:</label><input type="file" name="profileImage" class="form-control" accept="image/*"></div>
                         <button type="submit" class="btn">🚀 نشر المنتج</button>
                     </form>
                 </div>
@@ -98,14 +81,5 @@
         </div>
     </div>
     <script src="script.js"></script>
-    <script>
-        // تفعيل أول سكشن عند التحميل
-        document.addEventListener('DOMContentLoaded', () => {
-             const firstNavItem = document.querySelector('.nav-item');
-             if(firstNavItem) showSection('orders', firstNavItem);
-             loadAdminOrders();
-             generateStockFields(); // توليد خانة واحدة افتراضياً
-        });
-    </script>
 </body>
 </html>
