@@ -1,30 +1,30 @@
 // ✅ تأكد من تحديث الرابط عند تشغيل السيرفر
 const SERVER_URL = "https://hhjk-shop-final-v2.loca.lt";
 
-let productsData = []; // Store products to access details later
-
 /* =================================================================
-   ✨ 0. نظام الإشعارات (Notification System)
+   ✨ 0. NEW - Notification System
    ================================================================= */
-function showNotification(message, type = 'info') {
+function showNotification(message, type = 'info') { // types: 'success', 'error', 'info'
     const container = document.getElementById('notification-container');
     if (!container) {
+        console.warn('Notification container not found. Using alert() as fallback.');
         alert(message);
         return;
     }
+
     const notification = document.createElement('div');
     notification.className = `notification ${type}`;
-    const textNode = document.createElement('span');
-    textNode.textContent = message;
-    notification.appendChild(textNode);
+    notification.textContent = message;
+
     container.appendChild(notification);
+
     setTimeout(() => {
         notification.remove();
     }, 5000);
 }
 
 /* =================================================================
-   🔐 1. دوال المصادقة وتسجيل الدخول
+   🔐 1. دوال المصادقة وتسجيل الدخول (بدون تغيير جوهري)
    ================================================================= */
 async function handleRegister(event) {
     event.preventDefault();
@@ -64,17 +64,8 @@ function logout() {
 function updateUserSessionUI() {
     const div = document.getElementById("user-session"); if (!div) return;
     const token = localStorage.getItem("authToken"), name = localStorage.getItem("userName");
-    if (token && name) {
-        const initial = name.charAt(0).toUpperCase();
-        div.innerHTML = `
-            <div class="user-session-ui">
-                <span>أهلاً، ${name}</span>
-                <div class="user-avatar">${initial}</div>
-                <button onclick="logout()" class="logout-btn" title="تسجيل الخروج"><i class="fas fa-sign-out-alt"></i></button>
-            </div>`;
-    } else {
-        div.innerHTML = `<div style="display:flex;gap:10px;"><a href="login.html" class="btn-outline">دخول</a><a href="register.html" class="btn" style="width:auto;padding:10px 20px;margin:0;">حساب جديد</a></div>`;
-    }
+    if (token && name) { div.innerHTML = `<div style="display:flex;align-items:center;gap:15px;"><span style="color:#ccc;">أهلاً، ${name}</span><button onclick="logout()" class="btn" style="width:auto;padding:8px 15px;margin:0;font-size:0.9rem;"><i class="fas fa-sign-out-alt"></i></button></div>`; } 
+    else { div.innerHTML = `<div style="display:flex;gap:10px;"><a href="login.html" class="btn-outline">دخول</a><a href="register.html" class="btn" style="width:auto;padding:10px 20px;margin:0;">حساب جديد</a></div>`; }
 }
 
 /* =================================================================
@@ -86,55 +77,43 @@ async function loadProducts() {
     try {
         const res = await fetch(`${SERVER_URL}/products`, { headers: { "Bypass-Tunnel-Reminder": "true" } });
         if (!res.ok) throw new Error(`E:${res.status}`);
-        productsData = await res.json();
+        const products = await res.json();
         container.innerHTML = "";
-        if (productsData.length === 0) { container.innerHTML = "<p>لا توجد منتجات حالياً.</p>"; return; }
-        
-        productsData.forEach((p, index) => {
+        if (products.length === 0) { container.innerHTML = "<p>لا توجد منتجات.</p>"; return; }
+        products.forEach((p, index) => {
             const card = document.createElement("div");
             card.className = "card";
             card.style.animationDelay = `${100 * index}ms`;
-            card.innerHTML = `
-                <span class="tag">${p.type === 'netflix-user' ? "👤 بروفايل" : "💎 حساب كامل"}</span>
-                <h3>${p.name}</h3>
-                <p class="product-description">${p.description || 'لا يتوفر وصف لهذا المنتج.'}</p>
-                <div style="flex-grow:1;"></div>
-                <span class="price">${p.price} ج.م</span>
-                <button class="btn" onclick="openBuyModal(${p.id})">شراء الآن</button>`;
+            card.innerHTML = `<span class="tag">${p.type === 'netflix-user' ? "👤 بروفايل" : "💎 حساب كامل"}</span><h3>${p.name}</h3><div style="flex-grow:1;"></div><span class="price">${p.price} ج.م</span><button class="btn" onclick="openBuyModal(${p.id},'${p.name}')">شراء</button>`;
             container.appendChild(card);
         });
-    } catch (e) {
-        console.error(e);
-        container.innerHTML = "<p>حدث خطأ أثناء تحميل الباقات. يرجى المحاولة لاحقاً.</p>";
-    }
+    } catch (e) { console.error(e); container.innerHTML = "<p>خطأ في عرض الباقات.</p>"; }
 }
 
-function openBuyModal(productId) {
+// ## بداية التعديل: التحقق من تسجيل الدخول قبل الشراء ##
+function openBuyModal(id, name) {
     const token = localStorage.getItem("authToken");
     if (!token) {
-        showNotification("يجب تسجيل الدخول أولاً لإتمام الشراء.", "info");
-        setTimeout(() => { window.location.href = "login.html"; }, 2500);
-        return;
-    }
-    const product = productsData.find(p => p.id === productId);
-    if (!product) {
-        showNotification("عذراً، المنتج المحدد غير موجود.", "error");
+        showNotification("يجب تسجيل الدخول أولاً لإتمام الشراء.", "error");
+        setTimeout(() => { window.location.href = "login.html"; }, 2000);
         return;
     }
     document.getElementById("buyModal").style.display = "block";
-    document.getElementById("modal-product-name").innerText = product.name;
-    document.getElementById("modal-product-id").value = product.id;
-    document.getElementById("modal-product-description").innerText = product.description || 'لا يتوفر وصف لهذا المنتج.';
+    document.getElementById("modal-product-name").innerText = name;
+    document.getElementById("modal-product-id").value = id;
 }
+// ## نهاية التعديل ##
 
 function closeModal() { document.getElementById("buyModal").style.display = "none"; }
 
+// ## بداية التعديل: استخدام نظام الإشعارات ##
 async function submitOrder(e) {
     e.preventDefault();
     const token = localStorage.getItem("authToken");
     if (!token) { showNotification("يرجى تسجيل الدخول مرة أخرى.", "error"); return; }
     const btn = e.target.querySelector("button");
-    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
     const formData = new FormData(e.target);
     try {
         const res = await fetch(`${SERVER_URL}/buy`, { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: formData });
@@ -142,13 +121,20 @@ async function submitOrder(e) {
         if (res.ok) {
             closeModal();
             e.target.reset();
-            updateFileName(e.target.querySelector('#receipt-file'));
+            updateFileName(e.target.querySelector('#receipt-file')); // Reset file input label
             showNotification("✅ تم إرسال طلبك بنجاح!", "success");
             loadMyOrdersWidget();
-        } else { showNotification(data.message || "حدث خطأ ما.", "error"); }
-    } catch (err) { showNotification("فشل الاتصال بالسيرفر.", "error"); } 
-    finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-check-circle"></i> تأكيد الشراء'; }
+        } else {
+            showNotification(data.message || "حدث خطأ ما.", "error");
+        }
+    } catch (err) {
+        showNotification("فشل الاتصال بالسيرفر.", "error");
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-check-circle"></i> تأكيد الشراء';
+    }
 }
+// ## نهاية التعديل ##
 
 async function loadMyOrdersWidget() {
     const section = document.getElementById("my-orders-list"); if (!section) return;
@@ -166,7 +152,7 @@ async function loadMyOrdersWidget() {
             const card = document.createElement("div");
             card.className = "order-mini-card";
             card.setAttribute("onclick", `window.location.href='track.html?id=${o.orderId}'`);
-            card.innerHTML = `<div><strong>${o.productName}</strong><br><span style="font-family:monospace; color:var(--text-muted);">#${o.orderId}</span></div><span class="order-status ${o.status}">${statusText}</span>`;
+            card.innerHTML = `<div><strong>${o.productName}</strong><br><span>#${o.orderId}</span></div><span class="order-status ${o.status}">${statusText}</span>`;
             section.appendChild(card);
         });
     } catch (e) { section.innerHTML = "<p>خطأ في جلب الطلبات.</p>"; }
@@ -175,9 +161,8 @@ async function loadMyOrdersWidget() {
 window.onclick = function (event) { if (event.target == document.getElementById("buyModal")) closeModal(); };
 
 /* =================================================================
-   🔧 3. دوال لوحة الأدمن (النسخة الكاملة)
+   🔧 3. دوال لوحة الأدمن (بدون تغيير جوهري)
    ================================================================= */
-// FIX: Full implementation of admin panel functions
 function showSection(id, el) {
     document.querySelectorAll(".content-area > div").forEach(s => s.style.display = "none");
     document.getElementById("section-" + id).style.display = "block";
@@ -200,85 +185,41 @@ async function addProduct(e) {
     try {
         const res = await fetch(`${SERVER_URL}/admin/add-product`, { method: "POST", body: formData });
         const data = await res.json();
-        if (data.success) {
-            showNotification("✅ تم نشر المنتج بنجاح!", "success");
-            e.target.reset();
-        } else {
-            showNotification("فشل نشر المنتج.", "error");
-        }
-    } catch (err) {
-        showNotification("خطأ في الاتصال بالسيرفر.", "error");
-    } finally {
-        btn.disabled = false;
-        btn.innerText = "🚀 نشر المنتج";
-    }
+        if (data.success) { showNotification("✅ تم نشر المنتج!", "success"); e.target.reset(); } 
+        else { showNotification("فشل النشر.", "error"); }
+    } catch (err) { showNotification("خطأ اتصال.", "error"); }
+    btn.disabled = false; btn.innerText = "🚀 نشر المنتج";
 }
 
 async function loadAdminOrders() {
-    const container = document.getElementById("orders-list");
-    if (!container) return;
+    const container = document.getElementById("orders-list"); if (!container) return;
     container.innerHTML = '<div class="loader"></div>';
     try {
-        const res = await fetch(`${SERVER_URL}/admin/orders`);
-        if (!res.ok) throw new Error(`E: ${res.status}`);
-        let orders = await res.json();
-        orders.reverse();
-        container.innerHTML = "";
-        if (orders.length === 0) {
-            container.innerHTML = "<p style='text-align:center; color: var(--text-muted);'>لا توجد طلبات حالياً.</p>";
-            return;
-        }
+        const res = await fetch(`${SERVER_URL}/admin/orders`); if (!res.ok) throw new Error(`E: ${res.status}`);
+        let orders = await res.json(); orders.reverse(); container.innerHTML = "";
+        if (orders.length === 0) { container.innerHTML = "<p>لا توجد طلبات.</p>"; return; }
         orders.forEach(o => {
             const receiptUrl = o.receiptImage ? `${SERVER_URL}${o.receiptImage}` : "";
-            const receiptHtml = receiptUrl ? `<a href="${receiptUrl}" target="_blank"><img src="${receiptUrl}" class="receipt-thumb"></a>` : "<div class='receipt-thumb' style='background:#111; display:flex; align-items:center; justify-content:center; color:var(--text-muted); font-size:0.8rem;'>لا يوجد</div>";
-            const actionBtn = o.status === 'pending' ? `<button class="btn" style="width:auto; padding: 8px 16px; font-size:0.9rem; margin:0;" onclick="approve(${o.orderId}, this)">تفعيل</button>` : `<span style="color:var(--success); font-weight:bold;">${o.status === 'completed' ? "مكتمل" : "مُفعّل"}</span>`;
-            
-            const card = document.createElement('div');
-            card.className = `order-card order-status-${o.status}`;
-            card.id = `order-${o.orderId}`;
-            card.innerHTML = `
-                <div class="order-info">
-                    <h4>${o.productName}</h4>
-                    <div class="order-meta">
-                        <span class="meta-item"><i class="fas fa-id-card"></i> #${o.orderId}</span>
-                        <span class="meta-item"><i class="fas fa-user"></i> ID: ${o.userId}</span>
-                        <span class="meta-item"><i class="fas fa-mobile-alt"></i> ${o.userPhone}</span>
-                    </div>
-                </div>
-                <div class="order-actions">
-                    ${receiptHtml}
-                    <div style="text-align:center;">${actionBtn}</div>
-                </div>`;
-            container.appendChild(card);
+            const receiptHtml = receiptUrl ? `<a href="${receiptUrl}" target="_blank"><img src="${receiptUrl}" class="receipt-thumb"></a>` : "<div></div>";
+            const actionBtn = o.status === 'pending' ? `<button class="btn" onclick="approve(${o.orderId}, this)">تفعيل</button>` : `<span>${o.status === 'completed' ? "مكتمل" : "تم"}</span>`;
+            container.innerHTML += `<div class="order-card order-status-${o.status}" id="order-${o.orderId}"><div class="order-info"><h4>${o.productName} (#${o.orderId})</h4><div class="order-meta"><span class="meta-item"><i class="fas fa-user"></i> ${o.userId}</span><span class="meta-item"><i class="fas fa-mobile-alt"></i> ${o.userPhone}</span></div></div><div class="order-actions">${receiptHtml}<div style="text-align:center;">${actionBtn}</div></div></div>`;
         });
-    } catch (e) {
-        console.error(e);
-        container.innerHTML = "<p>خطأ في تحميل الطلبات.</p>";
-    }
+    } catch (e) { container.innerHTML = "<p>خطأ تحميل.</p>"; }
 }
 
 async function approve(id, el) {
     if (!confirm("هل أنت متأكد من تفعيل هذا الطلب؟")) return;
-    el.disabled = true;
-    el.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    el.disabled = true; el.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
     try {
         const res = await fetch(`${SERVER_URL}/admin/approve`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orderId: id }) });
         const data = await res.json();
         if (data.success) {
-            el.parentElement.innerHTML = "<span style='color:var(--success); font-weight:bold;'>مُفعّل</span>";
-            const card = document.getElementById(`order-${id}`);
-            card.classList.remove("order-status-pending");
-            card.classList.add("order-status-approved");
-        } else {
-            showNotification("فشل عملية التفعيل.", "error");
-            el.disabled = false;
-        }
-    } catch (e) {
-        showNotification("خطأ في الاتصال بالسيرفر.", "error");
-        el.disabled = false;
-    }
+            el.parentElement.innerHTML = "<span>تم</span>";
+            document.getElementById(`order-${id}`).classList.remove("order-status-pending");
+            document.getElementById(`order-${id}`).classList.add("order-status-approved");
+        } else { showNotification("فشل التفعيل.", "error"); el.disabled = false; }
+    } catch (e) { showNotification("خطأ اتصال.", "error"); el.disabled = false; }
 }
-
 
 /* =================================================================
    📡 4. دوال صفحة التتبع (Track.html)
@@ -290,7 +231,6 @@ async function initTrackPage() {
     const id = new URLSearchParams(window.location.search).get('id');
     if (!id) return pendingView.innerHTML = '<h1>رقم الطلب غير موجود.</h1>';
     dispIdElem.innerText = '#' + id;
-
     const checkStatus = async () => {
         try {
             const res = await fetch(`${SERVER_URL}/order-status/${id}`);
@@ -301,26 +241,16 @@ async function initTrackPage() {
                 approvedView.style.display = 'block';
                 const accContainer = document.getElementById('account-display');
                 
-                if (data.requiresCode) {
-                     // FIX: Using a reliable public image link as a fallback
-                     const imgSrc = data.profileImage ? `${SERVER_URL}${data.profileImage}` : 'https://upload.wikimedia.org/wikipedia/commons/0/0b/Netflix-avatar.png';
-                     console.log("Profile Image URL:", imgSrc); // For debugging
-                     
-                     accContainer.innerHTML = `
-                        <img src="${imgSrc}" class="profile-avatar" alt="Profile Avatar">
-                        <div class="info-row">
-                            <span class="info-label">الإيميل</span>
-                            <span class="info-value">${data.accountEmail} <button class="copy-btn" onclick="navigator.clipboard.writeText('${data.accountEmail}')"><i class="fas fa-copy"></i></button></span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">البروفايل</span>
-                            <span class="info-value">${data.profileName}</span>
-                        </div>
-                        <div>
-                            <span style="font-size:0.8rem;color:#666;">PIN</span>
-                            <span class="pin-display">${data.profilePin}</span>
-                        </div>`;
+                // ## بداية التعديل: عرض وصف المنتج ##
+                const descContainer = document.getElementById('product-description-container');
+                if (data.productDescription && descContainer) {
+                    descContainer.innerHTML = `<div class="product-description-box"><h4><i class="fas fa-info-circle"></i> تفاصيل المنتج</h4><p>${data.productDescription}</p></div>`;
+                }
+                // ## نهاية التعديل ##
 
+                if (data.requiresCode) {
+                     const imgSrc = data.profileImage ? `${SERVER_URL}${data.profileImage}` : 'https://upload.wikimedia.org/wikipedia/commons/0/0b/Netflix-avatar.png';
+                     accContainer.innerHTML = `<img src="${imgSrc}" class="profile-avatar"><div class="info-row"><span class="info-label">الإيميل</span><span class="info-value">${data.accountEmail} <button class="copy-btn" onclick="navigator.clipboard.writeText('${data.accountEmail}')"><i class="fas fa-copy"></i></button></span></div><div class="info-row"><span class="info-label">البروفايل</span><span class="info-value">${data.profileName}</span></div><div><span style="font-size:0.8rem;color:#666;">PIN</span><span class="pin-display">${data.profilePin}</span></div>`;
                      document.getElementById('code-section').style.display = 'block';
                      if (data.savedCode) {
                          document.getElementById('code-btn').style.display = 'none';
@@ -328,33 +258,21 @@ async function initTrackPage() {
                          document.getElementById('final-code').innerText = data.savedCode;
                      }
                 } else {
-                    accContainer.innerHTML = `
-                        <div class="info-row">
-                            <span class="info-label">الإيميل</span>
-                            <span class="info-value">${data.accountEmail} <button class="copy-btn" onclick="navigator.clipboard.writeText('${data.accountEmail}')"><i class="fas fa-copy"></i></button></span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">المرور</span>
-                            <span class="info-value">${data.accountPassword} <button class="copy-btn" onclick="navigator.clipboard.writeText('${data.accountPassword}')"><i class="fas fa-copy"></i></button></span>
-                        </div>`;
+                    accContainer.innerHTML = `<div class="info-row"><span class="info-label">الإيميل</span><span class="info-value">${data.accountEmail} <button class="copy-btn" onclick="navigator.clipboard.writeText('${data.accountEmail}')"><i class="fas fa-copy"></i></button></span></div><div class="info-row"><span class="info-label">المرور</span><span class="info-value">${data.accountPassword} <button class="copy-btn" onclick="navigator.clipboard.writeText('${data.accountPassword}')"><i class="fas fa-copy"></i></button></span></div>`;
                 }
             }
-        } catch (error) { 
-            console.error('[Track] Error fetching status:', error);
-            // Stop checking if there's a persistent error to avoid spamming the server
-            clearInterval(trackInterval);
-        }
+        } catch (error) { console.error('[Track] Error fetching status:', error); }
     };
-    if (trackInterval) clearInterval(trackInterval); 
-    checkStatus(); 
-    trackInterval = setInterval(checkStatus, 5000); // Increased interval to 5s
+    if (trackInterval) clearInterval(trackInterval); checkStatus(); trackInterval = setInterval(checkStatus, 4000);
 }
 
+// ## بداية التعديل: استخدام نظام الإشعارات ##
 async function getCode() {
     const id = new URLSearchParams(window.location.search).get("id");
     const btn = document.getElementById("code-btn");
     if (!btn) return;
-    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
     try {
         const res = await fetch(`${SERVER_URL}/get-code-secure`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orderId: id }) });
         const data = await res.json(); 
@@ -362,36 +280,27 @@ async function getCode() {
             document.getElementById("final-code").innerText = data.code;
             document.getElementById("code-result").style.display = "block";
             btn.style.display = "none";
-        } else { showNotification(data.message || "فشل جلب الكود.", "error"); }
-    } catch (e) { showNotification("خطأ في الاتصال بالسيرفر.", "error"); } 
-    finally {
+        } else {
+            showNotification(data.message || "فشل جلب الكود.", "error");
+        }
+    } catch (e) {
+        showNotification("خطأ في الاتصال بالسيرفر.", "error");
+    } finally {
+        // Only re-enable the button if the code was not successfully fetched
         if (btn.style.display !== 'none') {
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-key"></i> جلب كود الدخول';
         }
     }
 }
+// ## نهاية التعديل ##
 
 /* =================================================================
-   🚀 5. المنظم الرئيسي: تهيئة الصفحات عند التحميل
+   🚀 5. المنظم الرئيسي: تهيئة الصفحات عند التحميل (بدون تغيير)
    ================================================================= */
 document.addEventListener('DOMContentLoaded', () => {
     const currentPage = window.location.pathname.split('/').pop();
-    
-    if (currentPage === 'index.html' || currentPage === '') { 
-        updateUserSessionUI(); 
-        loadProducts(); 
-        loadMyOrdersWidget(); 
-    }
-    if (currentPage === 'admin.html') { 
-        const firstNavItem = document.querySelector('.nav-item'); 
-        if (firstNavItem) {
-            showSection('orders', firstNavItem);
-        }
-        loadAdminOrders();
-        toggleProductFields(); 
-    }
-    if (currentPage === 'track.html') { 
-        initTrackPage(); 
-    }
+    if (currentPage === 'index.html' || currentPage === '') { updateUserSessionUI(); loadProducts(); loadMyOrdersWidget(); }
+    if (currentPage === 'admin.html') { const firstNavItem = document.querySelector('.nav-item'); if (firstNavItem) showSection('orders', firstNavItem); loadAdminOrders(); toggleProductFields(); }
+    if (currentPage === 'track.html') { initTrackPage(); }
 });
