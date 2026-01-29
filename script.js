@@ -1,5 +1,5 @@
 // ✅ هام جداً: انسخ الرابط اللي بيظهر في التيرمينال وحطه هنا
-const SERVER_URL = "https://hhjk-shop-final-v2.loca.lt"; 
+const SERVER_URL = "https://hhjk-shop-final-v3.loca.lt"; 
 
 let productsData = []; 
 let currentProductId = null; // متغير لتخزين ID المنتج المختار
