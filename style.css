@@ -63,13 +63,13 @@ body::before {
 .notification-container {
     position: fixed;
     top: 90px;
-    left: 20px; /* Changed from right to left for RTL */
+    left: 20px;
     transform: none;
     right: auto;
     z-index: 9999;
     display: flex;
     flex-direction: column;
-    align-items: flex-start; /* Align to the left */
+    align-items: flex-start;
     gap: 15px;
     width: auto;
     max-width: 350px;
@@ -86,7 +86,7 @@ body::before {
     background: #1a1a1a;
     box-shadow: 0 8px 30px rgba(0,0,0,0.5);
     border: 1px solid rgba(255,255,255,0.1);
-    border-right-width: 5px; /* Changed from left to right for RTL */
+    border-right-width: 5px;
     border-left-width: 1px;
     animation: slide-in-left 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards, 
                fade-out-left 0.5s ease-out 4.5s forwards;
@@ -98,7 +98,7 @@ body::before {
     font-family: "Font Awesome 6 Free";
     font-weight: 900;
     font-size: 1.2rem;
-    order: 1; /* Move icon to the right for RTL */
+    order: 1;
     margin-right: 5px;
 }
 
@@ -188,7 +188,7 @@ header {
     transform: scale(1.05);
 }
 
-/* ======== NEW: Header User Area Styles ======== */
+/* ======== User Session UI ======== */
 .user-session-ui {
     display: flex;
     align-items: center;
@@ -311,6 +311,20 @@ header {
     box-shadow: 0 20px 40px rgba(0,0,0,0.5), 0 0 0 4px var(--primary-glow);
 }
 
+/* ## تنسيق صورة المنتج الاحترافي ## */
+.card-img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    transition: transform 0.3s ease;
+}
+.card:hover .card-img {
+    transform: scale(1.02);
+}
+
 .card h3 { 
     font-size: 1.6rem; 
     margin: 15px 0 10px 0; 
@@ -332,17 +346,17 @@ header {
     align-self: flex-start; 
     border: 1px solid var(--border-color);
 }
-/* NEW: Product Description on Card */
+
 .card .product-description {
     font-size: 0.9rem;
     color: var(--text-dark);
     line-height: 1.6;
     display: -webkit-box;
-    -webkit-line-clamp: 3; /* Limit to 3 lines */
+    -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;  
     overflow: hidden;
     text-overflow: ellipsis;
-    min-height: 54px; /* 3 lines * 1.6 line-height * 0.9rem font-size */
+    min-height: 54px;
 }
 
 
@@ -392,7 +406,6 @@ header {
     transform: rotate(90deg);
 }
 
-/* NEW: Modal Product Description style */
 #modal-product-description {
     background: #0f0f0f;
     padding: 15px;
@@ -486,6 +499,8 @@ header {
 .order-status.pending { color: var(--warning); }
 .order-status.approved { color: var(--success); }
 .order-status.completed { color: #8c8c8c; }
+/* تنسيق الحالة المرفوضة */
+.order-status.rejected { color: var(--primary); background: rgba(229, 9, 20, 0.1); }
 
 
 /* ======== Animations ======== */
