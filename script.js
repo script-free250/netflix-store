@@ -150,26 +150,52 @@ function openBuyModal(productId) {
 
 function closeModal() { document.getElementById("buyModal").style.display = "none"; }
 
+/* =================================================================
+   دالة الشراء بعد التعديل (الحل)
+   ================================================================= */
 async function submitOrder(e) {
     e.preventDefault();
     const token = localStorage.getItem("authToken");
     if (!token) { showNotification("يرجى تسجيل الدخول مرة أخرى.", "error"); return; }
+    
     const btn = e.target.querySelector("button");
     btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    
     const formData = new FormData(e.target);
+    
     try {
-        const res = await fetch(`${SERVER_URL}/buy`, { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: formData });
+        // ✅ تم الإصلاح: إضافة هيدر تجاوز التانل بجانب التوكن
+        const res = await fetch(`${SERVER_URL}/buy`, { 
+            method: "POST", 
+            headers: { 
+                "Authorization": `Bearer ${token}`,
+                "Bypass-Tunnel-Reminder": "true" 
+            }, 
+            body: formData 
+        });
+        
         const data = await res.json();
+        
         if (res.ok) {
             closeModal();
             e.target.reset();
-            updateFileName(e.target.querySelector('#receipt-file'));
+            const fileInput = e.target.querySelector('#receipt-file');
+            if(fileInput) updateFileName(fileInput); // إعادة تعيين اسم الملف
+            
             showNotification("✅ تم إرسال طلبك بنجاح!", "success");
             loadMyOrdersWidget();
-        } else { showNotification(data.message || "حدث خطأ ما.", "error"); }
-    } catch (err) { showNotification("فشل الاتصال بالسيرفر.", "error"); } 
-    finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-check-circle"></i> تأكيد الشراء'; }
+        } else { 
+            showNotification(data.message || "حدث خطأ ما.", "error"); 
+        }
+    } catch (err) { 
+        console.error(err);
+        showNotification("فشل الاتصال بالسيرفر.", "error"); 
+    } finally { 
+        btn.disabled = false; 
+        btn.innerHTML = '<i class="fas fa-check-circle"></i> تأكيد الشراء'; 
+    }
 }
+
 
 async function loadMyOrdersWidget() {
     const section = document.getElementById("my-orders-list"); if (!section) return;
