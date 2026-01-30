@@ -144,35 +144,64 @@ function closeModal() {
     document.getElementById("file-label-text").textContent = "اضغط لإرفاق صورة التحويل";
 }
 
+/* =================================================================
+   🛒 دالة إرسال الطلب (إكمال الشراء)
+   ================================================================= */
 async function submitOrder(event) {
-    event.preventDefault();
-    const form = event.target, btn = form.querySelector('button'), formData = new FormData(form);
-    btn.disabled = true; btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...`;
+    event.preventDefault(); // منع إعادة تحميل الصفحة
+
+    const form = event.target;
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalBtnHTML = submitBtn.innerHTML;
+
+    // تعطيل الزر وإظهار مؤشر التحميل
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
+
+    const formData = new FormData(form);
+
     try {
-        const token = localStorage.getItem("authToken");
-        if (!token) {
-            showNotification("يرجى تسجيل الدخول أولاً.", "error");
-            btn.disabled = false; btn.innerHTML = `<i class="fas fa-check-circle"></i> تأكيد الشراء`;
-            return;
-        }
-        // التعديل هنا: إزالة formData.append("authToken", token); وإضافة headers بدلاً من ذلك
-        const res = await fetch(`${SERVER_URL}/submit-order`, { 
-            method: "POST", 
-            headers: { 
-                "Authorization": `Bearer ${token}`,  // إضافة التوكن كـ Authorization header
-                "Bypass-Tunnel-Reminder": "true"    // إضافة header لتجاوز localtunnel
-            }, 
-            body: formData 
+        const res = await fetch(`${SERVER_URL}/api/submit-order`, {
+            method: "POST",
+            headers: {
+                // هيدر ضروري لتجاوز صفحة التحذير في localtunnel
+                "Bypass-Tunnel-Reminder": "true"
+            },
+            body: formData // لا تضيف Content-Type، المتصفح يضيفه تلقائياً مع boundary
         });
+
         const data = await res.json();
-        if (data.success) {
-            showNotification("تم إرسال الطلب بنجاح! جاري المراجعة.", "success");
-            closeModal();
-            loadMyOrdersWidget(); // تحديث قائمة الطلبات
-            form.reset();
-        } else { showNotification(data.message || "حدث خطأ أثناء إرسال الطلب.", "error"); }
-    } catch (e) { showNotification("خطأ في الاتصال بالسيرفر.", "error"); } 
-    finally { btn.disabled = false; btn.innerHTML = `<i class="fas fa-check-circle"></i> تأكيد الشراء`; }
+
+        if (res.ok && data.success) {
+            showNotification("تم إرسال الطلب بنجاح! سيتم مراجعته قريباً.", "success");
+            closeModal(); // إغلاق المودال
+
+            // توجيه المستخدم إلى صفحة تتبع الطلب بعد 2 ثانية
+            setTimeout(() => {
+                window.location.href = `track.html?id=${data.orderId}`;
+            }, 2000);
+        } else {
+            showNotification(data.message || "حدث خطأ أثناء إرسال الطلب.", "error");
+        }
+    } catch (error) {
+        console.error("خطأ في الاتصال:", error);
+        showNotification("فشل الاتصال بالسيرفر. تأكد من الإنترنت أو حاول لاحقاً.", "error");
+    } finally {
+        // إعادة الزر لحالته الأصلية
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnHTML;
+    }
+}
+
+/* =================================================================
+   دالة إغلاق المودال (إذا لم تكن موجودة بالفعل)
+   ================================================================= */
+function closeModal() {
+    document.getElementById('buyModal').style.display = 'none';
+    // إعادة تعيين الفورم والملف
+    document.getElementById('purchaseForm').reset();
+    document.getElementById('file-label-text').innerText = 'اضغط لإرفاق صورة التحويل';
+    document.getElementById('file-label-text').style.color = 'var(--text-muted)';
 }
 
 /* =================================================================
