@@ -151,50 +151,69 @@ function openBuyModal(productId) {
 function closeModal() { document.getElementById("buyModal").style.display = "none"; }
 
 /* =================================================================
-   دالة الشراء بعد التعديل (الحل)
+   دالة الشراء (تم تحسينها لحل مشاكل الاتصال)
    ================================================================= */
 async function submitOrder(e) {
     e.preventDefault();
     const token = localStorage.getItem("authToken");
-    if (!token) { showNotification("يرجى تسجيل الدخول مرة أخرى.", "error"); return; }
+    
+    if (!token) { 
+        showNotification("جلستك انتهت، يرجى تسجيل الدخول مجدداً.", "error");
+        setTimeout(() => window.location.href = "login.html", 2000);
+        return; 
+    }
     
     const btn = e.target.querySelector("button");
-    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    const originalBtnText = btn.innerHTML; // حفظ النص الأصلي للزر
+    btn.disabled = true; 
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري المعالجة...';
     
     const formData = new FormData(e.target);
     
     try {
-        // ✅ تم الإصلاح: إضافة هيدر تجاوز التانل بجانب التوكن
+        // إعداد الهيدرز بعناية
+        const headers = new Headers();
+        headers.append("Authorization", `Bearer ${token}`);
+        headers.append("Bypass-Tunnel-Reminder", "true");
+        // ملاحظة: لا تضف 'Content-Type': 'multipart/form-data' يدوياً!
+        // المتصفح سيضيفه تلقائياً مع الـ boundary الصحيح عند استخدام FormData.
+
         const res = await fetch(`${SERVER_URL}/buy`, { 
             method: "POST", 
-            headers: { 
-                "Authorization": `Bearer ${token}`,
-                "Bypass-Tunnel-Reminder": "true" 
-            }, 
+            headers: headers,
             body: formData 
         });
         
+        // التحقق من نوع الاستجابة (JSON أم HTML خطأ)
+        const contentType = res.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+            throw new Error("استجابة غير صالحة من السيرفر (قد تكون مشكلة في الاتصال).");
+        }
+
         const data = await res.json();
         
-        if (res.ok) {
+        if (res.ok && data.success) {
             closeModal();
             e.target.reset();
-            const fileInput = e.target.querySelector('#receipt-file');
-            if(fileInput) updateFileName(fileInput); // إعادة تعيين اسم الملف
             
-            showNotification("✅ تم إرسال طلبك بنجاح!", "success");
-            loadMyOrdersWidget();
+            // تحديث واجهة رفع الملف
+            const fileInput = document.getElementById('receipt-file');
+            if(fileInput) updateFileName(fileInput);
+            
+            showNotification("✅ تم استلام طلبك بنجاح! سيتم مراجعته قريباً.", "success");
+            loadMyOrdersWidget(); // تحديث قائمة الطلبات
         } else { 
-            showNotification(data.message || "حدث خطأ ما.", "error"); 
+            showNotification(data.message || "حدث خطأ أثناء معالجة الطلب.", "error"); 
         }
     } catch (err) { 
-        console.error(err);
-        showNotification("فشل الاتصال بالسيرفر.", "error"); 
+        console.error("Purchase Error:", err);
+        showNotification("فشل الاتصال بالسيرفر. تحقق من الإنترنت وحاول مجدداً.", "error"); 
     } finally { 
         btn.disabled = false; 
         btn.innerHTML = '<i class="fas fa-check-circle"></i> تأكيد الشراء'; 
     }
 }
+
 
 
 async function loadMyOrdersWidget() {
