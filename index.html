@@ -3,17 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="متجر Netflix Store الرسمي - أفضل الاشتراكات الرقمية بأسعار تنافسية وتسليم فوري. ضمان ذهبي ودعم متواصل.">
+    <meta name="theme-color" content="#E50914">
     <title>Netflix Store | المتجر الرسمي</title>
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="https://assets.nflxext.com/us/ffe/siteui/common/icons/nficon2016.png" type="image/png">
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- CSS -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- NEW: Notification Container -->
+    <!-- Notification Container -->
     <div id="notification-container"></div>
 
+    <!-- Header -->
     <header>
         <a href="index.html" class="logo">NETFLIX <span style="font-size:0.5em; color:var(--text-light); font-weight:300;">STORE</span></a>
         <div id="user-session">
@@ -22,14 +30,15 @@
     </header>
 
     <div class="container">
+        <!-- Hero Section: Improved Copy -->
         <div class="hero">
-            <h2>اشتراكاتك المفضلة، فوراً.</h2>
-            <p>أرخص الأسعار، ضمان كامل، ودعم فني على مدار الساعة.</p>
+            <h2>عالم الترفيه الرقمي بين يديك.</h2>
+            <p>استمتع بأفضل اشتراكات البث الترفيهي بأسعار تنافسية، تسليم فوري، وضمان ذهبي.</p>
         </div>
 
         <div class="section-title">
             <i class="fas fa-fire"></i>
-            <h3>الباقات المتاحة</h3>
+            <h3>الباقات المميزة</h3>
         </div>
         
         <div id="products-container" class="grid">
@@ -47,7 +56,44 @@
         </div>
     </div>
 
-    <!-- UPDATED: Buy Modal -->
+    <!-- New: Official Footer -->
+    <footer class="site-footer">
+        <div class="footer-content">
+            <div class="footer-logo">
+                <a href="index.html" class="logo">NETFLIX <span style="font-size:0.5em; color:var(--text-light); font-weight:300;">STORE</span></a>
+                <p>وجهتك الأولى للاشتراكات الرقمية الموثوقة.<br>نسعى لتوفير تجربة ترفيهية لا مثيل لها بأفضل الأسعار.</p>
+            </div>
+            <div class="footer-links">
+                <h4>روابط سريعة</h4>
+                <ul>
+                    <li><a href="index.html">الرئيسية</a></li>
+                    <li><a href="#products-container">الباقات</a></li>
+                    <li><a href="track.html">تتبع طلبك</a></li>
+                    <li><a href="#">الشروط والأحكام</a></li>
+                </ul>
+            </div>
+            <div class="footer-social">
+                <h4>تواصل معنا</h4>
+                <div class="social-icons">
+                    <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                    <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                    <a href="#" aria-label="Telegram"><i class="fab fa-telegram"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 Netflix Store. جميع الحقوق محفوظة.</p>
+        </div>
+    </footer>
+
+    <!-- New: WhatsApp Floating Button -->
+    <!-- استبدل الرقم بالرقم الخاص بك -->
+    <a href="https://wa.me/201000000000" class="whatsapp-float" target="_blank" title="تواصل معنا عبر واتساب">
+        <i class="fab fa-whatsapp"></i>
+    </a>
+
+    <!-- Buy Modal -->
     <div id="buyModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -59,7 +105,6 @@
                 أنت على وشك شراء: <span id="modal-product-name" style="color:var(--primary); font-weight:bold;"></span>
             </p>
             
-            <!-- NEW: Product Description in Modal -->
             <div id="modal-product-description"></div>
 
             <form id="purchaseForm" onsubmit="submitOrder(event)">
@@ -99,9 +144,11 @@
             if(input.files && input.files[0]) {
                 labelText.textContent = "تم اختيار: " + input.files[0].name;
                 uploadContent.style.color = "var(--success)";
+                uploadContent.querySelector('i').className = "fas fa-check-circle";
             } else {
                 labelText.textContent = "اضغط لإرفاق صورة التحويل";
                 uploadContent.style.color = "var(--text-muted)";
+                uploadContent.querySelector('i').className = "fas fa-cloud-upload-alt";
             }
         }
 
