@@ -83,7 +83,6 @@ function updateUserSessionUI() {
 /* =================================================================
    🛒 2. دوال المتجر والشراء
    ================================================================= */
-// ## تعديل: عرض الصورة والتحقق من المخزون ##
 async function loadProducts() {
     const container = document.getElementById("products-container"); if (!container) return;
     container.innerHTML = '<div class="loader"></div>';
@@ -95,17 +94,14 @@ async function loadProducts() {
         if (productsData.length === 0) { container.innerHTML = "<p>لا توجد منتجات حالياً.</p>"; return; }
         
         productsData.forEach((p, index) => {
-            // حساب المخزون المتاح
             const availableStock = p.inventory ? p.inventory.filter(i => !i.isSold).length : 0;
             const isOutOfStock = (p.inventory && availableStock === 0);
             
-            // تحديد حالة الزر والصورة
             const btnState = isOutOfStock ? 'disabled' : '';
             const btnText = isOutOfStock ? 'نفدت الكمية 🚫' : 'شراء الآن';
             const btnClass = isOutOfStock ? 'btn btn-disabled' : 'btn';
             
-            // استخدام صورة المنتج أو صورة افتراضية
-            const imageSrc = p.image ? `${SERVER_URL}${p.image}` : 'https://assets.nflxext.com/us/ffe/siteui/common/icons/nficon2016.png'; // صورة افتراضية بسيطة
+            const imageSrc = p.image ? `${SERVER_URL}${p.image}` : 'https://assets.nflxext.com/us/ffe/siteui/common/icons/nficon2016.png';
 
             const card = document.createElement("div");
             card.className = "card";
@@ -127,7 +123,6 @@ async function loadProducts() {
         container.innerHTML = "<p>حدث خطأ أثناء تحميل الباقات.</p>";
     }
 }
-// ## نهاية التعديل ##
 
 function openBuyModal(productId) {
     const token = localStorage.getItem("authToken");
@@ -139,7 +134,6 @@ function openBuyModal(productId) {
     const product = productsData.find(p => p.id === productId);
     if (!product) { showNotification("عذراً، المنتج غير موجود.", "error"); return; }
     
-    // فحص إضافي قبل فتح المودال
     if (product.inventory) {
         const stock = product.inventory.filter(i => !i.isSold).length;
         if (stock <= 0) { showNotification("عذراً، لقد نفد المخزون للتو.", "error"); return; }
@@ -169,7 +163,7 @@ async function submitOrder(e) {
             updateFileName(e.target.querySelector('#receipt-file'));
             showNotification("✅ تم إرسال طلبك بنجاح!", "success");
             loadMyOrdersWidget();
-            loadProducts(); // تحديث القائمة لتنعكس حالة المخزون الجديد (اختياري)
+            loadProducts(); 
         } else { showNotification(data.message || "حدث خطأ ما.", "error"); }
     } catch (err) { showNotification("فشل الاتصال بالسيرفر.", "error"); } 
     finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-check-circle"></i> تأكيد الشراء'; }
@@ -187,7 +181,7 @@ async function loadMyOrdersWidget() {
         orders.reverse(); section.innerHTML = "";
         if (!orders.length) { section.innerHTML = "<p>لا توجد طلبات سابقة.</p>"; return; }
         orders.forEach(o => {
-            let statusText = o.status === 'approved' ? "جاهز للعرض" : (o.status === 'completed' ? "مكتمل" : "قيد المراجعة");
+            let statusText = o.status === 'approved' ? "جاهز للعرض" : (o.status === 'completed' ? "مكتمل" : (o.status === 'rejected' ? "مرفوض" : "قيد المراجعة"));
             const card = document.createElement("div");
             card.className = "order-mini-card";
             card.setAttribute("onclick", `window.location.href='track.html?id=${o.orderId}'`);
@@ -212,7 +206,6 @@ function showSection(id, el) {
 function toggleProductFields() {
     if (!document.getElementById("p-type")) return;
     const type = document.getElementById("p-type").value;
-    // (Optional) Logic for hiding/showing specific fields if needed
 }
 
 async function addProduct(e) {
@@ -226,7 +219,6 @@ async function addProduct(e) {
         if (data.success) {
             showNotification("✅ تم نشر المنتج بنجاح!", "success");
             e.target.reset();
-            // Reset preview image
             document.getElementById('main-image-preview').style.display = 'none';
             document.getElementById('main-image-text').style.display = 'block';
             document.querySelector('.image-upload-box i').style.display = 'block';
@@ -249,7 +241,16 @@ async function loadAdminOrders() {
         orders.forEach(o => {
             const receiptUrl = o.receiptImage ? `${SERVER_URL}${o.receiptImage}` : "";
             const receiptHtml = receiptUrl ? `<a href="${receiptUrl}" target="_blank"><img src="${receiptUrl}" class="receipt-thumb"></a>` : "<div class='receipt-thumb' style='background:#111; display:flex; align-items:center; justify-content:center; color:var(--text-muted); font-size:0.8rem;'>لا يوجد</div>";
-            const actionBtn = o.status === 'pending' ? `<button class="btn" style="width:auto; padding: 8px 16px; font-size:0.9rem; margin:0;" onclick="approve(${o.orderId}, this)">تفعيل</button>` : `<span style="color:var(--success); font-weight:bold;">${o.status === 'completed' ? "مكتمل" : "مُفعّل"}</span>`;
+            
+            // ## تعديل: إضافة زر الرفض ##
+            const actionBtn = o.status === 'pending' ? 
+                `<div style="display:flex; gap:10px; justify-content:center;">
+                    <button class="btn" style="width:auto; padding: 8px 16px; font-size:0.9rem; margin:0; background:var(--success);" onclick="approve(${o.orderId}, this)">قبول</button>
+                    <button class="btn" style="width:auto; padding: 8px 16px; font-size:0.9rem; margin:0; background:var(--primary);" onclick="rejectOrder(${o.orderId})">رفض</button>
+                 </div>` 
+                : `<span style="font-weight:bold; color:${o.status==='approved' || o.status==='completed' ? 'var(--success)' : (o.status==='rejected' ? 'var(--primary)' : '#888')}">${o.status === 'completed' ? "مكتمل" : (o.status === 'approved' ? "مُفعّل" : "مرفوض")}</span>`;
+            // ## نهاية التعديل ##
+
             const card = document.createElement('div');
             card.className = `order-card order-status-${o.status}`;
             card.id = `order-${o.orderId}`;
@@ -283,12 +284,39 @@ async function approve(id, el) {
     } catch (e) { showNotification("خطأ في الاتصال.", "error"); el.disabled = false; }
 }
 
+// ## إضافة: دالة رفض الطلب ##
+async function rejectOrder(id) {
+    const reason = prompt("أدخل سبب الرفض (سيظهر للمستخدم):");
+    if (reason === null) return; 
+    if (!reason.trim()) { alert("يجب كتابة سبب الرفض!"); return; }
+
+    try {
+        const res = await fetch(`${SERVER_URL}/admin/reject`, { 
+            method: "POST", 
+            headers: { "Content-Type": "application/json" }, 
+            body: JSON.stringify({ orderId: id, reason: reason }) 
+        });
+        const data = await res.json();
+        if (data.success) {
+            showNotification("تم رفض الطلب.", "info");
+            loadAdminOrders();
+        } else {
+            showNotification("فشل الرفض.", "error");
+        }
+    } catch (e) { showNotification("خطأ في الاتصال.", "error"); }
+}
+// ## نهاية الإضافة ##
+
 /* =================================================================
    📡 4. صفحة التتبع
    ================================================================= */
 let trackInterval;
 async function initTrackPage() {
     const pendingView = document.getElementById('pending-view'), approvedView = document.getElementById('approved-view'), dispIdElem = document.getElementById('disp-id');
+    // ## إضافة: عنصر العرض المرفوض ##
+    const rejectedView = document.getElementById('rejected-view');
+    // ## نهاية الإضافة ##
+    
     if (!pendingView || !approvedView || !dispIdElem) return;
     const id = new URLSearchParams(window.location.search).get('id');
     if (!id) return pendingView.innerHTML = '<h1>رقم الطلب غير موجود.</h1>';
@@ -298,13 +326,26 @@ async function initTrackPage() {
         try {
             const res = await fetch(`${SERVER_URL}/order-status/${id}`);
             const data = await res.json();
+            
+            // ## إضافة: التعامل مع حالة الرفض ##
+            if (data.status === 'rejected') {
+                clearInterval(trackInterval);
+                pendingView.style.display = 'none';
+                approvedView.style.display = 'none';
+                if (rejectedView) {
+                    rejectedView.style.display = 'block';
+                    document.getElementById('rejection-reason').innerText = data.rejectionReason;
+                }
+                return;
+            }
+            // ## نهاية الإضافة ##
+
             if (data.status === 'approved' || data.status === 'completed') {
                 clearInterval(trackInterval);
                 pendingView.style.display = 'none';
                 approvedView.style.display = 'block';
                 const accContainer = document.getElementById('account-display');
                 
-                // إضافة وصف المنتج في صفحة التتبع
                 const descContainer = document.getElementById('product-description-container');
                 if (descContainer && data.productDescription) {
                     descContainer.innerHTML = `
