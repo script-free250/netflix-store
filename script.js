@@ -31,22 +31,42 @@ async function handleRegister(event) {
     const form = event.target, btn = form.querySelector('button'), name = form.querySelector('#name').value, email = form.querySelector('#email').value, password = form.querySelector('#password').value, errMsg = form.querySelector('#error-message'), okMsg = form.querySelector('#success-message');
     btn.disabled = true; btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`; errMsg.style.display = "none"; okMsg.style.display = "none";
     try {
-        const res = await fetch(`${SERVER_URL}/api/register`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, email, password }) });
+        // تم إضافة "Bypass-Tunnel-Reminder": "true"
+        const res = await fetch(`${SERVER_URL}/api/register`, { 
+            method: "POST", 
+            headers: { 
+                "Content-Type": "application/json",
+                "Bypass-Tunnel-Reminder": "true" 
+            }, 
+            body: JSON.stringify({ name, email, password }) 
+        });
         const data = await res.json();
         if (res.ok) {
             okMsg.innerText = data.message; okMsg.style.display = "block"; form.reset();
             setTimeout(() => { window.location.href = "login.html" }, 2000);
         } else { errMsg.innerText = data.message; errMsg.style.display = "block"; }
-    } catch (e) { errMsg.innerText = "فشل الاتصال."; } 
+    } catch (e) { 
+        console.error(e);
+        errMsg.innerText = "فشل الاتصال بالسيرفر."; 
+    } 
     finally { btn.disabled = false; btn.innerHTML = "إنشاء حساب"; }
 }
+
 
 async function handleLogin(event) {
     event.preventDefault();
     const form = event.target, btn = form.querySelector('button'), email = form.querySelector('#email').value, password = form.querySelector('#password').value, errMsg = form.querySelector('#error-message');
     btn.disabled = true; btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`; errMsg.style.display = "none";
     try {
-        const res = await fetch(`${SERVER_URL}/api/login`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) });
+        // تم إضافة الهيدر الضروري هنا أيضاً
+        const res = await fetch(`${SERVER_URL}/api/login`, { 
+            method: "POST", 
+            headers: { 
+                "Content-Type": "application/json",
+                "Bypass-Tunnel-Reminder": "true"
+            }, 
+            body: JSON.stringify({ email, password }) 
+        });
         const data = await res.json();
         if (res.ok && data.success) {
             localStorage.setItem("authToken", data.token); localStorage.setItem("userEmail", data.email); localStorage.setItem("userName", data.name);
@@ -55,6 +75,7 @@ async function handleLogin(event) {
     } catch (e) { errMsg.innerText = "فشل الاتصال."; } 
     finally { btn.disabled = false; btn.innerHTML = "دخول"; }
 }
+
 
 function logout() {
     localStorage.removeItem("authToken"); localStorage.removeItem("userEmail"); localStorage.removeItem("userName");
@@ -295,10 +316,30 @@ async function initTrackPage() {
         try {
             const res = await fetch(`${SERVER_URL}/order-status/${id}`);
             const data = await res.json();
-            if (data.status === 'approved' || data.status === 'completed') {
-                clearInterval(trackInterval);
-                pendingView.style.display = 'none';
-                approvedView.style.display = 'block';
+// ... داخل دالة initTrackPage ...
+if (data.status === 'approved' || data.status === 'completed') {
+    clearInterval(trackInterval);
+    pendingView.style.display = 'none';
+    approvedView.style.display = 'block';
+    
+    // --- بداية التصحيح: إضافة كود عرض الوصف ---
+    const descContainer = document.getElementById('product-description-container');
+    if (descContainer) {
+        if (data.productDescription) {
+            descContainer.innerHTML = `
+                <div class="product-description-box">
+                    <h4><i class="fas fa-info-circle"></i> تفاصيل المنتج</h4>
+                    <p>${data.productDescription}</p>
+                </div>`;
+        } else {
+            descContainer.innerHTML = ""; // تفريغ الحاوية إذا لم يوجد وصف
+        }
+    }
+    // --- نهاية التصحيح ---
+
+    const accContainer = document.getElementById('account-display');
+    // ... باقي الكود كما هو ...
+
                 const accContainer = document.getElementById('account-display');
                 
                 if (data.requiresCode) {
