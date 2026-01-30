@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>إنشاء حساب جديد</title>
+    <title>إنشاء حساب جديد | Netflix Store</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="auth-style.css">
@@ -13,15 +13,13 @@
         <div class="auth-panel">
             <a href="index.html" class="logo" style="margin-bottom: 30px; display: block; text-align: center;">NETFLIX <span style="font-size:0.5em; color:var(--text-light); font-weight:300;">STORE</span></a>
             <h2>إنشاء حساب جديد</h2>
-            <p class="auth-subtitle">انضم إلينا واستمتع بأفضل العروض.</p>
+            <p class="auth-subtitle">انضم إلينا واستمتع بأفضل العروض الحصرية.</p>
             
             <form id="registerForm" onsubmit="handleRegister(event)">
-                <!-- ## بداية التعديل: إضافة حقل الاسم ## -->
                 <div class="form-group">
                     <label for="name">الاسم</label>
                     <input type="text" id="name" class="form-control" required>
                 </div>
-                <!-- ## نهاية التعديل ## -->
 
                 <div class="form-group">
                     <label for="email">البريد الإلكتروني</label>
@@ -30,7 +28,7 @@
                 <div class="form-group">
                     <label for="password">كلمة المرور</label>
                     <input type="password" id="password" class="form-control" minlength="6" required>
-                    <small style="color: #888; font-size: 0.8rem; margin-top: 5px; display: block;">يجب أن تكون 6 أحرف على الأقل.</small>
+                    <small style="color: #666; font-size: 0.8rem; margin-top: 5px; display: block;">يجب أن تكون 6 أحرف على الأقل.</small>
                 </div>
                 
                 <p id="error-message" class="error-message"></p>
@@ -40,6 +38,10 @@
             </form>
             
             <p class="switch-auth">لديك حساب بالفعل؟ <a href="login.html">سجّل الدخول</a></p>
+            
+            <div style="text-align: center; margin-top: 30px; color: #555; font-size: 0.8rem; border-top: 1px solid #333; padding-top: 15px;">
+                &copy; 2024 Netflix Store. جميع الحقوق محفوظة.
+            </div>
         </div>
     </div>
     <script src="script.js"></script>
