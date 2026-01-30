@@ -26,16 +26,11 @@ function showNotification(message, type = 'info') {
 /* =================================================================
    🔐 1. دوال المصادقة وتسجيل الدخول
    ================================================================= */
-/* =================================================================
-   دوال المصادقة بعد التعديل (الحل)
-   ================================================================= */
-
 async function handleRegister(event) {
     event.preventDefault();
     const form = event.target, btn = form.querySelector('button'), name = form.querySelector('#name').value, email = form.querySelector('#email').value, password = form.querySelector('#password').value, errMsg = form.querySelector('#error-message'), okMsg = form.querySelector('#success-message');
     btn.disabled = true; btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`; errMsg.style.display = "none"; okMsg.style.display = "none";
     try {
-        // ✅ تم الإصلاح: إضافة الهيدر لتجاوز صفحة localtunnel
         const res = await fetch(`${SERVER_URL}/api/register`, { 
             method: "POST", 
             headers: { 
@@ -49,7 +44,7 @@ async function handleRegister(event) {
             okMsg.innerText = data.message; okMsg.style.display = "block"; form.reset();
             setTimeout(() => { window.location.href = "login.html" }, 2000);
         } else { errMsg.innerText = data.message; errMsg.style.display = "block"; }
-    } catch (e) { errMsg.innerText = "فشل الاتصال."; } 
+    } catch (e) { errMsg.innerText = "فشل الاتصال."; errMsg.style.display = "block"; } 
     finally { btn.disabled = false; btn.innerHTML = "إنشاء حساب"; }
 }
 
@@ -58,7 +53,6 @@ async function handleLogin(event) {
     const form = event.target, btn = form.querySelector('button'), email = form.querySelector('#email').value, password = form.querySelector('#password').value, errMsg = form.querySelector('#error-message');
     btn.disabled = true; btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`; errMsg.style.display = "none";
     try {
-        // ✅ تم الإصلاح: إضافة الهيدر لتجاوز صفحة localtunnel
         const res = await fetch(`${SERVER_URL}/api/login`, { 
             method: "POST", 
             headers: { 
@@ -72,7 +66,7 @@ async function handleLogin(event) {
             localStorage.setItem("authToken", data.token); localStorage.setItem("userEmail", data.email); localStorage.setItem("userName", data.name);
             window.location.href = "index.html";
         } else { errMsg.innerText = data.message; errMsg.style.display = "block"; }
-    } catch (e) { errMsg.innerText = "فشل الاتصال."; } 
+    } catch (e) { errMsg.innerText = "فشل الاتصال."; errMsg.style.display = "block"; } 
     finally { btn.disabled = false; btn.innerHTML = "دخول"; }
 }
 
@@ -87,12 +81,30 @@ function updateUserSessionUI() {
     const token = localStorage.getItem("authToken"), name = localStorage.getItem("userName");
     if (token && name) {
         const initial = name.charAt(0).toUpperCase();
-        div.innerHTML = `
-            <div class="user-session-ui">
-                <span>أهلاً، ${name}</span>
-                <div class="user-avatar">${initial}</div>
-                <button onclick="logout()" class="logout-btn" title="تسجيل الخروج"><i class="fas fa-sign-out-alt"></i></button>
-            </div>`;
+        
+        // ✅ تم الإصلاح: استخدام textContent بدلاً من innerHTML لعرض اسم المستخدم لمنع ثغرات XSS.
+        div.innerHTML = ''; // تفريغ المحتوى السابق
+        const userSessionDiv = document.createElement('div');
+        userSessionDiv.className = 'user-session-ui';
+
+        const welcomeSpan = document.createElement('span');
+        welcomeSpan.textContent = `أهلاً، ${name}`; // الطريقة الآمنة
+
+        const avatarDiv = document.createElement('div');
+        avatarDiv.className = 'user-avatar';
+        avatarDiv.textContent = initial;
+
+        const logoutButton = document.createElement('button');
+        logoutButton.className = 'logout-btn';
+        logoutButton.title = 'تسجيل الخروج';
+        logoutButton.onclick = logout;
+        logoutButton.innerHTML = `<i class="fas fa-sign-out-alt"></i>`;
+
+        userSessionDiv.appendChild(welcomeSpan);
+        userSessionDiv.appendChild(avatarDiv);
+        userSessionDiv.appendChild(logoutButton);
+        div.appendChild(userSessionDiv);
+
     } else {
         div.innerHTML = `<div style="display:flex;gap:10px;"><a href="login.html" class="btn-outline">دخول</a><a href="register.html" class="btn" style="width:auto;padding:10px 20px;margin:0;">حساب جديد</a></div>`;
     }
@@ -150,13 +162,11 @@ function openBuyModal(productId) {
 
 function closeModal() { document.getElementById("buyModal").style.display = "none"; }
 
-/* =================================================================
-   دالة الشراء (تم التصحيح والتحسين)
-   ================================================================= */
 async function submitOrder(event) {
     event.preventDefault();
     const form = event.target;
     const btn = form.querySelector('button');
+    const originalBtnHTML = btn.innerHTML;
     btn.disabled = true;
     btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...`;
     const formData = new FormData(form);
@@ -181,13 +191,9 @@ async function submitOrder(event) {
         showNotification('خطأ في الاتصال.', 'error');
     } finally {
         btn.disabled = false;
-        btn.innerHTML = `<i class="fas fa-check-circle"></i> تأكيد الشراء`;
+        btn.innerHTML = originalBtnHTML;
     }
 }
-
-
-
-
 
 async function loadMyOrdersWidget() {
     const section = document.getElementById("my-orders-list"); if (!section) return;
@@ -195,7 +201,7 @@ async function loadMyOrdersWidget() {
     if (!token) { section.innerHTML = '<p>يرجى <a href="login.html">تسجيل الدخول</a> لعرض طلباتك.</p>'; return; }
     section.innerHTML = '<div class="loader"></div>';
     try {
-        const res = await fetch(`${SERVER_URL}/api/my-orders`, { headers: { Authorization: `Bearer ${token}` } });
+        const res = await fetch(`${SERVER_URL}/api/my-orders`, { headers: { Authorization: `Bearer ${token}`, "Bypass-Tunnel-Reminder": "true" } });
         if (!res.ok) { if (res.status === 401 || res.status === 403) logout(); throw new Error(""); }
         let orders = await res.json();
         orders.reverse(); section.innerHTML = "";
@@ -216,7 +222,6 @@ window.onclick = function (event) { if (event.target == document.getElementById(
 /* =================================================================
    🔧 3. دوال لوحة الأدمن (النسخة الكاملة)
    ================================================================= */
-// FIX: Full implementation of admin panel functions
 function showSection(id, el) {
     document.querySelectorAll(".content-area > div").forEach(s => s.style.display = "none");
     document.getElementById("section-" + id).style.display = "block";
@@ -231,10 +236,8 @@ function toggleProductFields() {
     document.getElementById("fields-user").style.display = type === 'netflix-user' ? "block" : "none";
 }
 
-// متغير لتخزين عدد عناصر المخزون الحالية
 let stockCount = 0;
 
-// دالة مساعدة لإضافة حقول مخزون جديدة في الواجهة (توضع في script.js)
 function addStockItem() {
     const container = document.getElementById('stock-items-container');
     const type = document.getElementById('p-type').value;
@@ -262,47 +265,43 @@ function addStockItem() {
     container.appendChild(div);
 }
 
-// الدالة المعدلة للإرسال
 async function addProduct(e) {
     e.preventDefault();
     const btn = e.target.querySelector("button[type=submit]");
+    const originalBtnText = btn.innerText;
     btn.disabled = true; btn.innerText = "جاري النشر...";
     
     const formData = new FormData(e.target);
     
-    // نقوم بتنظيف البيانات لإرسال هيكلية منظمة للسيرفر
-    // ملاحظة: السيرفر (index.js) سيحتاج لتعديل لاستقبال `stock` كمصفوفة ومعالجة الصور المتعددة
-    // لكن هنا نركز على كود الواجهة كما طلبت.
-    
     try {
         const res = await fetch(`${SERVER_URL}/admin/add-product`, { 
             method: "POST", 
+            headers: { "Bypass-Tunnel-Reminder": "true" },
             body: formData 
         });
         const data = await res.json();
         if (data.success) {
             showNotification("✅ تم نشر المنتج والمخزون بنجاح!", "success");
             e.target.reset();
-            document.getElementById('stock-items-container').innerHTML = ''; // تفريغ المخزون
+            document.getElementById('stock-items-container').innerHTML = '';
             stockCount = 0;
         } else {
-            showNotification("فشل نشر المنتج.", "error");
+            showNotification(data.message || "فشل نشر المنتج.", "error");
         }
     } catch (err) {
         showNotification("خطأ في الاتصال بالسيرفر.", "error");
     } finally {
         btn.disabled = false;
-        btn.innerText = "🚀 نشر المنتج";
+        btn.innerText = originalBtnText;
     }
 }
-
 
 async function loadAdminOrders() {
     const container = document.getElementById("orders-list");
     if (!container) return;
     container.innerHTML = '<div class="loader"></div>';
     try {
-        const res = await fetch(`${SERVER_URL}/admin/orders`);
+        const res = await fetch(`${SERVER_URL}/admin/orders`, { headers: { "Bypass-Tunnel-Reminder": "true" } });
         if (!res.ok) throw new Error(`E: ${res.status}`);
         let orders = await res.json();
         orders.reverse();
@@ -342,26 +341,29 @@ async function loadAdminOrders() {
 
 async function approve(id, el) {
     if (!confirm("هل أنت متأكد من تفعيل هذا الطلب؟")) return;
+    const originalContent = el.innerHTML; // ✅ تم الإصلاح: حفظ المحتوى الأصلي للزر
     el.disabled = true;
     el.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
     try {
-        const res = await fetch(`${SERVER_URL}/admin/approve`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orderId: id }) });
+        const res = await fetch(`${SERVER_URL}/admin/approve`, { method: "POST", headers: { "Content-Type": "application/json", "Bypass-Tunnel-Reminder": "true" }, body: JSON.stringify({ orderId: id }) });
         const data = await res.json();
         if (data.success) {
             el.parentElement.innerHTML = "<span style='color:var(--success); font-weight:bold;'>مُفعّل</span>";
             const card = document.getElementById(`order-${id}`);
             card.classList.remove("order-status-pending");
             card.classList.add("order-status-approved");
+            showNotification("تم تفعيل الطلب بنجاح.", "success");
         } else {
-            showNotification("فشل عملية التفعيل.", "error");
+            showNotification(data.message || "فشل عملية التفعيل.", "error");
             el.disabled = false;
+            el.innerHTML = originalContent; // ✅ تم الإصلاح: إعادة الزر لحالته الأصلية عند الفشل
         }
     } catch (e) {
         showNotification("خطأ في الاتصال بالسيرفر.", "error");
         el.disabled = false;
+        el.innerHTML = originalContent; // ✅ تم الإصلاح: إعادة الزر لحالته الأصلية عند الخطأ
     }
 }
-
 
 /* =================================================================
    📡 4. دوال صفحة التتبع (Track.html)
@@ -376,7 +378,12 @@ async function initTrackPage() {
 
     const checkStatus = async () => {
         try {
-            const res = await fetch(`${SERVER_URL}/order-status/${id}`);
+            const res = await fetch(`${SERVER_URL}/order-status/${id}`, { headers: { "Bypass-Tunnel-Reminder": "true" } });
+            if (!res.ok) {
+                // إذا كان الطلب غير موجود أو هناك خطأ، أوقف التحديث
+                clearInterval(trackInterval);
+                return;
+            }
             const data = await res.json();
             if (data.status === 'approved' || data.status === 'completed') {
                 clearInterval(trackInterval);
@@ -385,12 +392,10 @@ async function initTrackPage() {
                 const accContainer = document.getElementById('account-display');
                 
                 if (data.requiresCode) {
-                     // FIX: Using a reliable public image link as a fallback
                      const imgSrc = data.profileImage ? `${SERVER_URL}${data.profileImage}` : 'https://upload.wikimedia.org/wikipedia/commons/0/0b/Netflix-avatar.png';
-                     console.log("Profile Image URL:", imgSrc); // For debugging
                      
                      accContainer.innerHTML = `
-                        <img src="${imgSrc}" class="profile-avatar" alt="Profile Avatar">
+                        <img src="${imgSrc}" class="profile-avatar" alt="Profile Avatar" onerror="this.onerror=null;this.src='https://upload.wikimedia.org/wikipedia/commons/0/0b/Netflix-avatar.png';">
                         <div class="info-row">
                             <span class="info-label">الإيميل</span>
                             <span class="info-value">${data.accountEmail} <button class="copy-btn" onclick="navigator.clipboard.writeText('${data.accountEmail}')"><i class="fas fa-copy"></i></button></span>
@@ -424,33 +429,36 @@ async function initTrackPage() {
             }
         } catch (error) { 
             console.error('[Track] Error fetching status:', error);
-            // Stop checking if there's a persistent error to avoid spamming the server
             clearInterval(trackInterval);
         }
     };
     if (trackInterval) clearInterval(trackInterval); 
     checkStatus(); 
-    trackInterval = setInterval(checkStatus, 5000); // Increased interval to 5s
+    trackInterval = setInterval(checkStatus, 5000);
 }
 
 async function getCode() {
     const id = new URLSearchParams(window.location.search).get("id");
     const btn = document.getElementById("code-btn");
     if (!btn) return;
+    const originalContent = btn.innerHTML; // ✅ تم الإصلاح: حفظ المحتوى الأصلي
     btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
     try {
-        const res = await fetch(`${SERVER_URL}/get-code-secure`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orderId: id }) });
+        const res = await fetch(`${SERVER_URL}/get-code-secure`, { method: "POST", headers: { "Content-Type": "application/json", "Bypass-Tunnel-Reminder": "true" }, body: JSON.stringify({ orderId: id }) });
         const data = await res.json(); 
         if (data.success) {
             document.getElementById("final-code").innerText = data.code;
             document.getElementById("code-result").style.display = "block";
             btn.style.display = "none";
-        } else { showNotification(data.message || "فشل جلب الكود.", "error"); }
-    } catch (e) { showNotification("خطأ في الاتصال بالسيرفر.", "error"); } 
-    finally {
+        } else { 
+            showNotification(data.message || "فشل جلب الكود.", "error"); 
+        }
+    } catch (e) { 
+        showNotification("خطأ في الاتصال بالسيرفر.", "error"); 
+    } finally {
         if (btn.style.display !== 'none') {
             btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-key"></i> جلب كود الدخول';
+            btn.innerHTML = originalContent; // ✅ تم الإصلاح: إعادة المحتوى الأصلي
         }
     }
 }
@@ -459,10 +467,12 @@ async function getCode() {
    🚀 5. المنظم الرئيسي: تهيئة الصفحات عند التحميل
    ================================================================= */
 document.addEventListener('DOMContentLoaded', () => {
-    const currentPage = window.location.pathname.split('/').pop();
+    const currentPage = window.location.pathname.split('/').pop() || 'index.html'; // Fallback for root path
     
-    if (currentPage === 'index.html' || currentPage === '') { 
-        updateUserSessionUI(); 
+    // دوال مشتركة بين الصفحات
+    updateUserSessionUI();
+
+    if (currentPage === 'index.html') { 
         loadProducts(); 
         loadMyOrdersWidget(); 
     }
@@ -472,7 +482,11 @@ document.addEventListener('DOMContentLoaded', () => {
             showSection('orders', firstNavItem);
         }
         loadAdminOrders();
-        toggleProductFields(); 
+        const pType = document.getElementById("p-type");
+        if(pType) {
+            toggleProductFields();
+            pType.addEventListener('change', toggleProductFields);
+        }
     }
     if (currentPage === 'track.html') { 
         initTrackPage(); 
