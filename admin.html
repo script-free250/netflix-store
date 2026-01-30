@@ -72,8 +72,13 @@
                         <textarea name="description" class="form-control" rows="3" placeholder="اكتب هنا تفاصيل المنتج التي ستظهر للمشتري عند استلام الطلب..."></textarea>
                         <!-- ## نهاية الإضافة ## -->
 
-                        <div id="fields-full" style="display:none;"><label class="form-label">بيانات الحساب:</label><input type="email" name="accountEmail" class="form-control" placeholder="Email"><input type="text" name="accountPassword" class="form-control" placeholder="Password"></div>
-                        <div id="fields-user"><label class="form-label">بيانات البروفايل:</label><input type="text" name="profileName" class="form-control" placeholder="اسم البروفايل"><input type="text" name="profilePin" class="form-control" placeholder="PIN"><label class="form-label">صورة البروفايل:</label><input type="file" name="profileImage" class="form-control" accept="image/*"></div>
+                      <!-- ... داخل admin.html ... -->
+<div id="stock-section">
+    <label class="form-label" style="margin-top:20px; border-top:1px solid #333; padding-top:10px;">📦 إدارة المخزون</label>
+    <div id="stock-items-container"></div>
+    <button type="button" class="btn-outline" onclick="addStockItem()" style="width:100%; margin-top:10px; border-style:dashed;">+ إضافة حساب للمخزون</button>
+</div>
+
                         <button type="submit" class="btn">🚀 نشر المنتج</button>
                     </form>
                 </div>
