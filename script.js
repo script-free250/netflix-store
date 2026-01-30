@@ -26,12 +26,16 @@ function showNotification(message, type = 'info') {
 /* =================================================================
    🔐 1. دوال المصادقة وتسجيل الدخول
    ================================================================= */
+/* =================================================================
+   دوال المصادقة بعد التعديل (الحل)
+   ================================================================= */
+
 async function handleRegister(event) {
     event.preventDefault();
     const form = event.target, btn = form.querySelector('button'), name = form.querySelector('#name').value, email = form.querySelector('#email').value, password = form.querySelector('#password').value, errMsg = form.querySelector('#error-message'), okMsg = form.querySelector('#success-message');
     btn.disabled = true; btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`; errMsg.style.display = "none"; okMsg.style.display = "none";
     try {
-        // تم إضافة "Bypass-Tunnel-Reminder": "true"
+        // ✅ تم الإصلاح: إضافة الهيدر لتجاوز صفحة localtunnel
         const res = await fetch(`${SERVER_URL}/api/register`, { 
             method: "POST", 
             headers: { 
@@ -45,25 +49,21 @@ async function handleRegister(event) {
             okMsg.innerText = data.message; okMsg.style.display = "block"; form.reset();
             setTimeout(() => { window.location.href = "login.html" }, 2000);
         } else { errMsg.innerText = data.message; errMsg.style.display = "block"; }
-    } catch (e) { 
-        console.error(e);
-        errMsg.innerText = "فشل الاتصال بالسيرفر."; 
-    } 
+    } catch (e) { errMsg.innerText = "فشل الاتصال."; } 
     finally { btn.disabled = false; btn.innerHTML = "إنشاء حساب"; }
 }
-
 
 async function handleLogin(event) {
     event.preventDefault();
     const form = event.target, btn = form.querySelector('button'), email = form.querySelector('#email').value, password = form.querySelector('#password').value, errMsg = form.querySelector('#error-message');
     btn.disabled = true; btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`; errMsg.style.display = "none";
     try {
-        // تم إضافة الهيدر الضروري هنا أيضاً
+        // ✅ تم الإصلاح: إضافة الهيدر لتجاوز صفحة localtunnel
         const res = await fetch(`${SERVER_URL}/api/login`, { 
             method: "POST", 
             headers: { 
                 "Content-Type": "application/json",
-                "Bypass-Tunnel-Reminder": "true"
+                "Bypass-Tunnel-Reminder": "true" 
             }, 
             body: JSON.stringify({ email, password }) 
         });
@@ -316,30 +316,10 @@ async function initTrackPage() {
         try {
             const res = await fetch(`${SERVER_URL}/order-status/${id}`);
             const data = await res.json();
-// ... داخل دالة initTrackPage ...
-if (data.status === 'approved' || data.status === 'completed') {
-    clearInterval(trackInterval);
-    pendingView.style.display = 'none';
-    approvedView.style.display = 'block';
-    
-    // --- بداية التصحيح: إضافة كود عرض الوصف ---
-    const descContainer = document.getElementById('product-description-container');
-    if (descContainer) {
-        if (data.productDescription) {
-            descContainer.innerHTML = `
-                <div class="product-description-box">
-                    <h4><i class="fas fa-info-circle"></i> تفاصيل المنتج</h4>
-                    <p>${data.productDescription}</p>
-                </div>`;
-        } else {
-            descContainer.innerHTML = ""; // تفريغ الحاوية إذا لم يوجد وصف
-        }
-    }
-    // --- نهاية التصحيح ---
-
-    const accContainer = document.getElementById('account-display');
-    // ... باقي الكود كما هو ...
-
+            if (data.status === 'approved' || data.status === 'completed') {
+                clearInterval(trackInterval);
+                pendingView.style.display = 'none';
+                approvedView.style.display = 'block';
                 const accContainer = document.getElementById('account-display');
                 
                 if (data.requiresCode) {
