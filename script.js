@@ -35,20 +35,24 @@ async function checkServerConnection() {
    ================================================================= */
 document.addEventListener('DOMContentLoaded', () => {
     checkServerConnection();
-    checkLogin();
+    checkLogin(); // تأكد من استدعاء هذه الدالة
 
-    [...](asc_slot:
+    // تعريف المتغير page الذي كان مفقوداً
+    const page = window.location.pathname.split('/').pop() || 'index.html';
 
-    [...](asc_slot:
+    // إعادة بناء هيكل if/else بشكل صحيح
+    if (page === 'index.html') {
         loadProducts();
     } else if (page === 'admin.html') {
         loadAdminOrders();
     } else if (page === 'track.html') {
         initTrackPage();
     } else if (page === 'my-orders.html') {
-        loadMyOrders();
+        // تأكد أن دالة loadMyOrders موجودة في الكود (لم تكن موجودة في المقتطف الذي أرسلته لكن استدعاؤها هنا صحيح)
+        if(typeof loadMyOrders === 'function') loadMyOrders(); 
     }
 });
+
 
 function checkLogin() {
     const token = localStorage.getItem('token');
@@ -109,9 +113,12 @@ function openBuyModal(productId) {
 async function buyProduct(productId) {
     const formData = new FormData();
     formData.append('productId', productId);
-    // إذا كان هناك رفع صور، يجب إضافتها للـ FormData من الـ input
-     const fileInput = document.getElementById('receipt-file');
-     if(fileInput.files[0]) formData.append('receipt', fileInput.files[0]);
+
+    // التحقق من وجود عنصر الملف أولاً لتجنب الأخطاء إذا لم يكن موجوداً في الصفحة
+    const fileInput = document.getElementById('receipt-file');
+    if(fileInput && fileInput.files[0]) { // تم إزالة الشرطات المائلة \
+        formData.append('receipt', fileInput.files[0]);
+    }
 
     try {
         const res = await fetch(`${SERVER_URL}/buy`, {
@@ -119,6 +126,7 @@ async function buyProduct(productId) {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
             body: formData
         });
+        
         const data = await res.json();
         
         if (data.success) {
@@ -133,6 +141,7 @@ async function buyProduct(productId) {
         showNotification("خطأ في الاتصال بالسيرفر", "error");
     }
 }
+
 /* =================================================================
    🔍 TRACKING PAGE FUNCTIONS (track.html)
    ================================================================= */
@@ -188,22 +197,22 @@ async function initTrackPage() {
     setInterval(checkStatus, 5000);
 }
 async function fetchCode(orderId) {
-    // ...
-    const res = await fetch(`${SERVER_URL}/get-code-secure`, {
-        method: 'POST',
-        headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}` // <-- تم إضافة هذا السطر
-        },
-        body: JSON.stringify({ orderId })
-    });
-    // ...
+    showNotification("جاري جلب الكود من السيرفر...", "info");
+    try {
+        const res = await fetch(`${SERVER_URL}/get-code-secure`, {
+            method: 'POST', // يجب تحديد نوع الطلب
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}` // ضروري جداً للأمان
+            },
+            body: JSON.stringify({ orderId })
+        });
+
         const data = await res.json();
         
         if (data.success) {
             showNotification("تم جلب الكود!", "success");
-            // إعادة تحميل الحالة لعرض الكود
-            initTrackPage();
+            initTrackPage(); // تحديث الصفحة لعرض الكود
         } else {
             showNotification(data.message || "فشل جلب الكود", "error");
         }
@@ -211,15 +220,22 @@ async function fetchCode(orderId) {
         showNotification("خطأ في الاتصال", "error");
     }
 }
+
 /* =================================================================
    👮 ADMIN FUNCTIONS (admin.html)
    ================================================================= */
 async function loadAdminOrders() {
     const container = document.getElementById('admin-orders-list');
     if(!container) return;
-
     try {
-        const res = await fetch(`${SERVER_URL}/admin/orders`);
+        const res = await fetch(`${SERVER_URL}/admin/orders`, {
+            headers: { 
+                'Authorization': `Bearer ${localStorage.getItem('token')}` // تم إضافة التوكن
+            }
+        });
+        
+        if (!res.ok) throw new Error("Unauthorized"); // تحقق إضافي
+
         const orders = await res.json();
         
         container.innerHTML = orders.map(o => `
@@ -231,7 +247,7 @@ async function loadAdminOrders() {
             </div>
         `).join('');
     } catch (e) {
-        container.innerHTML = "<p>فشل تحميل الطلبات</p>";
+        container.innerHTML = "<p>فشل تحميل الطلبات (تأكد أنك أدمن)</p>";
     }
 }
 
@@ -241,15 +257,21 @@ async function approveOrder(orderId) {
     try {
         const res = await fetch(`${SERVER_URL}/admin/approve`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}` // تم إضافة التوكن
+            },
             body: JSON.stringify({ orderId })
         });
         const data = await res.json();
         if(data.success) {
             showNotification("تم قبول الطلب", "success");
-            loadAdminOrders(); // تحديث القائمة
+            loadAdminOrders(); 
+        } else {
+            showNotification(data.message || "فشل قبول الطلب", "error");
         }
     } catch (e) {
-        showNotification("خطأ", "error");
+        showNotification("خطأ في الاتصال", "error");
     }
 }
+
