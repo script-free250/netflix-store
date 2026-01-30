@@ -284,7 +284,6 @@ async function approve(id, el) {
     } catch (e) { showNotification("خطأ في الاتصال.", "error"); el.disabled = false; }
 }
 
-// ## إضافة: دالة رفض الطلب ##
 async function rejectOrder(id) {
     const reason = prompt("أدخل سبب الرفض (سيظهر للمستخدم):");
     if (reason === null) return; 
@@ -305,9 +304,7 @@ async function rejectOrder(id) {
         }
     } catch (e) { showNotification("خطأ في الاتصال.", "error"); }
 }
-// ## نهاية الإضافة ##
 
-// ## إضافة: دالة البحث الشامل عن الطلب ##
 async function searchOrderFull() {
     const input = document.getElementById('search-input');
     const output = document.getElementById('search-output');
@@ -324,7 +321,6 @@ async function searchOrderFull() {
         if(!res.ok) throw new Error("Failed to fetch");
         const orders = await res.json();
         
-        // مقارنة مرنة (رقم مع نص)
         const order = orders.find(o => o.orderId == id);
         
         if(!order) {
@@ -360,7 +356,145 @@ async function searchOrderFull() {
         console.error(e);
     }
 }
-// ## نهاية الإضافة ##
+
+/* =================================================================
+   🚀 4. دوال صفحة التتبع (Track Page) - تمت الإضافة
+   ================================================================= */
+async function initTrackPage() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const orderId = urlParams.get('id');
+    
+    if (!orderId) {
+        document.querySelector('.status-page-box').innerHTML = '<p style="text-align:center; color:#fff;">رقم الطلب غير موجود.</p>';
+        return;
+    }
+
+    document.getElementById('disp-id').innerText = orderId;
+
+    try {
+        const res = await fetch(`${SERVER_URL}/order-status/${orderId}`, { headers: { "Bypass-Tunnel-Reminder": "true" } });
+        const data = await res.json();
+
+        // إخفاء كل الواجهات أولاً
+        document.getElementById('pending-view').style.display = 'none';
+        document.getElementById('rejected-view').style.display = 'none';
+        document.getElementById('approved-view').style.display = 'none';
+
+        if (data.status === 'pending') {
+            document.getElementById('pending-view').style.display = 'block';
+        } 
+        else if (data.status === 'rejected') {
+            document.getElementById('rejected-view').style.display = 'block';
+            const reasonEl = document.getElementById('rejection-reason');
+            if(reasonEl) reasonEl.innerText = data.rejectionReason || "لم يتم ذكر سبب.";
+        }
+        else if (data.status === 'approved' || data.status === 'completed') {
+            document.getElementById('approved-view').style.display = 'block';
+            
+            // عرض وصف المنتج
+            if(data.productDescription) {
+                const descContainer = document.getElementById('product-description-container');
+                if(descContainer) {
+                    descContainer.innerHTML = `
+                        <div class="product-description-box">
+                            <h4><i class="fas fa-info-circle"></i> تفاصيل المنتج</h4>
+                            <p>${data.productDescription}</p>
+                        </div>
+                    `;
+                }
+            }
+
+            // عرض بيانات الحساب
+            const accContainer = document.getElementById('account-display');
+            let html = '';
+
+            // تحقق من نوع المنتج (كامل أم بروفايل)
+            if (data.accountEmail && data.accountPassword) {
+                // حساب كامل
+                html = `
+                    <img src="https://assets.nflxext.com/us/ffe/siteui/common/icons/nficon2016.png" class="profile-avatar">
+                    <div class="info-row">
+                        <span class="info-label">الإيميل:</span>
+                        <span class="info-value">${data.accountEmail}</span>
+                        <button class="copy-btn" onclick="navigator.clipboard.writeText('${data.accountEmail}')"><i class="fas fa-copy"></i></button>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">كلمة المرور:</span>
+                        <span class="info-value">${data.accountPassword}</span>
+                        <button class="copy-btn" onclick="navigator.clipboard.writeText('${data.accountPassword}')"><i class="fas fa-copy"></i></button>
+                    </div>
+                `;
+            } else {
+                // بروفايل
+                const img = data.profileImage ? `${SERVER_URL}${data.profileImage}` : 'https://assets.nflxext.com/us/ffe/siteui/common/icons/nficon2016.png';
+                html = `
+                    <img src="${img}" class="profile-avatar">
+                    <div class="info-row">
+                        <span class="info-label">الإيميل:</span>
+                        <span class="info-value">${data.accountEmail || 'N/A'}</span>
+                        <button class="copy-btn" onclick="navigator.clipboard.writeText('${data.accountEmail || ''}')"><i class="fas fa-copy"></i></button>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">اسم البروفايل:</span>
+                        <span class="info-value">${data.profileName}</span>
+                    </div>
+                    ${data.profilePin ? `<div class="pin-display">${data.profilePin}</div><br><span style="color:#666;font-size:0.8rem;">PIN Code</span>` : ''}
+                `;
+            }
+            accContainer.innerHTML = html;
+
+            // منطق الكود
+            if (data.requiresCode) {
+                document.getElementById('code-section').style.display = 'block';
+                if (data.savedCode) {
+                    document.getElementById('code-result').style.display = 'block';
+                    document.getElementById('final-code').innerText = data.savedCode;
+                    document.getElementById('code-btn').style.display = 'none';
+                }
+            }
+        } 
+        else {
+            document.querySelector('.status-page-box').innerHTML = '<p style="text-align:center; color:#fff;">حالة الطلب غير معروفة.</p>';
+        }
+
+    } catch (e) {
+        console.error(e);
+        document.querySelector('.status-page-box').innerHTML = '<p style="text-align:center; color:red;">حدث خطأ في الاتصال بالسيرفر.</p>';
+    }
+}
+
+async function getCode() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const orderId = urlParams.get('id');
+    const btn = document.getElementById('code-btn');
+    
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الجلب...';
+
+    try {
+        const res = await fetch(`${SERVER_URL}/get-code-secure`, { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orderId })
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+            document.getElementById('code-result').style.display = 'block';
+            document.getElementById('final-code').innerText = data.code;
+            btn.style.display = 'none';
+            showNotification("تم جلب الكود بنجاح!", "success");
+        } else {
+            showNotification(data.message || "فشل جلب الكود.", "error");
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-key"></i> جلب كود الدخول';
+        }
+    } catch (e) {
+        showNotification("خطأ في الاتصال.", "error");
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-key"></i> جلب كود الدخول';
+    }
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     const currentPage = window.location.pathname.split('/').pop();
