@@ -307,96 +307,60 @@ async function rejectOrder(id) {
 }
 // ## نهاية الإضافة ##
 
-/* =================================================================
-   📡 4. صفحة التتبع
-   ================================================================= */
-let trackInterval;
-async function initTrackPage() {
-    const pendingView = document.getElementById('pending-view'), approvedView = document.getElementById('approved-view'), dispIdElem = document.getElementById('disp-id');
-    // ## إضافة: عنصر العرض المرفوض ##
-    const rejectedView = document.getElementById('rejected-view');
-    // ## نهاية الإضافة ##
+// ## إضافة: دالة البحث الشامل عن الطلب ##
+async function searchOrderFull() {
+    const input = document.getElementById('search-input');
+    const output = document.getElementById('search-output');
+    if(!input || !output) return;
     
-    if (!pendingView || !approvedView || !dispIdElem) return;
-    const id = new URLSearchParams(window.location.search).get('id');
-    if (!id) return pendingView.innerHTML = '<h1>رقم الطلب غير موجود.</h1>';
-    dispIdElem.innerText = '#' + id;
-
-    const checkStatus = async () => {
-        try {
-            const res = await fetch(`${SERVER_URL}/order-status/${id}`);
-            const data = await res.json();
-            
-            // ## إضافة: التعامل مع حالة الرفض ##
-            if (data.status === 'rejected') {
-                clearInterval(trackInterval);
-                pendingView.style.display = 'none';
-                approvedView.style.display = 'none';
-                if (rejectedView) {
-                    rejectedView.style.display = 'block';
-                    document.getElementById('rejection-reason').innerText = data.rejectionReason;
-                }
-                return;
-            }
-            // ## نهاية الإضافة ##
-
-            if (data.status === 'approved' || data.status === 'completed') {
-                clearInterval(trackInterval);
-                pendingView.style.display = 'none';
-                approvedView.style.display = 'block';
-                const accContainer = document.getElementById('account-display');
-                
-                const descContainer = document.getElementById('product-description-container');
-                if (descContainer && data.productDescription) {
-                    descContainer.innerHTML = `
-                        <div class="product-description-box">
-                            <h4><i class="fas fa-info-circle"></i> تعليمات هامة</h4>
-                            <p>${data.productDescription}</p>
-                        </div>
-                    `;
-                }
-
-                if (data.requiresCode) {
-                     const imgSrc = data.profileImage ? `${SERVER_URL}${data.profileImage}` : 'https://upload.wikimedia.org/wikipedia/commons/0/0b/Netflix-avatar.png';
-                     accContainer.innerHTML = `
-                        <img src="${imgSrc}" class="profile-avatar" alt="Profile Avatar">
-                        <div class="info-row"><span class="info-label">الإيميل</span><span class="info-value">${data.accountEmail} <button class="copy-btn" onclick="navigator.clipboard.writeText('${data.accountEmail}')"><i class="fas fa-copy"></i></button></span></div>
-                        <div class="info-row"><span class="info-label">البروفايل</span><span class="info-value">${data.profileName}</span></div>
-                        <div><span style="font-size:0.8rem;color:#666;">PIN</span><span class="pin-display">${data.profilePin}</span></div>`;
-                     document.getElementById('code-section').style.display = 'block';
-                     if (data.savedCode) {
-                         document.getElementById('code-btn').style.display = 'none';
-                         document.getElementById('code-result').style.display = 'block';
-                         document.getElementById('final-code').innerText = data.savedCode;
-                     }
-                } else {
-                    accContainer.innerHTML = `
-                        <div class="info-row"><span class="info-label">الإيميل</span><span class="info-value">${data.accountEmail} <button class="copy-btn" onclick="navigator.clipboard.writeText('${data.accountEmail}')"><i class="fas fa-copy"></i></button></span></div>
-                        <div class="info-row"><span class="info-label">المرور</span><span class="info-value">${data.accountPassword} <button class="copy-btn" onclick="navigator.clipboard.writeText('${data.accountPassword}')"><i class="fas fa-copy"></i></button></span></div>`;
-                }
-            }
-        } catch (error) { clearInterval(trackInterval); }
-    };
-    if (trackInterval) clearInterval(trackInterval); 
-    checkStatus(); trackInterval = setInterval(checkStatus, 5000);
-}
-
-async function getCode() {
-    const id = new URLSearchParams(window.location.search).get("id");
-    const btn = document.getElementById("code-btn");
-    if (!btn) return;
-    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    const id = input.value.trim();
+    if(!id) { alert("الرجاء إدخال رقم الطلب"); return; }
+    
+    output.style.display = "block";
+    output.innerHTML = '<div class="loader"></div>';
+    
     try {
-        const res = await fetch(`${SERVER_URL}/get-code-secure`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orderId: id }) });
-        const data = await res.json(); 
-        if (data.success) {
-            document.getElementById("final-code").innerText = data.code;
-            document.getElementById("code-result").style.display = "block";
-            btn.style.display = "none";
-        } else { showNotification(data.message || "فشل جلب الكود.", "error"); }
-    } catch (e) { showNotification("خطأ في الاتصال بالسيرفر.", "error"); } 
-    finally { if (btn.style.display !== 'none') { btn.disabled = false; btn.innerHTML = '<i class="fas fa-key"></i> جلب كود الدخول'; } }
+        const res = await fetch(`${SERVER_URL}/admin/orders`);
+        if(!res.ok) throw new Error("Failed to fetch");
+        const orders = await res.json();
+        
+        // مقارنة مرنة (رقم مع نص)
+        const order = orders.find(o => o.orderId == id);
+        
+        if(!order) {
+            output.innerHTML = '<p style="color:var(--primary); font-weight:bold; text-align:center;">❌ الطلب غير موجود</p>';
+            return;
+        }
+        
+        let html = '<table style="width:100%; border-collapse: collapse; direction:ltr; font-family:monospace; font-size:0.9rem;">';
+        
+        function formatValue(val) {
+            if (val === null) return '<span style="color:#777;">null</span>';
+            if (val === undefined) return '<span style="color:#777;">undefined</span>';
+            if (typeof val === 'boolean') return val ? '<span style="color:var(--success);">true</span>' : '<span style="color:var(--primary);">false</span>';
+            if (typeof val === 'object') return `<pre style="margin:0; background:#000; padding:5px; border-radius:4px; max-height:200px; overflow:auto; white-space:pre-wrap;">${JSON.stringify(val, null, 2)}</pre>`;
+            if (String(val).startsWith('http')) return `<a href="${val}" target="_blank" style="color:#4da3ff; text-decoration:underline;">Link</a>`;
+            return `<span style="color:#ddd;">${val}</span>`;
+        }
+
+        for (const key in order) {
+            html += `
+                <tr style="border-bottom:1px solid #222;">
+                    <td style="padding:12px; color:#aaa; width:200px; vertical-align:top; border-right:1px solid #222;">${key}</td>
+                    <td style="padding:12px; background:rgba(255,255,255,0.02);">${formatValue(order[key])}</td>
+                </tr>
+            `;
+        }
+        
+        html += '</table>';
+        output.innerHTML = html;
+        
+    } catch(e) {
+        output.innerHTML = '<p style="color:var(--primary); text-align:center;">حدث خطأ في الاتصال.</p>';
+        console.error(e);
+    }
 }
+// ## نهاية الإضافة ##
 
 document.addEventListener('DOMContentLoaded', () => {
     const currentPage = window.location.pathname.split('/').pop();
