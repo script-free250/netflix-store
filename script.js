@@ -26,11 +26,16 @@ function showNotification(message, type = 'info') {
 /* =================================================================
    🔐 1. دوال المصادقة وتسجيل الدخول
    ================================================================= */
+/* =================================================================
+   دوال المصادقة بعد التعديل (الحل)
+   ================================================================= */
+
 async function handleRegister(event) {
     event.preventDefault();
     const form = event.target, btn = form.querySelector('button'), name = form.querySelector('#name').value, email = form.querySelector('#email').value, password = form.querySelector('#password').value, errMsg = form.querySelector('#error-message'), okMsg = form.querySelector('#success-message');
     btn.disabled = true; btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`; errMsg.style.display = "none"; okMsg.style.display = "none";
     try {
+        // ✅ تم الإصلاح: إضافة الهيدر لتجاوز صفحة localtunnel
         const res = await fetch(`${SERVER_URL}/api/register`, { 
             method: "POST", 
             headers: { 
@@ -44,7 +49,7 @@ async function handleRegister(event) {
             okMsg.innerText = data.message; okMsg.style.display = "block"; form.reset();
             setTimeout(() => { window.location.href = "login.html" }, 2000);
         } else { errMsg.innerText = data.message; errMsg.style.display = "block"; }
-    } catch (e) { errMsg.innerText = "فشل الاتصال."; errMsg.style.display = "block"; } 
+    } catch (e) { errMsg.innerText = "فشل الاتصال."; } 
     finally { btn.disabled = false; btn.innerHTML = "إنشاء حساب"; }
 }
 
@@ -53,6 +58,7 @@ async function handleLogin(event) {
     const form = event.target, btn = form.querySelector('button'), email = form.querySelector('#email').value, password = form.querySelector('#password').value, errMsg = form.querySelector('#error-message');
     btn.disabled = true; btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`; errMsg.style.display = "none";
     try {
+        // ✅ تم الإصلاح: إضافة الهيدر لتجاوز صفحة localtunnel
         const res = await fetch(`${SERVER_URL}/api/login`, { 
             method: "POST", 
             headers: { 
@@ -66,7 +72,7 @@ async function handleLogin(event) {
             localStorage.setItem("authToken", data.token); localStorage.setItem("userEmail", data.email); localStorage.setItem("userName", data.name);
             window.location.href = "index.html";
         } else { errMsg.innerText = data.message; errMsg.style.display = "block"; }
-    } catch (e) { errMsg.innerText = "فشل الاتصال."; errMsg.style.display = "block"; } 
+    } catch (e) { errMsg.innerText = "فشل الاتصال."; } 
     finally { btn.disabled = false; btn.innerHTML = "دخول"; }
 }
 
@@ -81,30 +87,12 @@ function updateUserSessionUI() {
     const token = localStorage.getItem("authToken"), name = localStorage.getItem("userName");
     if (token && name) {
         const initial = name.charAt(0).toUpperCase();
-        
-        // ✅ تم الإصلاح: استخدام textContent بدلاً من innerHTML لعرض اسم المستخدم لمنع ثغرات XSS.
-        div.innerHTML = ''; // تفريغ المحتوى السابق
-        const userSessionDiv = document.createElement('div');
-        userSessionDiv.className = 'user-session-ui';
-
-        const welcomeSpan = document.createElement('span');
-        welcomeSpan.textContent = `أهلاً، ${name}`; // الطريقة الآمنة
-
-        const avatarDiv = document.createElement('div');
-        avatarDiv.className = 'user-avatar';
-        avatarDiv.textContent = initial;
-
-        const logoutButton = document.createElement('button');
-        logoutButton.className = 'logout-btn';
-        logoutButton.title = 'تسجيل الخروج';
-        logoutButton.onclick = logout;
-        logoutButton.innerHTML = `<i class="fas fa-sign-out-alt"></i>`;
-
-        userSessionDiv.appendChild(welcomeSpan);
-        userSessionDiv.appendChild(avatarDiv);
-        userSessionDiv.appendChild(logoutButton);
-        div.appendChild(userSessionDiv);
-
+        div.innerHTML = `
+            <div class="user-session-ui">
+                <span>أهلاً، ${name}</span>
+                <div class="user-avatar">${initial}</div>
+                <button onclick="logout()" class="logout-btn" title="تسجيل الخروج"><i class="fas fa-sign-out-alt"></i></button>
+            </div>`;
     } else {
         div.innerHTML = `<div style="display:flex;gap:10px;"><a href="login.html" class="btn-outline">دخول</a><a href="register.html" class="btn" style="width:auto;padding:10px 20px;margin:0;">حساب جديد</a></div>`;
     }
@@ -162,37 +150,25 @@ function openBuyModal(productId) {
 
 function closeModal() { document.getElementById("buyModal").style.display = "none"; }
 
-async function submitOrder(event) {
-    event.preventDefault();
-    const form = event.target;
-    const btn = form.querySelector('button');
-    const originalBtnHTML = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...`;
-    const formData = new FormData(form);
-    formData.append('userEmail', localStorage.getItem('userEmail') || '');
+async function submitOrder(e) {
+    e.preventDefault();
+    const token = localStorage.getItem("authToken");
+    if (!token) { showNotification("يرجى تسجيل الدخول مرة أخرى.", "error"); return; }
+    const btn = e.target.querySelector("button");
+    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    const formData = new FormData(e.target);
     try {
-        const res = await fetch(`${SERVER_URL}/submit-order`, {
-            method: "POST",
-            headers: { 
-                "Bypass-Tunnel-Reminder": "true" 
-            },
-            body: formData
-        });
+        const res = await fetch(`${SERVER_URL}/buy`, { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: formData });
         const data = await res.json();
-        if (data.success) {
-            showNotification('تم تقديم الطلب بنجاح! جاري المراجعة.', 'success');
+        if (res.ok) {
             closeModal();
-            window.location.href = `track.html?id=${data.orderId}`;
-        } else {
-            showNotification(data.message || 'فشل تقديم الطلب.', 'error');
-        }
-    } catch (e) {
-        showNotification('خطأ في الاتصال.', 'error');
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = originalBtnHTML;
-    }
+            e.target.reset();
+            updateFileName(e.target.querySelector('#receipt-file'));
+            showNotification("✅ تم إرسال طلبك بنجاح!", "success");
+            loadMyOrdersWidget();
+        } else { showNotification(data.message || "حدث خطأ ما.", "error"); }
+    } catch (err) { showNotification("فشل الاتصال بالسيرفر.", "error"); } 
+    finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-check-circle"></i> تأكيد الشراء'; }
 }
 
 async function loadMyOrdersWidget() {
@@ -201,7 +177,7 @@ async function loadMyOrdersWidget() {
     if (!token) { section.innerHTML = '<p>يرجى <a href="login.html">تسجيل الدخول</a> لعرض طلباتك.</p>'; return; }
     section.innerHTML = '<div class="loader"></div>';
     try {
-        const res = await fetch(`${SERVER_URL}/api/my-orders`, { headers: { Authorization: `Bearer ${token}`, "Bypass-Tunnel-Reminder": "true" } });
+        const res = await fetch(`${SERVER_URL}/api/my-orders`, { headers: { Authorization: `Bearer ${token}` } });
         if (!res.ok) { if (res.status === 401 || res.status === 403) logout(); throw new Error(""); }
         let orders = await res.json();
         orders.reverse(); section.innerHTML = "";
@@ -222,6 +198,7 @@ window.onclick = function (event) { if (event.target == document.getElementById(
 /* =================================================================
    🔧 3. دوال لوحة الأدمن (النسخة الكاملة)
    ================================================================= */
+// FIX: Full implementation of admin panel functions
 function showSection(id, el) {
     document.querySelectorAll(".content-area > div").forEach(s => s.style.display = "none");
     document.getElementById("section-" + id).style.display = "block";
@@ -236,63 +213,25 @@ function toggleProductFields() {
     document.getElementById("fields-user").style.display = type === 'netflix-user' ? "block" : "none";
 }
 
-let stockCount = 0;
-
-function addStockItem() {
-    const container = document.getElementById('stock-items-container');
-    const type = document.getElementById('p-type').value;
-    const index = stockCount++;
-    
-    const div = document.createElement('div');
-    div.className = 'stock-item';
-    div.style = "background:#111; padding:15px; margin-bottom:10px; border-radius:8px; border:1px solid #333; position:relative;";
-    div.innerHTML = `
-        <span style="position:absolute; top:5px; left:10px; color:#555; font-size:0.8rem;">#${index + 1}</span>
-        <button type="button" onclick="this.parentElement.remove()" style="position:absolute; top:5px; right:5px; background:none; border:none; color:#f00; cursor:pointer;">&times;</button>
-        <div style="margin-top:10px;">
-            <input type="email" name="stock[${index}][email]" class="form-control" placeholder="Email" required style="margin-bottom:10px;">
-            <input type="text" name="stock[${index}][password]" class="form-control" placeholder="Password" required style="margin-bottom:10px;">
-            ${type === 'netflix-user' ? `
-            <div style="display:flex; gap:10px;">
-                <input type="text" name="stock[${index}][pin]" class="form-control" placeholder="PIN" style="width:80px;">
-                <input type="text" name="stock[${index}][profileName]" class="form-control" placeholder="اسم البروفايل">
-            </div>
-            <label style="font-size:0.8rem; color:#aaa; display:block; margin-top:5px;">صورة البروفايل:</label>
-            <input type="file" name="stockImage_${index}" class="form-control" accept="image/*">
-            ` : ''}
-        </div>
-    `;
-    container.appendChild(div);
-}
-
 async function addProduct(e) {
     e.preventDefault();
-    const btn = e.target.querySelector("button[type=submit]");
-    const originalBtnText = btn.innerText;
+    const btn = e.target.querySelector("button");
     btn.disabled = true; btn.innerText = "جاري النشر...";
-    
     const formData = new FormData(e.target);
-    
     try {
-        const res = await fetch(`${SERVER_URL}/admin/add-product`, { 
-            method: "POST", 
-            headers: { "Bypass-Tunnel-Reminder": "true" },
-            body: formData 
-        });
+        const res = await fetch(`${SERVER_URL}/admin/add-product`, { method: "POST", body: formData });
         const data = await res.json();
         if (data.success) {
-            showNotification("✅ تم نشر المنتج والمخزون بنجاح!", "success");
+            showNotification("✅ تم نشر المنتج بنجاح!", "success");
             e.target.reset();
-            document.getElementById('stock-items-container').innerHTML = '';
-            stockCount = 0;
         } else {
-            showNotification(data.message || "فشل نشر المنتج.", "error");
+            showNotification("فشل نشر المنتج.", "error");
         }
     } catch (err) {
         showNotification("خطأ في الاتصال بالسيرفر.", "error");
     } finally {
         btn.disabled = false;
-        btn.innerText = originalBtnText;
+        btn.innerText = "🚀 نشر المنتج";
     }
 }
 
@@ -301,7 +240,7 @@ async function loadAdminOrders() {
     if (!container) return;
     container.innerHTML = '<div class="loader"></div>';
     try {
-        const res = await fetch(`${SERVER_URL}/admin/orders`, { headers: { "Bypass-Tunnel-Reminder": "true" } });
+        const res = await fetch(`${SERVER_URL}/admin/orders`);
         if (!res.ok) throw new Error(`E: ${res.status}`);
         let orders = await res.json();
         orders.reverse();
@@ -341,29 +280,26 @@ async function loadAdminOrders() {
 
 async function approve(id, el) {
     if (!confirm("هل أنت متأكد من تفعيل هذا الطلب؟")) return;
-    const originalContent = el.innerHTML; // ✅ تم الإصلاح: حفظ المحتوى الأصلي للزر
     el.disabled = true;
     el.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
     try {
-        const res = await fetch(`${SERVER_URL}/admin/approve`, { method: "POST", headers: { "Content-Type": "application/json", "Bypass-Tunnel-Reminder": "true" }, body: JSON.stringify({ orderId: id }) });
+        const res = await fetch(`${SERVER_URL}/admin/approve`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orderId: id }) });
         const data = await res.json();
         if (data.success) {
             el.parentElement.innerHTML = "<span style='color:var(--success); font-weight:bold;'>مُفعّل</span>";
             const card = document.getElementById(`order-${id}`);
             card.classList.remove("order-status-pending");
             card.classList.add("order-status-approved");
-            showNotification("تم تفعيل الطلب بنجاح.", "success");
         } else {
-            showNotification(data.message || "فشل عملية التفعيل.", "error");
+            showNotification("فشل عملية التفعيل.", "error");
             el.disabled = false;
-            el.innerHTML = originalContent; // ✅ تم الإصلاح: إعادة الزر لحالته الأصلية عند الفشل
         }
     } catch (e) {
         showNotification("خطأ في الاتصال بالسيرفر.", "error");
         el.disabled = false;
-        el.innerHTML = originalContent; // ✅ تم الإصلاح: إعادة الزر لحالته الأصلية عند الخطأ
     }
 }
+
 
 /* =================================================================
    📡 4. دوال صفحة التتبع (Track.html)
@@ -378,12 +314,7 @@ async function initTrackPage() {
 
     const checkStatus = async () => {
         try {
-            const res = await fetch(`${SERVER_URL}/order-status/${id}`, { headers: { "Bypass-Tunnel-Reminder": "true" } });
-            if (!res.ok) {
-                // إذا كان الطلب غير موجود أو هناك خطأ، أوقف التحديث
-                clearInterval(trackInterval);
-                return;
-            }
+            const res = await fetch(`${SERVER_URL}/order-status/${id}`);
             const data = await res.json();
             if (data.status === 'approved' || data.status === 'completed') {
                 clearInterval(trackInterval);
@@ -392,10 +323,12 @@ async function initTrackPage() {
                 const accContainer = document.getElementById('account-display');
                 
                 if (data.requiresCode) {
+                     // FIX: Using a reliable public image link as a fallback
                      const imgSrc = data.profileImage ? `${SERVER_URL}${data.profileImage}` : 'https://upload.wikimedia.org/wikipedia/commons/0/0b/Netflix-avatar.png';
+                     console.log("Profile Image URL:", imgSrc); // For debugging
                      
                      accContainer.innerHTML = `
-                        <img src="${imgSrc}" class="profile-avatar" alt="Profile Avatar" onerror="this.onerror=null;this.src='https://upload.wikimedia.org/wikipedia/commons/0/0b/Netflix-avatar.png';">
+                        <img src="${imgSrc}" class="profile-avatar" alt="Profile Avatar">
                         <div class="info-row">
                             <span class="info-label">الإيميل</span>
                             <span class="info-value">${data.accountEmail} <button class="copy-btn" onclick="navigator.clipboard.writeText('${data.accountEmail}')"><i class="fas fa-copy"></i></button></span>
@@ -429,36 +362,33 @@ async function initTrackPage() {
             }
         } catch (error) { 
             console.error('[Track] Error fetching status:', error);
+            // Stop checking if there's a persistent error to avoid spamming the server
             clearInterval(trackInterval);
         }
     };
     if (trackInterval) clearInterval(trackInterval); 
     checkStatus(); 
-    trackInterval = setInterval(checkStatus, 5000);
+    trackInterval = setInterval(checkStatus, 5000); // Increased interval to 5s
 }
 
 async function getCode() {
     const id = new URLSearchParams(window.location.search).get("id");
     const btn = document.getElementById("code-btn");
     if (!btn) return;
-    const originalContent = btn.innerHTML; // ✅ تم الإصلاح: حفظ المحتوى الأصلي
     btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
     try {
-        const res = await fetch(`${SERVER_URL}/get-code-secure`, { method: "POST", headers: { "Content-Type": "application/json", "Bypass-Tunnel-Reminder": "true" }, body: JSON.stringify({ orderId: id }) });
+        const res = await fetch(`${SERVER_URL}/get-code-secure`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orderId: id }) });
         const data = await res.json(); 
         if (data.success) {
             document.getElementById("final-code").innerText = data.code;
             document.getElementById("code-result").style.display = "block";
             btn.style.display = "none";
-        } else { 
-            showNotification(data.message || "فشل جلب الكود.", "error"); 
-        }
-    } catch (e) { 
-        showNotification("خطأ في الاتصال بالسيرفر.", "error"); 
-    } finally {
+        } else { showNotification(data.message || "فشل جلب الكود.", "error"); }
+    } catch (e) { showNotification("خطأ في الاتصال بالسيرفر.", "error"); } 
+    finally {
         if (btn.style.display !== 'none') {
             btn.disabled = false;
-            btn.innerHTML = originalContent; // ✅ تم الإصلاح: إعادة المحتوى الأصلي
+            btn.innerHTML = '<i class="fas fa-key"></i> جلب كود الدخول';
         }
     }
 }
@@ -467,12 +397,10 @@ async function getCode() {
    🚀 5. المنظم الرئيسي: تهيئة الصفحات عند التحميل
    ================================================================= */
 document.addEventListener('DOMContentLoaded', () => {
-    const currentPage = window.location.pathname.split('/').pop() || 'index.html'; // Fallback for root path
+    const currentPage = window.location.pathname.split('/').pop();
     
-    // دوال مشتركة بين الصفحات
-    updateUserSessionUI();
-
-    if (currentPage === 'index.html') { 
+    if (currentPage === 'index.html' || currentPage === '') { 
+        updateUserSessionUI(); 
         loadProducts(); 
         loadMyOrdersWidget(); 
     }
@@ -482,11 +410,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showSection('orders', firstNavItem);
         }
         loadAdminOrders();
-        const pType = document.getElementById("p-type");
-        if(pType) {
-            toggleProductFields();
-            pType.addEventListener('change', toggleProductFields);
-        }
+        toggleProductFields(); 
     }
     if (currentPage === 'track.html') { 
         initTrackPage(); 

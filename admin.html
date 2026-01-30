@@ -32,6 +32,10 @@
         .order-actions { display: flex; align-items: center; gap: 20px; }
         .receipt-thumb { width: 70px; height: 70px; object-fit: cover; border-radius: 8px; border: 1px solid #444; cursor: pointer; transition: 0.3s; }
         .receipt-thumb:hover { transform: scale(1.1); border-color: #fff; }
+        
+        /* تنسيق حاوية المخزون */
+        .inventory-item { background: #111; border: 1px solid #333; border-radius: 8px; padding: 15px; margin-bottom: 20px; position: relative; }
+        .inventory-item h4 { margin: 0 0 15px 0; color: var(--primary); font-size: 0.9rem; border-bottom: 1px solid #222; padding-bottom: 5px; }
     </style>
 </head>
 <body>
@@ -57,27 +61,41 @@
                 </div>
                 <div id="orders-list"><div class="loader"></div></div>
             </div>
+            
             <div id="section-add-product" style="display: none;">
                 <div class="section-header"><h3>➕ إضافة منتج جديد</h3></div>
                 <div class="panel">
                     <form id="addProductForm" onsubmit="addProduct(event)">
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                            <div><label class="form-label">نوع المنتج</label><select name="type" id="p-type" class="form-control" onchange="toggleProductFields()"><option value="netflix-user">بروفايل</option><option value="netflix-full">حساب كامل</option></select></div>
-                            <div><label class="form-label">السعر (ج.م)</label><input type="number" name="price" class="form-control" required></div>
+                            <div>
+                                <label class="form-label">نوع المنتج</label>
+                                <!-- ## تعديل: إضافة حدث onchange لتحديث الحقول ## -->
+                                <select name="type" id="p-type" class="form-control" onchange="renderInventoryInputs()">
+                                    <option value="netflix-user">بروفايل</option>
+                                    <option value="netflix-full">حساب كامل</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="form-label">السعر (ج.م)</label>
+                                <input type="number" name="price" class="form-control" required>
+                            </div>
                         </div>
-                        <label class="form-label">اسم المنتج للعرض</label><input type="text" name="name" class="form-control" placeholder="مثال: اشتراك شهر 4K" required>
-                        
-                        <!-- ## بداية الإضافة: حقل تفاصيل المنتج ## -->
-                        <label class="form-label">تفاصيل المنتج (الوصف)</label>
-                        <textarea name="description" class="form-control" rows="3" placeholder="اكتب هنا تفاصيل المنتج التي ستظهر للمشتري عند استلام الطلب..."></textarea>
+
+                        <!-- ## بداية الإضافة: حقل عدد المخزون ## -->
+                        <label class="form-label">عدد المخزون (Inventory Count)</label>
+                        <input type="number" id="inventory-count" name="inventoryCount" class="form-control" value="1" min="1" onchange="renderInventoryInputs()" required>
                         <!-- ## نهاية الإضافة ## -->
 
-                      <!-- ... داخل admin.html ... -->
-<div id="stock-section">
-    <label class="form-label" style="margin-top:20px; border-top:1px solid #333; padding-top:10px;">📦 إدارة المخزون</label>
-    <div id="stock-items-container"></div>
-    <button type="button" class="btn-outline" onclick="addStockItem()" style="width:100%; margin-top:10px; border-style:dashed;">+ إضافة حساب للمخزون</button>
-</div>
+                        <label class="form-label">اسم المنتج للعرض</label>
+                        <input type="text" name="name" class="form-control" placeholder="مثال: اشتراك شهر 4K" required>
+                        
+                        <label class="form-label">تفاصيل المنتج (الوصف)</label>
+                        <textarea name="description" class="form-control" rows="3" placeholder="اكتب هنا تفاصيل المنتج..."></textarea>
+                        
+                        <!-- ## حاوية الحقول الديناميكية ## -->
+                        <div id="inventory-container" style="margin-top: 25px; border-top: 2px dashed #333; padding-top: 20px;">
+                            <!-- سيتم توليد الحقول هنا بواسطة الجافاسكريبت -->
+                        </div>
 
                         <button type="submit" class="btn">🚀 نشر المنتج</button>
                     </form>
@@ -85,6 +103,52 @@
             </div>
         </div>
     </div>
+    
     <script src="script.js"></script>
+    
+    <!-- ## كود الجافاسكريبت الخاص بتوليد حقول المخزون ## -->
+    <script>
+        function renderInventoryInputs() {
+            const type = document.getElementById('p-type').value;
+            const countInput = document.getElementById('inventory-count');
+            const count = parseInt(countInput.value) || 1;
+            const container = document.getElementById('inventory-container');
+            
+            container.innerHTML = ''; // مسح الحقول القديمة
+
+            for (let i = 0; i < count; i++) {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'inventory-item';
+                
+                const title = document.createElement('h4');
+                title.innerText = `📦 عنصر المخزون رقم ${i + 1}`;
+                itemDiv.appendChild(title);
+
+                if (type === 'netflix-full') {
+                    // حقول الحساب الكامل
+                    itemDiv.innerHTML += `
+                        <label class="form-label">بيانات الحساب:</label>
+                        <input type="email" name="accountEmails" class="form-control" placeholder="البريد الإلكتروني للحساب" style="margin-bottom:10px" required>
+                        <input type="text" name="accountPasswords" class="form-control" placeholder="كلمة المرور" required>
+                    `;
+                } else {
+                    // حقول البروفايل
+                    itemDiv.innerHTML += `
+                        <label class="form-label">بيانات البروفايل:</label>
+                        <input type="text" name="profileNames" class="form-control" placeholder="اسم البروفايل" style="margin-bottom:10px" required>
+                        <input type="text" name="profilePins" class="form-control" placeholder="رمز PIN (اختياري)" style="margin-bottom:10px">
+                        
+                        <label class="form-label">صورة البروفايل:</label>
+                        <!-- ملاحظة: اسم الملف مميز برقم لضمان الترتيب في السيرفر -->
+                        <input type="file" name="profileImage_${i}" class="form-control" accept="image/*" required>
+                    `;
+                }
+                container.appendChild(itemDiv);
+            }
+        }
+
+        // تشغيل الدالة عند تحميل الصفحة لأول مرة
+        document.addEventListener('DOMContentLoaded', renderInventoryInputs);
+    </script>
 </body>
 </html>
