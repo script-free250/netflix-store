@@ -213,17 +213,60 @@ function toggleProductFields() {
     document.getElementById("fields-user").style.display = type === 'netflix-user' ? "block" : "none";
 }
 
+// متغير لتخزين عدد عناصر المخزون الحالية
+let stockCount = 0;
+
+// دالة مساعدة لإضافة حقول مخزون جديدة في الواجهة (توضع في script.js)
+function addStockItem() {
+    const container = document.getElementById('stock-items-container');
+    const type = document.getElementById('p-type').value;
+    const index = stockCount++;
+    
+    const div = document.createElement('div');
+    div.className = 'stock-item';
+    div.style = "background:#111; padding:15px; margin-bottom:10px; border-radius:8px; border:1px solid #333; position:relative;";
+    div.innerHTML = `
+        <span style="position:absolute; top:5px; left:10px; color:#555; font-size:0.8rem;">#${index + 1}</span>
+        <button type="button" onclick="this.parentElement.remove()" style="position:absolute; top:5px; right:5px; background:none; border:none; color:#f00; cursor:pointer;">&times;</button>
+        <div style="margin-top:10px;">
+            <input type="email" name="stock[${index}][email]" class="form-control" placeholder="Email" required style="margin-bottom:10px;">
+            <input type="text" name="stock[${index}][password]" class="form-control" placeholder="Password" required style="margin-bottom:10px;">
+            ${type === 'netflix-user' ? `
+            <div style="display:flex; gap:10px;">
+                <input type="text" name="stock[${index}][pin]" class="form-control" placeholder="PIN" style="width:80px;">
+                <input type="text" name="stock[${index}][profileName]" class="form-control" placeholder="اسم البروفايل">
+            </div>
+            <label style="font-size:0.8rem; color:#aaa; display:block; margin-top:5px;">صورة البروفايل:</label>
+            <input type="file" name="stockImage_${index}" class="form-control" accept="image/*">
+            ` : ''}
+        </div>
+    `;
+    container.appendChild(div);
+}
+
+// الدالة المعدلة للإرسال
 async function addProduct(e) {
     e.preventDefault();
-    const btn = e.target.querySelector("button");
+    const btn = e.target.querySelector("button[type=submit]");
     btn.disabled = true; btn.innerText = "جاري النشر...";
+    
     const formData = new FormData(e.target);
+    
+    // نقوم بتنظيف البيانات لإرسال هيكلية منظمة للسيرفر
+    // ملاحظة: السيرفر (index.js) سيحتاج لتعديل لاستقبال `stock` كمصفوفة ومعالجة الصور المتعددة
+    // لكن هنا نركز على كود الواجهة كما طلبت.
+    
     try {
-        const res = await fetch(`${SERVER_URL}/admin/add-product`, { method: "POST", body: formData });
+        const res = await fetch(`${SERVER_URL}/admin/add-product`, { 
+            method: "POST", 
+            body: formData 
+        });
         const data = await res.json();
         if (data.success) {
-            showNotification("✅ تم نشر المنتج بنجاح!", "success");
+            showNotification("✅ تم نشر المنتج والمخزون بنجاح!", "success");
             e.target.reset();
+            document.getElementById('stock-items-container').innerHTML = ''; // تفريغ المخزون
+            stockCount = 0;
         } else {
             showNotification("فشل نشر المنتج.", "error");
         }
@@ -234,6 +277,7 @@ async function addProduct(e) {
         btn.innerText = "🚀 نشر المنتج";
     }
 }
+
 
 async function loadAdminOrders() {
     const container = document.getElementById("orders-list");
