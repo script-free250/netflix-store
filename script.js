@@ -150,7 +150,7 @@ function openBuyModal(productId) {
 
 function closeModal() { document.getElementById("buyModal").style.display = "none"; }
 
-/* =================================================================
+//* =================================================================
    دالة الشراء (تم تحسينها لحل مشاكل الاتصال)
    ================================================================= */
 async function submitOrder(e) {
@@ -213,6 +213,7 @@ async function submitOrder(e) {
         btn.innerHTML = '<i class="fas fa-check-circle"></i> تأكيد الشراء'; 
     }
 }
+
 
 
 
